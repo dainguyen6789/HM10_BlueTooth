@@ -176,7 +176,7 @@ float aaWorldY;
 float aaWorldZ;
 
 float peak_speed,avg_peak_speed,ratio,peak_speeds[5];// we will monitor 4 previous peak speed values
-
+float xx[5]={1,2,3,4,5};
 //============================
 
 int const NumOfSamples=5;
@@ -709,7 +709,7 @@ void loop() {
                                 if (ratio<0.9)
                                 {
                                   mySerial.println(ratio);
-                                  }
+                                }
                               }
                               j++;
                               if(j==20)// use j as a delay variable to reset peak_speed
@@ -743,6 +743,7 @@ void loop() {
                         Serial.print(peak_speeds[3]); 
                         Serial.print(",");
                         Serial.println(peak_speeds[4]); 
+                        Serial.println(fake_average(xx));
                                                
                         
               }
@@ -769,12 +770,12 @@ float absolute(float x)
 float fake_average(float x[])
 {
   float temp=0;
-  len=sizeof(x)-1;
+  int len=sizeof(x)-1;
   for(int i=0;i< len;i++)
   {
     temp=temp+x[i];
     }
-    return temp/len;
+    return temp/(float)len;
     
   }
 
