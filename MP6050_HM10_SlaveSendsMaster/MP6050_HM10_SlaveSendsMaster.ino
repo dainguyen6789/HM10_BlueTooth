@@ -677,7 +677,7 @@ void loop() {
                         }
                         
                         //==================================================================//
-                        //  Catch the peak speed value
+                        //  Catch the peak speed value, minor bug when move at low speed
                         //==================================================================//
 //
 //
