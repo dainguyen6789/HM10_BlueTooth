@@ -700,9 +700,8 @@ void loop() {
                                 peak_speeds[2]=peak_speeds[3];
                                 peak_speeds[3]=peak_speeds[4]; 
                                 peak_speeds[4]=peak_speed;
-                                avg_peak_speed=fake_average(peak_speeds);// this average function will ignore  last element of the array
                                 
-//                                avg_peak_speed=(peak_speeds[0]+peak_speeds[1]+peak_speeds[2]+peak_speeds[3])/5;
+                                avg_peak_speed=(peak_speeds[0]+peak_speeds[1]+peak_speeds[2]+peak_speeds[3])/5;
                                 
                                 //  tend to reduce the user's speed
                                 ratio=peak_speeds[4]/avg_peak_speed;
@@ -743,7 +742,7 @@ void loop() {
                         Serial.print(peak_speeds[3]); 
                         Serial.print(",");
                         Serial.println(peak_speeds[4]); 
-                        Serial.println(fake_average(xx));
+//                        Serial.println(fake_average(xx));
                                                
                         
               }
@@ -766,18 +765,6 @@ float absolute(float x)
     return -x;
 }
 
-// this average function will ignore  last element of the array
-float fake_average(float x[])
-{
-  float temp=0;
-  int len=sizeof(x)-1;
-  for(int i=0;i< len;i++)
-  {
-    temp=temp+x[i];
-    }
-    return temp/(float)len;
-    
-  }
 
 
 
