@@ -679,10 +679,11 @@ void loop() {
                         //==================================================================//
                         //  Catch the peak speed value, minor bug when move at low speed
                         //==================================================================//
-//
+
 //
                         peak_speeds[0]=max(peak_speeds[0],absolute(spd[1].x)); // we have to use our own absolute function because built-in abs() returns int value
-//                        
+//                        Modify the code to detect the peak of 4 steps
+
 //                        spd[0].x=abs(spd[1].x);
 
                         //==================================================================//
