@@ -175,7 +175,7 @@ float aaWorldX;
 float aaWorldY;
 float aaWorldZ;
 
-float peak_speed,peak_speeds[5];// we will monitor 4 previous peak speed values
+float peak_speed,avg_peak_speed,ratio,peak_speeds[5];// we will monitor 4 previous peak speed values
 
 //============================
 
@@ -683,10 +683,12 @@ void loop() {
                         peak_speed=max(peak_speed,absolute(spd[1].x)); // we have to use our own absolute function because built-in abs() returns int value
                         
                         //==================================================================//
-//                        Modify the code to detect the peak of 4 steps
-//                        current speed < previous speed  that means we finish with the 1st peak
-                        //==================================================================//
-                        
+                        //        CATCH PEAK SPEED VALUES
+                        //        Modify the code to detect the peak of 4 steps
+                        //        current speed < previous speed  that means we finish with the 1st peak
+                        //==================================================================//  
+                        //==================================================================//    
+                          
                         // peak_speed>0.5 to prevent the small negative value at the beginning of foot step 
                         if (absolute(spd[1].x) < peak_speed && peak_speed>0.5 && absolute(spd[1].x)!=0 ) //the value is going down and the acceleration is zero.
                         {
@@ -698,7 +700,14 @@ void loop() {
                                 peak_speeds[2]=peak_speeds[3];
                                 peak_speeds[3]=peak_speeds[4]; 
                                 peak_speeds[4]=peak_speed;
+                                avg_peak_speed=(peak_speeds[0]+peak_speeds[1]+peak_speeds[2]+peak_speeds[3])/5;
                                 
+                                //  tend to reduce the user's speed
+                                ratio=peak_speeds[4]/avg_peak_speed;
+                                if (ratio<0.9)
+                                {
+                                  mySerial.println(ratio);
+                                  }
                               }
                               j++;
                               if(j==20)// use j as a delay variable to reset peak_speed
