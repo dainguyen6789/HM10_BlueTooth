@@ -179,7 +179,7 @@ float peak_speed,peak_speeds[4];// we will monitor 4 previous peak speed values
 
 //============================
 
-int const NumOfSamples=3;
+int const NumOfSamples=5;
 
 int16_t AccelX[NumOfSamples+1], AccelY[NumOfSamples+1], AccelZ[NumOfSamples+1];
 
@@ -686,7 +686,7 @@ void loop() {
 //                        Modify the code to detect the peak of 4 steps
 //                        current speed < previous speed  that means we finish with the 1st peak
                         //==================================================================//
-                        if (absolute(spd[1].x) < peak_speed && peak_speed>0.3 && absolute(spd[1].x)!=0 ) //the value is going down and the acceleration is zero.
+                        if (absolute(spd[1].x) < peak_speed && peak_speed>0.5 && absolute(spd[1].x)!=0 ) //the value is going down and the acceleration is zero.
                         {
                              
                               if (!j)// j==0
