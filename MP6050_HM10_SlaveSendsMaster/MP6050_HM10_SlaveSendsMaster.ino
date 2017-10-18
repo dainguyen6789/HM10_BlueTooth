@@ -162,7 +162,6 @@ int run1=1,j;
 //For Fastest Speed;
 //============================
 float AccelMagThreshold=1.5;
-//float SpdMagThreshold=1.6;
 const int NumSamplesToSetZero=2;
 
 // orientation/motion vars
@@ -687,22 +686,29 @@ void loop() {
 //                        Modify the code to detect the peak of 4 steps
 //                        current speed < previous speed  that means we finish with the 1st peak
                         //==================================================================//
-                        if (absolute(spd[1].x) < peak_speed)
+                        if (absolute(spd[1].x) < peak_speed) //the value is going down and the acceleration is zero.
                         {
                              
                               if (!j)// j==0
                               {
-                                j=1;
+                                
                                 peak_speeds[0]=peak_speeds[1];
                                 peak_speeds[1]=peak_speeds[2];
                                 peak_speeds[2]=peak_speeds[3];
                                 peak_speeds[3]=peak_speed;
                               }
+                              j++;
+                              if(j==20)// use j as a delay variable to reset peak_speed
+                              {
+                                peak_speed=0;
+                              }
                          }
                          else
                          {
-                            j=0;
+                          j=0;
                           }
+
+
 
 //                        spd[0].x=abs(spd[1].x);
 
