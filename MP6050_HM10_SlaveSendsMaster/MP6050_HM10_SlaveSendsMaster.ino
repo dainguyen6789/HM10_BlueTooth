@@ -176,7 +176,7 @@ float aaWorldX;
 float aaWorldY;
 float aaWorldZ;
 
-float peak_speeds[4];
+float peak_speeds[4];// we will monitor 4 previous peak speed values
 
 //============================
 
@@ -657,11 +657,7 @@ void loop() {
                     
                     time_old=time1;
                     time1=millis();
-                }
-    
-//                
-//                
-//                        //delta_t=(time1-time_old)/1000.0;
+                }         
                         delta_t=(time1-time_old);
                         //==================================================================//
                         //==============    RESET SPEED TO ZERO IF NECESSARY ===============//
@@ -673,51 +669,50 @@ void loop() {
                            SumMagAccel+=AVAWorldMagSeries[ii];
                           }
                           
-                        //if(SumMagAccel==0 && spd[1].mag()<SpdMagThreshold)
                         if(SumMagAccel==0)
                         {
                           spd[1].x=0;
                           spd[1].y=0;
                           spd[1].z=0;                         
                         }
+                        
+                        //==================================================================//
+                        //  Catch the peak speed value
+                        //==================================================================//
+//
+//
+                        peak_speeds[0]=max(peak_speeds[0],absolute(spd[1].x)); // we have to use our own absolute function because built-in abs() returns int value
+//                        
+//                        spd[0].x=abs(spd[1].x);
+
                         //==================================================================//
                         //==============              Serial Print           ===============//
-                        //==================================================================//                    
+                        //==================================================================//  
+                                          
 //                        Serial.print(time1);
 //                        Serial.print(",");
-//                        Serial.print(spd[1].x);
-//                        Serial.print(",");
-//                        Serial.print(spd[1].y);
-//                        Serial.print(",");
-//                        Serial.println(spd[1].z);
-//                        Serial.print(",");
-                        //===========================================
+                        Serial.print(spd[1].x);
+                        Serial.print(",");
+                        Serial.println(peak_speeds[0]);
+                        
               }
-//            Serial.println(AVAWorld.x);
-//            Serial.print("\n");
-//            Serial.print(",");
-//            Serial.println(AVAWorld.y);
-//            Serial.print(",");
-//            Serial.println(aaWorld.z);
             //==================================================================//
             //==============       BLE SoftwareSerial Print      ===============//
             //==================================================================//  
 //            mySerial.println(AVAWorld.x);
-//            mySerial.print("\n");
-//            mySerial.print(",");                        
-//            mySerial.println(aaWorld.y);
-//            mySerial.print(",");                        
-//            mySerial.println(aaWorld.z);
-                
-            }
-            
 
+
+            }
         #endif
 
-        // blink LED to indicate activity
-        blinkState = !blinkState;
-        digitalWrite(LED_PIN, blinkState);
-    
+}
+
+float absolute(float x)
+{
+  if (x>0)
+    return x;
+  else
+    return -x;
 }
 
 
