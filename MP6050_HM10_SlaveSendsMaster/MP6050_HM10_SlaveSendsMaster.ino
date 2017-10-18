@@ -686,6 +686,7 @@ void loop() {
 //                        Modify the code to detect the peak of 4 steps
 //                        current speed < previous speed  that means we finish with the 1st peak
                         //==================================================================//
+                        // peak_speed>0.5 to prevent the small negative value at the beginning of foot step 
                         if (absolute(spd[1].x) < peak_speed && peak_speed>0.5 && absolute(spd[1].x)!=0 ) //the value is going down and the acceleration is zero.
                         {
                              
