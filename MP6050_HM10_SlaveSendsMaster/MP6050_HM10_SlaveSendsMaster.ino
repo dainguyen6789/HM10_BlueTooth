@@ -681,8 +681,16 @@ void loop() {
                         //==================================================================//
 
 //
-                        peak_speeds[0]=max(peak_speeds[0],absolute(spd[1].x)); // we have to use our own absolute function because built-in abs() returns int value
+                        peak_speed=max(peak_speed,absolute(spd[1].x)); // we have to use our own absolute function because built-in abs() returns int value
+                        
+                        //==================================================================//
 //                        Modify the code to detect the peak of 4 steps
+//                        current speed < previous speed  that means we finish with the 1st peak
+                        //==================================================================//
+                        if (absolute(spd[1].x) < peak_speeds)
+                        {
+                         peak_speeds[i]= peak_speed;
+                          }
 
 //                        spd[0].x=abs(spd[1].x);
 
