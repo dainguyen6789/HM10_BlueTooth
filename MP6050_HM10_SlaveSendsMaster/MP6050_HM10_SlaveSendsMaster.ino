@@ -149,7 +149,7 @@ uint8_t fifoBuffer[64]; // FIFO storage buffer
 unsigned long time1=0,time_old;
 float delta_t,SumMagAccel;
 //float delta_time;
-int run1=1;
+int run1=1,j;
 
 //============================
 //For Normal and Faster Speed
@@ -176,7 +176,7 @@ float aaWorldX;
 float aaWorldY;
 float aaWorldZ;
 
-float peak_speeds[4];// we will monitor 4 previous peak speed values
+float peak_speed,peak_speeds[4];// we will monitor 4 previous peak speed values
 
 //============================
 
@@ -687,9 +687,21 @@ void loop() {
 //                        Modify the code to detect the peak of 4 steps
 //                        current speed < previous speed  that means we finish with the 1st peak
                         //==================================================================//
-                        if (absolute(spd[1].x) < peak_speeds)
+                        if (absolute(spd[1].x) < peak_speed)
                         {
-                         peak_speeds[i]= peak_speed;
+                             
+                              if (!j)// j==0
+                              {
+                                j=1;
+                                peak_speeds[0]=peak_speeds[1];
+                                peak_speeds[1]=peak_speeds[2];
+                                peak_speeds[2]=peak_speeds[3];
+                                peak_speeds[3]=peak_speed;
+                              }
+                         }
+                         else
+                         {
+                            j=0;
                           }
 
 //                        spd[0].x=abs(spd[1].x);
@@ -702,7 +714,13 @@ void loop() {
 //                        Serial.print(",");
                         Serial.print(spd[1].x);
                         Serial.print(",");
-                        Serial.println(peak_speeds[0]);
+                        Serial.print(peak_speeds[0]);
+                        Serial.print(",");
+                        Serial.print(peak_speeds[1]);
+                        Serial.print(",");
+                        Serial.print(peak_speeds[2]);
+                        Serial.print(",");
+                        Serial.println(peak_speeds[3]);                        
                         
               }
             //==================================================================//
