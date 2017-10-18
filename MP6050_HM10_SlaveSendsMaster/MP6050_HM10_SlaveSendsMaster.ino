@@ -175,7 +175,7 @@ float aaWorldX;
 float aaWorldY;
 float aaWorldZ;
 
-float peak_speed,peak_speeds[4];// we will monitor 4 previous peak speed values
+float peak_speed,peak_speeds[5];// we will monitor 4 previous peak speed values
 
 //============================
 
@@ -686,17 +686,19 @@ void loop() {
 //                        Modify the code to detect the peak of 4 steps
 //                        current speed < previous speed  that means we finish with the 1st peak
                         //==================================================================//
+                        
                         // peak_speed>0.5 to prevent the small negative value at the beginning of foot step 
                         if (absolute(spd[1].x) < peak_speed && peak_speed>0.5 && absolute(spd[1].x)!=0 ) //the value is going down and the acceleration is zero.
                         {
                              
                               if (!j)// j==0
                               {
-                                
                                 peak_speeds[0]=peak_speeds[1];
                                 peak_speeds[1]=peak_speeds[2];
                                 peak_speeds[2]=peak_speeds[3];
-                                peak_speeds[3]=peak_speed;
+                                peak_speeds[3]=peak_speeds[4]; 
+                                peak_speeds[4]=peak_speed;
+                                
                               }
                               j++;
                               if(j==20)// use j as a delay variable to reset peak_speed
@@ -727,7 +729,10 @@ void loop() {
                         Serial.print(",");
                         Serial.print(peak_speeds[2]);
                         Serial.print(",");
-                        Serial.println(peak_speeds[3]);                        
+                        Serial.print(peak_speeds[3]); 
+                        Serial.print(",");
+                        Serial.println(peak_speeds[4]); 
+                                               
                         
               }
             //==================================================================//
