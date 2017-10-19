@@ -683,7 +683,8 @@ void loop() {
                         //  Catch the peak speed value, minor bug when move at low speed
                         //==================================================================//
 
-//
+//                      per our test, the peak value of normal walk will never drop below 0.8
+                        if (absolute(spd[1].x>0.8))
                         peak_speed=max(peak_speed,absolute(spd[1].x)); // we have to use our own absolute function because built-in abs() returns int value
                         
                         //==================================================================//
@@ -695,7 +696,7 @@ void loop() {
                           
                         // peak_speed>0.5 to prevent the small negative value at the beginning of foot step .
                         // absolute(spd[1].x)==0 before the condition j==n_reset is met, then we can't reset the temp var "peak_speed".
-                        if (absolute(spd[1].x) < peak_speed && peak_speed>0.5 && absolute(spd[1].x)!=0 ) //the value is going down and the acceleration is zero.
+                        if (absolute(spd[1].x) < peak_speed && peak_speed>0.6 && absolute(spd[1].x)!=0 ) //the value is going down (absolute(spd[1].x) < peak_speed) and the acceleration is zero.
                         {
                              
                               if (!j)// j==0
@@ -722,6 +723,7 @@ void loop() {
                               if(j==n_reset)// use j as a delay variable to reset peak_speed to Zero in order to catch another peak.
                               {
                                 peak_speed=0;
+                                Serial.print("RS");
                               }
                          }
                          else

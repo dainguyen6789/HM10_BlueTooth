@@ -680,6 +680,7 @@ void loop() {
                         //==================================================================//
 
 //
+                        if (absolute(spd[1].x>0.8))
                         peak_speed=max(peak_speed,absolute(spd[1].x)); // we have to use our own absolute function because built-in abs() returns int value
                         
                         //==================================================================//
