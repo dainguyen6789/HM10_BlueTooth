@@ -149,7 +149,7 @@ uint8_t fifoBuffer[64]; // FIFO storage buffer
 unsigned long time1=0,time_old;
 float delta_t,SumMagAccel;
 //float delta_time;
-int run1=1,j,n_reset;
+int run1=1,j,n_reset=15;
 
 //============================
 //For Normal and Faster Speed
