@@ -690,6 +690,7 @@ void loop() {
                         //==================================================================//    
                           
                         // peak_speed>0.5 to prevent the small negative value at the beginning of foot step 
+                        // absolute(spd[1].x)==0 before the condition j==n_reset is met, then we can't reset the temp var "peak_speed"
                         if (absolute(spd[1].x) < peak_speed && peak_speed>0.5 && absolute(spd[1].x)!=0 ) //the value is going down and the acceleration is zero.
                         {
                              
