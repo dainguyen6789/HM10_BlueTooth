@@ -668,7 +668,7 @@ void loop() {
                            SumMagAccel+=AVAWorldMagSeries[ii];
                           }
                           
-                        if(SumMagAccel==0)
+                        if(SumMagAccel==0 && abs(spd[1].x)<0.5)
                         {
                           spd[1].x=0;
                           spd[1].y=0;
