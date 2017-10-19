@@ -149,7 +149,7 @@ uint8_t fifoBuffer[64]; // FIFO storage buffer
 unsigned long time1=0,time_old;
 float delta_t,SumMagAccel;
 //float delta_time;
-int run1=1,j;
+int run1=1,j,n_reset=15;
 
 //============================
 //For Normal and Faster Speed
@@ -175,8 +175,8 @@ float aaWorldX;
 float aaWorldY;
 float aaWorldZ;
 
-float peak_speed,peak_speeds[4];// we will monitor 4 previous peak speed values
-
+float peak_speed,avg_peak_speed,ratio,peak_speeds[5];// we will monitor 4 previous peak speed values
+float xx[5]={1,2,3,4,5};
 //============================
 
 int const NumOfSamples=5;
@@ -683,23 +683,38 @@ void loop() {
                         peak_speed=max(peak_speed,absolute(spd[1].x)); // we have to use our own absolute function because built-in abs() returns int value
                         
                         //==================================================================//
-//                        Modify the code to detect the peak of 4 steps
-//                        current speed < previous speed  that means we finish with the 1st peak
-                        //==================================================================//
-                        // peak_speed>0.5 to prevent the small negative value at the beginning of foot step 
+                        //        CATCH PEAK SPEED VALUES
+                        //        Modify the code to detect the peak of 4 steps
+                        //        current speed < previous speed  that means we finish with the 1st peak
+                        //==================================================================//  
+                        //==================================================================//    
+                          
+                        // peak_speed>0.5 to prevent the small negative value at the beginning of foot step .
+                        // absolute(spd[1].x)==0 before the condition j==n_reset is met, then we can't reset the temp var "peak_speed".
                         if (absolute(spd[1].x) < peak_speed && peak_speed>0.5 && absolute(spd[1].x)!=0 ) //the value is going down and the acceleration is zero.
                         {
                              
                               if (!j)// j==0
                               {
-                                
                                 peak_speeds[0]=peak_speeds[1];
                                 peak_speeds[1]=peak_speeds[2];
                                 peak_speeds[2]=peak_speeds[3];
-                                peak_speeds[3]=peak_speed;
+                                peak_speeds[3]=peak_speeds[4]; 
+                                peak_speeds[4]=peak_speed;
+                                
+                                avg_peak_speed=(peak_speeds[0]+peak_speeds[1]+peak_speeds[2]+peak_speeds[3])/4;
+                                
+                                //  tend to reduce the user's speed
+                                ratio=peak_speeds[4]/avg_peak_speed;
+                                if (ratio<0.9)
+                                {
+                                  mySerial.println(ratio);
+                                  Serial.println("SR");
+                                }
                               }
                               j++;
-                              if(j==20)// use j as a delay variable to reset peak_speed
+                              // the value n_reset should be tuned, if it is too large then we can't reset the peak_speed, ex: 20 still fails in some case.
+                              if(j==n_reset)// use j as a delay variable to reset peak_speed to Zero in order to catch another peak.
                               {
                                 peak_speed=0;
                               }
@@ -727,7 +742,10 @@ void loop() {
                         Serial.print(",");
                         Serial.print(peak_speeds[2]);
                         Serial.print(",");
-                        Serial.println(peak_speeds[3]);                        
+                        Serial.print(peak_speeds[3]); 
+                        Serial.print(",");
+                        Serial.println(peak_speeds[4]); 
+                                               
                         
               }
             //==================================================================//
@@ -748,6 +766,7 @@ float absolute(float x)
   else
     return -x;
 }
+
 
 
 
