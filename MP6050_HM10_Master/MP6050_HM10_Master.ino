@@ -676,7 +676,7 @@ void loop() {
                         abs_x=absolute(spd[1].x);
                         //==================================================================//
                         
-                        if(SumMagAccel==0 && abs_x<0.5 )// add abs(spd[1].x)<0.5 to prevent wrong speed reset
+                        if(SumMagAccel==0 )// add abs(spd[1].x)<0.5 to prevent wrong speed reset
                         {
                           spd[1].x=0;
                           spd[1].y=0;
