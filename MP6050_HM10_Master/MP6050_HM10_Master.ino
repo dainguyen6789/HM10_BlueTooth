@@ -140,7 +140,7 @@ SoftwareSerial mySerial(7, 8); // RX, TX
 bool blinkState = false;
 
 // MPU control/status vars
-bool dmpReady = false,noreadAccel;  // set true if DMP init was successful
+bool dmpReady = false;  // set true if DMP init was successful
 uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
 uint8_t devStatus;      // return status after each device operation (0 = success, !0 = error)
 uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
@@ -149,8 +149,7 @@ uint8_t fifoBuffer[64]; // FIFO storage buffer
 unsigned long time1=0,time_old;
 float delta_t,SumMagAccel;
 //float delta_time;
-int run1=1;
-char c;
+int run1=1,j,n_reset=15;
 
 //============================
 //For Normal and Faster Speed
@@ -163,7 +162,6 @@ char c;
 //For Fastest Speed;
 //============================
 float AccelMagThreshold=1.5;
-//float SpdMagThreshold=1.6;
 const int NumSamplesToSetZero=2;
 
 // orientation/motion vars
@@ -177,9 +175,11 @@ float aaWorldX;
 float aaWorldY;
 float aaWorldZ;
 
+float peak_speed,avg_peak_speed,ratio,peak_speeds[5];// we will monitor 4 previous peak speed values
+float xx[5]={1,2,3,4,5};
 //============================
 
-int const NumOfSamples=3;
+int const NumOfSamples=5;
 
 int16_t AccelX[NumOfSamples+1], AccelY[NumOfSamples+1], AccelZ[NumOfSamples+1];
 
@@ -432,7 +432,7 @@ void setup() {
     // join I2C bus (I2Cdev library doesn't do this automatically)
     #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
         Wire.begin();
-        //TWBR = 24; // 400kHz I2C clock (200kHz if CPU is 8MHz)
+        TWBR = 24; // 400kHz I2C clock (200kHz if CPU is 8MHz)
         Wire.setClock(400000);
     #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
         Fastwire::setup(400, true);
@@ -533,17 +533,16 @@ Data is printed as: acelX acelY acelZ giroX giroY giroZ
     pinMode(LED_PIN, OUTPUT);
     
     Serial.println("I am Master!");
-    //mpu.resetFIFO();
     
     //  =======================================================
     // set the data rate for the SoftwareSerial port
     //  =======================================================
+
     mySerial.begin(9600);
     // set Master mode
-    mySerial.print("AT+ROLE1"); 
+    mySerial.print("AT+ROLE1");
     delay(1000);
-    mySerial.print("AT+COND43639D711FA");// THIS IS THE ADDRESS OF BLE MODULE #2 (D4:36:39:D7:11:FA)
-    //mySerial.print("AT+COND665B8EC4Db67");// THIS IS THE ADDRESS OF BLE MODULE #1 
+    mySerial.print("AT+COND43639D711FA");
     delay(1000);
 }
 
@@ -561,9 +560,7 @@ Data is printed as: acelX acelY acelZ giroX giroY giroZ
 // ===                    MAIN PROGRAM LOOP                     ===
 // ================================================================
 
-
 void loop() {
-
     // if programming failed, don't try to do anything
     if (!dmpReady) return;
 
@@ -585,7 +582,7 @@ void loop() {
         // reset so we can continue cleanly
         mpu.resetFIFO();
         //delay(200);
-       // Serial.println(F("FIFO overflow!"));
+        Serial.println(F("FIFO overflow!"));
 
     // otherwise, check for DMP data ready interrupt (this should happen frequently)
     } 
@@ -607,7 +604,7 @@ void loop() {
             if( time1<2500)
             {
               time1=millis();
-            }
+              }
             
             if (time1>2500)
             {
@@ -632,100 +629,155 @@ void loop() {
                 mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
                 AverageAccel(&AVAWorld);
     
-//                if(run1==1)
-//                {
-//                    if (AVAWorld.mag()<AccelMagThreshold)
-//                      {
-//                        AVAWorldMagSeries[NumSamplesToSetZero-1]=0;
-//                      }
-//                      else
-//                      {
-//                        AVAWorldMagSeries[NumSamplesToSetZero-1]= AVAWorld.mag(); 
-//                      }
-//                    time1=millis();
-//                    run1=2;
-//                }
-//                else
-//                {
-//                    for(int ii=0;ii<NumSamplesToSetZero-1;ii++)
-//                      {
-//                        AVAWorldMagSeries[ii]= AVAWorldMagSeries[ii+1];
-//                      }
-//                   
-//                    if (AVAWorld.mag()<AccelMagThreshold)
-//                      {
-//                        AVAWorldMagSeries[NumSamplesToSetZero-1]=0;
-//                      }
-//                      else
-//                      {
-//                        AVAWorldMagSeries[NumSamplesToSetZero-1]= AVAWorld.mag(); 
-//                      }
-//                    
-//                    time_old=time1;
-//                    time1=millis();
-//                }
-    
-//                
-//                
-//                        delta_t=(time1-time_old)/1000.0;
-//                        delta_t=(time1-time_old);
-//                        //==================================================================//
-//                        //==============    RESET SPEED TO ZERO IF NECESSARY ===============//
-//                        //==================================================================//
-//                        SumMagAccel=0;
-//                        speed_calc(&spd[1],AVAWorld, delta_t);
-//                        for(int ii=0;ii<NumSamplesToSetZero;ii++)
-//                        {
-//                           SumMagAccel+=AVAWorldMagSeries[ii];
-//                          }
-//                          
-//                        //if(SumMagAccel==0 && spd[1].mag()<SpdMagThreshold)
-//                        if(SumMagAccel==0)
-//                        {
-//              
+                if(run1==1)
+                {
+                    if (AVAWorld.mag()<AccelMagThreshold)
+                      {
+                        AVAWorldMagSeries[NumSamplesToSetZero-1]=0;
+                      }
+                      else
+                      {
+                        AVAWorldMagSeries[NumSamplesToSetZero-1]= AVAWorld.mag(); 
+                      }
+                    time1=millis();
+                    run1++;
+                }
+                else
+                {
+                    for(int ii=0;ii<NumSamplesToSetZero-1;ii++)
+                      {
+                        AVAWorldMagSeries[ii]= AVAWorldMagSeries[ii+1];
+                      }
+                   
+                    if (AVAWorld.mag()<AccelMagThreshold)
+                      {
+                        AVAWorldMagSeries[NumSamplesToSetZero-1]=0;
+                      }
+                      else
+                      {
+                        AVAWorldMagSeries[NumSamplesToSetZero-1]= AVAWorld.mag(); 
+                      }
+                    
+                    time_old=time1;
+                    time1=millis();
+                }         
+                        delta_t=(time1-time_old);
+                        //==================================================================//
+                        //==============    RESET SPEED TO ZERO IF NECESSARY ===============//
+                        //==================================================================//
+                        SumMagAccel=0;
+                        speed_calc(&spd[1],AVAWorld, delta_t);
+                        for(int ii=0;ii<NumSamplesToSetZero;ii++)
+                        {
+                           SumMagAccel+=AVAWorldMagSeries[ii];
+                          }
+                          
+                        if(SumMagAccel==0)
+                        {
+                          spd[1].x=0;
+                          spd[1].y=0;
+                          spd[1].z=0;                         
+                        }
+                        
+                        //==================================================================//
+                        //  Catch the peak speed value, minor bug when move at low speed
+                        //==================================================================//
+
 //
-//                          spd[1].x=0;
-//                          spd[1].y=0;
-//                          spd[1].z=0;
-//                          
-//                        }
+                        peak_speed=max(peak_speed,absolute(spd[1].x)); // we have to use our own absolute function because built-in abs() returns int value
+                        
+                        //==================================================================//
+                        //        CATCH PEAK SPEED VALUES
+                        //        Modify the code to detect the peak of 4 steps
+                        //        current speed < previous speed  that means we finish with the 1st peak
+                        //==================================================================//  
+                        //==================================================================//    
+                          
+                        // peak_speed>0.5 to prevent the small negative value at the beginning of foot step .
+                        // absolute(spd[1].x)==0 before the condition j==n_reset is met, then we can't reset the temp var "peak_speed".
+                        if (absolute(spd[1].x) < peak_speed && peak_speed>0.5 && absolute(spd[1].x)!=0 ) //the value is going down and the acceleration is zero.
+                        {
+                             
+                              if (!j)// j==0
+                              {
+                                peak_speeds[0]=peak_speeds[1];
+                                peak_speeds[1]=peak_speeds[2];
+                                peak_speeds[2]=peak_speeds[3];
+                                peak_speeds[3]=peak_speeds[4]; 
+                                peak_speeds[4]=peak_speed;
+                                
+                                avg_peak_speed=(peak_speeds[0]+peak_speeds[1]+peak_speeds[2]+peak_speeds[3])/4;
+                                
+                                //  tend to reduce the user's speed
+                                ratio=peak_speeds[4]/avg_peak_speed;
+                                // this is at Master side
+                                if (ratio<0.6)
+                                {
+                                  mySerial.println(ratio);
+                                  Serial.println("SR");
+                                }
+                              }
+                              j++;
+                              // the value n_reset should be tuned, if it is too large then we can't reset the peak_speed, ex: 20 still fails in some case.
+                              if(j==n_reset)// use j as a delay variable to reset peak_speed to Zero in order to catch another peak.
+                              {
+                                peak_speed=0;
+                              }
+                         }
+                         else
+                         {
+                          j=0;
+                          }
+
+
+
+//                        spd[0].x=abs(spd[1].x);
+
                         //==================================================================//
                         //==============              Serial Print           ===============//
-                        //==================================================================//                    
-//                        Serial.print(spd[1].x);
+                        //==================================================================//  
+                                          
+//                        Serial.print(time1);
 //                        Serial.print(",");
-//                        Serial.print(spd[1].y);
-//                        Serial.print(",");
-//                        Serial.println(spd[1].z);
-//                        Serial.print(",");
-                        //===========================================
-              }
-             #endif   
-               Serial.print(millis());
-                Serial.print(",");   
-                Serial.print(AVAWorld.x);
-                Serial.print(",");
-                
-                //noreadAccel=true;
-                while(true)
-                {
-                  if (mySerial.available())
-                    {
-                      c=mySerial.read();
-                      Serial.print(c);// BLE reads data
-                      if (c=='\n')
-                      {
-                        //noreadAccel=false;
-                        break;
+                        Serial.print(spd[1].x);
+                        Serial.print(",");
+                        Serial.print(peak_speeds[0]);
+                        Serial.print(",");
+                        Serial.print(peak_speeds[1]);
+                        Serial.print(",");
+                        Serial.print(peak_speeds[2]);
+                        Serial.print(",");
+                        Serial.print(peak_speeds[3]); 
+                        Serial.print(",");
+                        Serial.println(peak_speeds[4]); 
+                                               
                         
-                      }
-                    }
-                }
+              }
+            //==================================================================//
+            //==============       BLE SoftwareSerial Print      ===============//
+            //==================================================================//  
+//            mySerial.println(AVAWorld.x);
+
+
             }
+        #endif
 
+        if(mySerial.available())
+        {
+          c=mySerial.read();
+          Serial.print(c);
+          }
 
-    
 }
+
+float absolute(float x)
+{
+  if (x>0)
+    return x;
+  else
+    return -x;
+}
+
 
 
 
