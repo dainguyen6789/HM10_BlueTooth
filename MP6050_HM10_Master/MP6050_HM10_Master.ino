@@ -601,9 +601,12 @@ void loop() {
 
     
             #ifdef OUTPUT_READABLE_WORLDACCEL
-            if( time1<2500)
+            if( time1<=2500)
             {
               time1=millis();
+              spd[1].x=0;
+              spd[1].y=0;
+              spd[1].z=0;     
               }
             
             if (time1>2500)
@@ -676,7 +679,7 @@ void loop() {
                         abs_x=absolute(spd[1].x);
                         //==================================================================//
                         
-                        if(SumMagAccel==0 )// add abs(spd[1].x)<0.5 to prevent wrong speed reset
+                        if(SumMagAccel==0  )// can't add abs_x<0.5 to prevent wrong speed reset :((
                         {
                           spd[1].x=0;
                           spd[1].y=0;
