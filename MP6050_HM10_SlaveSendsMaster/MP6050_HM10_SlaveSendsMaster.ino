@@ -1,4 +1,3 @@
-// Test Branch ......
 // I2C device class (I2Cdev) demonstration Arduino sketch for MPU6050 class using DMP (MotionApps v2.0)
 // 6/21/2012 by Jeff Rowberg <jeff@rowberg.net>
 // Updates should (hopefully) always be available at https://github.com/jrowberg/i2cdevlib
@@ -150,7 +149,7 @@ uint8_t fifoBuffer[64]; // FIFO storage buffer
 unsigned long time1=0,time_old;
 float delta_t,SumMagAccel;
 //float delta_time;
-int run1=1,j;
+int run1=1,j,n_reset;
 
 //============================
 //For Normal and Faster Speed
@@ -702,17 +701,19 @@ void loop() {
                                 peak_speeds[3]=peak_speeds[4]; 
                                 peak_speeds[4]=peak_speed;
                                 
-                                avg_peak_speed=(peak_speeds[0]+peak_speeds[1]+peak_speeds[2]+peak_speeds[3])/5;
+                                avg_peak_speed=(peak_speeds[0]+peak_speeds[1]+peak_speeds[2]+peak_speeds[3])/4;
                                 
                                 //  tend to reduce the user's speed
                                 ratio=peak_speeds[4]/avg_peak_speed;
                                 if (ratio<0.9)
                                 {
                                   mySerial.println(ratio);
+                                  Serial.println("SR");
                                 }
                               }
                               j++;
-                              if(j==20)// use j as a delay variable to reset peak_speed
+                              // the value n_reset should be tuned, if it is too large then we can't reset the peak_speed, ex: 20 still fails in some case
+                              if(j==n_reset)// use j as a delay variable to reset peak_speed to Zero in order to catch another peak
                               {
                                 peak_speed=0;
                               }
@@ -743,7 +744,6 @@ void loop() {
                         Serial.print(peak_speeds[3]); 
                         Serial.print(",");
                         Serial.println(peak_speeds[4]); 
-//                        Serial.println(fake_average(xx));
                                                
                         
               }
