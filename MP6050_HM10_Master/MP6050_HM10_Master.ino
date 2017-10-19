@@ -604,9 +604,6 @@ void loop() {
             if( time1<=2500)
             {
               time1=millis();
-              spd[1].x=0;
-              spd[1].y=0;
-              spd[1].z=0;     
               }
             
             if (time1>2500)
@@ -679,11 +676,14 @@ void loop() {
                         abs_x=absolute(spd[1].x);
                         //==================================================================//
                         
-                        if(SumMagAccel==0  )// can't add abs_x<0.5 to prevent wrong speed reset :((
+                        if(SumMagAccel==0 && abs_x<0.8)// add abs_x<0.8 to prevent wrong speed reset :((
                         {
+                          // we should realize the peak value and do not reset the speed to zero
+//                          Serial.print("here,");
                           spd[1].x=0;
                           spd[1].y=0;
-                          spd[1].z=0;                         
+                          spd[1].z=0; 
+                                                  
                         }
                         
                         //==================================================================//
