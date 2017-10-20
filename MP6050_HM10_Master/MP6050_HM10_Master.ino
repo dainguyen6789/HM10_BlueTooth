@@ -820,13 +820,19 @@ void loop() {
             }
         #endif
 
-        if(mySerial.available() && ratio<0.9)
+        if(mySerial.available())
         {
 //          c=mySerial.read();
+          Serial.print("RD");
+          analogWrite(10,90);
+          analogWrite(9,90);
+         }
+        if(ratio<0.7)
+        {
           Serial.print("ST");
           analogWrite(10,0);
           analogWrite(9,0);
-         }
+          }
 
 }
 
