@@ -680,7 +680,7 @@ void loop() {
                         //==================================================================//
 
 //
-                        if (absolute(spd[1].x>0.8))                     // this condition to prevent the wrong peak value after reset peak_speed
+                        if (absolute(spd[1].x>0.8))                    // this condition to prevent the wrong peak value after reset peak_speed
                         peak_speed=max(peak_speed,absolute(spd[1].x)); // we have to use our own absolute function because built-in abs() returns int value
                         
                         //==================================================================//

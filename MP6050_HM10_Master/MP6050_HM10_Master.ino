@@ -135,6 +135,9 @@ SoftwareSerial mySerial(7, 8); // RX, TX
 
 
 //---------------------------------------------------------------------
+int fadeAmount = 5;     // how many points to fade the LED by
+int num_loop=0;
+int brightness = 55;    // how bright the LED is
 
 #define LED_PIN 13 // (Arduino is 13, Teensy is 11, Teensy++ is 6)
 bool blinkState = false;
@@ -429,6 +432,49 @@ uint8_t dmpGetLinearAccel_8G(VectorInt16 *v, VectorInt16 *vRaw, VectorFloat *gra
 // ================================================================
 
 void setup() {
+      // ================================================================
+      // ===                      Motor SETUP                       ===
+      // ================================================================
+      // declare pin 10 to be an output:
+       pinMode(10, OUTPUT);
+      //analogWrite(10, 0);
+      setPwmFrequency(10, 8);           //  3921.16 Hz
+      //analogWrite(10, 0);
+    
+    
+       pinMode(9, OUTPUT);
+      //analogWrite(10, 0);
+      setPwmFrequency(9, 8);           //  3921.16 Hz
+      //analogWrite(10, 0);
+    
+      //analogWrite(9, 0);
+      //analogWrite(10, 0);
+      while (num_loop<=25)
+      {
+
+        analogWrite(10,brightness);
+    
+        analogWrite(9,brightness);
+        
+        brightness = brightness + fadeAmount;
+        
+        num_loop++;
+        
+        if (brightness <= 0 || brightness >= 255) 
+        {
+          fadeAmount = -fadeAmount;      
+        }
+        if ( num_loop<=1 )
+        {
+           delay(3000);
+        }
+        else
+           delay(10);
+      }
+      analogWrite(10,100);
+      analogWrite(9,100);
+  //==============================================================
+  
     // join I2C bus (I2Cdev library doesn't do this automatically)
     #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
         Wire.begin();
@@ -546,14 +592,9 @@ Data is printed as: acelX acelY acelZ giroX giroY giroZ
     delay(1000);
 }
 
-
-
-
-
-
-
-
-
+// ================================================================
+// ===                    MAIN PROGRAM LOOP                     ===
+// ================================================================
 
 
 // ================================================================
@@ -691,7 +732,7 @@ void loop() {
                         //==================================================================//
 
 //                      per our test, the peak value of normal walk will never drop below 0.8
-                        if (abs_x>0.8)
+                        if (abs_x>0.9)
                         peak_speed=max(peak_speed,abs_x); // we have to use our own absolute function because built-in abs() returns int value
                         
                         //==================================================================//
@@ -718,15 +759,23 @@ void loop() {
                                 
                                 //  tend to reduce the user's speed
                                 ratio=peak_speeds[4]/avg_peak_speed;
+                                
                                 // this is at Master side
-                                if (ratio<0.6)
-                                {
-                                  //mySerial.println(ratio);
-                                  Serial.println("ST");
-                                }
+//                                if (ratio<0.6)
+//                                {
+//                                  //mySerial.println(ratio);
+//                                  Serial.println("ST");
+//                                  analogWrite(10,0);
+//                                  analogWrite(9,0);
+//                                }
                               }
+                              
                               j++;
+                              
                               // the value n_reset should be tuned, if it is too large then we can't reset the peak_speed, ex: 20 still fails in some case.
+                              // n_reset should be dynamically changed depend on the peak value
+                              // idea: catch the time from the beginning of foot step and at its peak speed
+                              
                               if(j==n_reset)// use j as a delay variable to reset peak_speed to Zero in order to catch another peak.
                               {
                                 peak_speed=0;
@@ -771,11 +820,13 @@ void loop() {
             }
         #endif
 
-        if(mySerial.available())
+        if(mySerial.available() && ratio<0.9)
         {
-          c=mySerial.read();
-          Serial.print(c);
-          }
+//          c=mySerial.read();
+          Serial.print("ST");
+          analogWrite(10,0);
+          analogWrite(9,0);
+         }
 
 }
 
@@ -789,6 +840,46 @@ float absolute(float x)
     return x;
   else
     return -x;
+}
+
+void setPwmFrequency(int pin, int divisor) {
+  byte mode;
+  if(pin == 5 || pin == 6 || pin == 9 || pin == 10) {
+  /*    http://playground.arduino.cc/Main/TimerPWMCheatsheet
+   *     Setting   Divisor   Frequency
+  0x01    1     31372.55
+  0x02    8     3921.16
+  0x03      64    490.20   <--DEFAULT
+  0x04      256     122.55
+  0x05    1024    30.64
+  TCCR1B = (TCCR1B & 0b11111000) | <setting>; */
+
+    switch(divisor) {
+      case 1: mode = 0x01; break;
+      case 8: mode = 0x02; break;
+      case 64: mode = 0x03; break;
+      case 256: mode = 0x04; break;
+      case 1024: mode = 0x05; break;
+      default: return;
+    }
+    if(pin == 5 || pin == 6) {
+      TCCR0B = TCCR0B & 0b11111000 | mode;
+    } else {
+      TCCR1B = TCCR1B & 0b11111000 | mode;
+    }
+  } else if(pin == 3 || pin == 11) {
+    switch(divisor) {
+      case 1: mode = 0x01; break;
+      case 8: mode = 0x02; break;
+      case 32: mode = 0x03; break;
+      case 64: mode = 0x04; break;
+      case 128: mode = 0x05; break;
+      case 256: mode = 0x06; break;
+      case 1024: mode = 0x07; break;
+      default: return;
+    }
+    TCCR2B = TCCR2B & 0b11111000 | mode;
+  }
 }
 
 
