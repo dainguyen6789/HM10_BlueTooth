@@ -710,7 +710,7 @@ void loop() {
                                 if (ratio<0.9)
                                 {
                                   mySerial.println(ratio);
-                                  Serial.println("SR");
+                                  Serial.println("Se");
                                 }
                               }
                               j++;

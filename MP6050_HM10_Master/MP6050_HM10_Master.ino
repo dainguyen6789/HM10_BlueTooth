@@ -471,8 +471,8 @@ void setup() {
         else
            delay(10);
       }
-      analogWrite(10,100);
-      analogWrite(9,100);
+      analogWrite(10,95);
+      analogWrite(9,95);
   //==============================================================
   
     // join I2C bus (I2Cdev library doesn't do this automatically)
@@ -824,8 +824,8 @@ void loop() {
         {
 //          c=mySerial.read();
           Serial.print("RD");
-          analogWrite(10,90);
-          analogWrite(9,90);
+          analogWrite(10,85);
+          analogWrite(9,85);
          }
         if(ratio<0.7)
         {
