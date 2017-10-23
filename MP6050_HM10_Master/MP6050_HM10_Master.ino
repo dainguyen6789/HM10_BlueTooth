@@ -197,7 +197,7 @@ float vx,vy,vz;
 // packet structure for InvenSense teapot demo
 uint8_t teapotPacket[14] = { '$', 0x02, 0,0, 0,0, 0,0, 0,0, 0x00, 0x00, '\r', '\n' };
 
-char c;
+char c=2;
 
 
 class AvgAccel{
@@ -471,8 +471,8 @@ void setup() {
         else
            delay(10);
       }
-      analogWrite(10,95);
-      analogWrite(9,95);
+      analogWrite(10,75);
+      analogWrite(9,75);
   //==============================================================
   
     // join I2C bus (I2Cdev library doesn't do this automatically)
@@ -717,7 +717,7 @@ void loop() {
                         abs_x=absolute(spd[1].x);
                         //==================================================================//
                         
-                        if(SumMagAccel==0 && abs_x<0.8)// add abs_x<0.8 to prevent wrong speed reset :((
+                        if(SumMagAccel==0 && abs(spd[1].x)<0.5)// add abs_x<0.8 to prevent wrong speed reset :((
                         {
                           // we should realize the peak value and do not reset the speed to zero
 //                          Serial.print("here,");
@@ -732,7 +732,7 @@ void loop() {
                         //==================================================================//
 
 //                      per our test, the peak value of normal walk will never drop below 0.8
-                        if (abs_x>0.9)
+                        if (abs_x>0.8)
                         peak_speed=max(peak_speed,abs_x); // we have to use our own absolute function because built-in abs() returns int value
                         
                         //==================================================================//
@@ -822,21 +822,24 @@ void loop() {
 
         if(mySerial.available())
         {
-//          c=mySerial.read();
-          Serial.print("RD");
-          analogWrite(10,85);
-          analogWrite(9,85);
-         }
-        if(ratio<0.7)
+          c=mySerial.read();
+        }
+        // This stopping mechanism should be reviewed again
+        //c==0: slave ratio <0.9, >0.7
+        //c==1: slave ratio <0.7
+        if((c==0 && ratio<0.7) || (c==1 && ratio<0.9) )// Stop
         {
-          Serial.print("ST");
+          Serial.print("ST,");
           analogWrite(10,0);
-          analogWrite(9,0);
-          }
-
+          analogWrite(9,0);}
+        else if(c==0 && ratio>0.7 && ratio<0.9)
+        {
+          Serial.print("Dec,");
+          analogWrite(10,70);
+          analogWrite(9,70);
+        }
+         
 }
-
-
 
 
 

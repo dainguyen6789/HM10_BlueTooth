@@ -707,12 +707,16 @@ void loop() {
                                 
                                 //  tend to reduce the user's speed
                                 ratio=peak_speeds[4]/avg_peak_speed;
-                                if (ratio<0.9)
+                                if (ratio<0.9 && ratio >0.7)
                                 {
-                                  mySerial.println(ratio);
+                                  mySerial.println(0);
                                   Serial.println("Se");
                                 }
-                              }
+                                else if(ratio<0.7)
+                                {
+                                  mySerial.println(1);}
+                                }
+                              
                               j++;
                               // the value n_reset should be tuned, if it is too large then we can't reset the peak_speed, ex: 20 still fails in some case.
                               if(j==n_reset)// use j as a delay variable to reset peak_speed to Zero in order to catch another peak.
