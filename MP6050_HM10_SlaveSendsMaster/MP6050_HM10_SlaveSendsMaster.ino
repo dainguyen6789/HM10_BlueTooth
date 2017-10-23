@@ -707,14 +707,15 @@ void loop() {
                                 
                                 //  tend to reduce the user's speed
                                 ratio=peak_speeds[4]/avg_peak_speed;
-                                if (ratio<0.9 && ratio >0.7)
+                                if (ratio<0.92 && ratio >0.7)
                                 {
                                   mySerial.println(0);
-                                  Serial.println("Se");
+                                  Serial.println("Se1");
                                 }
-                                else if(ratio<0.7)
+                                else if(ratio<0.7 && ratio>0)
                                 {
-                                  mySerial.println(1);}
+                                  mySerial.println(1);
+                                  Serial.println("Se2");}
                                 }
                               
                               j++;
