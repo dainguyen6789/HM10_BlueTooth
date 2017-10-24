@@ -714,6 +714,7 @@ void loop() {
                                 ratio=peak_speeds[4]/avg_peak_speed;
                                 if (ratio<0.92 && ratio >0.7)
                                 {
+                                  //note on this
                                   mySerial.write((byte)0x00);
                                   Serial.println("Se1");
                                 }
