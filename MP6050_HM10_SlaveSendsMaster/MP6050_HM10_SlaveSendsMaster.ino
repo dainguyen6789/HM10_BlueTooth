@@ -754,7 +754,9 @@ void loop() {
                         Serial.print(",");
                         Serial.print(peak_speeds[2]);
                         Serial.print(",");
-                        Serial.println(peak_speeds[3]); 
+                        Serial.print(peak_speeds[3]); 
+                        Serial.print(",");
+                        Serial.println(peak_speeds[4]);                         
 //                        Serial.print(peak_speeds[3]);                         
 //                        Serial.print(",");
 //                        Serial.print(AVAWorld.x); 
