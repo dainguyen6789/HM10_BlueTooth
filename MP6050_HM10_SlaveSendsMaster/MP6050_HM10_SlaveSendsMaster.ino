@@ -218,9 +218,9 @@ AvgAccel aaWorld5[NumOfAccelSampletoZero];
 
 class Speed{
   public:
-  float x;
-  float y;
-  float z;
+  float x=0;
+  float y=0;
+  float z=0;
   float mag(){
     return sqrt(pow(x,2)+pow(y,2)+pow(z,2));
   }
@@ -539,7 +539,7 @@ Data is printed as: acelX acelY acelZ giroX giroY giroZ
     //  =======================================================
 
     mySerial.begin(9600);
-    delay(1000);
+    //delay(3000);
 }
 
 
@@ -597,12 +597,12 @@ void loop() {
 
     
             #ifdef OUTPUT_READABLE_WORLDACCEL
-            if( time1<2500)
+            if( time1<5000)
             {
               time1=millis();
               }
             
-            if (time1>2500)
+            if (time1>5000)
             {
                 // display initial world-frame acceleration, adjusted to remove gravity
                 // and rotated based on known orientation from quaternion
@@ -662,25 +662,30 @@ void loop() {
                         //==============    RESET SPEED TO ZERO IF NECESSARY ===============//
                         //==================================================================//
                         SumMagAccel=0;
-                        speed_calc(&spd[1],AVAWorld, delta_t);
+                        
+
                         for(int ii=0;ii<NumSamplesToSetZero;ii++)
                         {
                            SumMagAccel+=AVAWorldMagSeries[ii];
                           }
                           
-                        if(SumMagAccel==0 && abs(spd[1].x)<0.5)
+                        if(SumMagAccel==0 && absolute(spd[1].x)<0.8)
+                        //if(SumMagAccel==0)
                         {
                           spd[1].x=0;
                           spd[1].y=0;
-                          spd[1].z=0;                         
+                          spd[1].z=0;   
+                          AVAWorld.x=0;
+                          AVAWorld.y=0;
+                          AVAWorld.z=0;                        
                         }
-                        
+                        speed_calc(&spd[1],AVAWorld, delta_t);
                         //==================================================================//
                         //  Catch the peak speed value, minor bug when move at low speed
                         //==================================================================//
 
 //
-                        if (absolute(spd[1].x>0.8))                    // this condition to prevent the wrong peak value after reset peak_speed
+                        if (absolute(spd[1].x)>0.8)                    // this condition to prevent the wrong peak value after reset peak_speed
                         peak_speed=max(peak_speed,absolute(spd[1].x)); // we have to use our own absolute function because built-in abs() returns int value
                         
                         //==================================================================//
@@ -709,12 +714,12 @@ void loop() {
                                 ratio=peak_speeds[4]/avg_peak_speed;
                                 if (ratio<0.92 && ratio >0.7)
                                 {
-                                  mySerial.println(0);
+                                  mySerial.write((byte)0x00);
                                   Serial.println("Se1");
                                 }
                                 else if(ratio<0.7 && ratio>0)
                                 {
-                                  mySerial.println(1);
+                                  mySerial.write(1);
                                   Serial.println("Se2");}
                                 }
                               
@@ -748,9 +753,15 @@ void loop() {
                         Serial.print(",");
                         Serial.print(peak_speeds[2]);
                         Serial.print(",");
-                        Serial.print(peak_speeds[3]); 
-                        Serial.print(",");
-                        Serial.println(peak_speeds[4]); 
+                        Serial.println(peak_speeds[3]); 
+//                        Serial.print(peak_speeds[3]);                         
+//                        Serial.print(",");
+//                        Serial.print(AVAWorld.x); 
+//                        Serial.print("");
+//                        Serial.print(AVAWorld.y); 
+//                        Serial.print(",");
+//                        Serial.println(AVAWorld.z); 
+
                                                
                         
               }
@@ -789,3 +800,4 @@ float absolute(float x)
 
 
   
+

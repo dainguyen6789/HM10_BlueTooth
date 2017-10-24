@@ -202,9 +202,9 @@ char c=2;
 
 class AvgAccel{
   public:
-  float x;
-  float y;
-  float z;
+  float x=0;
+  float y=0;
+  float z=0;
    float mag(){
     return sqrt(pow(x,2)+pow(y,2)+pow(z,2));
     }
@@ -588,7 +588,7 @@ void setup() {
     mySerial.print("AT+ROLE1");
     delay(1000);
     mySerial.print("AT+COND43639D711FA");
-    delay(1000);
+    delay(3000);
 }
 
 // ================================================================
@@ -706,7 +706,7 @@ void loop() {
                         //==============    RESET SPEED TO ZERO IF NECESSARY ===============//
                         //==================================================================//
                         SumMagAccel=0;
-                        speed_calc(&spd[1],AVAWorld, delta_t);
+                        
                         for(int ii=0;ii<NumSamplesToSetZero;ii++)
                         {
                            SumMagAccel+=AVAWorldMagSeries[ii];
@@ -716,16 +716,18 @@ void loop() {
                         abs_x=absolute(spd[1].x);
                         //==================================================================//
                         
-                        if(SumMagAccel==0 && abs(spd[1].x)<0.5)// add abs_x<0.8 to prevent wrong speed reset :((
+                        if(SumMagAccel==0 && abs_x<0.7)// add abs_x<0.8 to prevent wrong speed reset :((
                         {
                           // we should realize the peak value and do not reset the speed to zero
 //                          Serial.print("here,");
                           spd[1].x=0;
                           spd[1].y=0;
                           spd[1].z=0; 
-                                                  
+                          AVAWorld.x=0;
+                          AVAWorld.y=0;
+                          AVAWorld.z=0;                         
                         }
-                        
+                        speed_calc(&spd[1],AVAWorld, delta_t);
                         //==================================================================//
                         //  Catch the peak speed value, minor bug when move at low speed
                         //==================================================================//
@@ -822,7 +824,7 @@ void loop() {
         if(mySerial.available())
         {
           c=mySerial.read();
-          Serial.println("Read");
+          Serial.println(c);
         }
         // This stopping mechanism should be reviewed again
         //c==0: slave ratio <0.9, >0.7
