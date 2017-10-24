@@ -526,18 +526,17 @@ void setup() {
     #ifdef AccelSensitivity_8G
     mpu.setFullScaleAccelRange(2);  //0 = +/- 2g | 1 = +/- 4g | 2 = +/- 8g | 3 =  +/- 16g 
     #endif
-
-/*
-Sensor readings with offsets:  5 4 16383 1 0 0
-Your offsets: -1036 -2044 851 19  -13 -23
-
-Data is printed as: acelX acelY acelZ giroX giroY giroZ
-*/
+//Your MPU6050 should be placed in horizontal position, with package letters facing up. 
+//Sensor readings with offsets:  4 1 16374 -1  0 0
+//Your offsets: -2182 -1810 4667  74  -4  -60
+//
+//Data is printed as: acelX acelY acelZ giroX giroY giroZ
+//Check that your sensor readings are close to 0 0 16384 0 0 0
 
     // supply your own gyro offsets here, scaled for min sensitivity
-    mpu.setXGyroOffset(72);
-    mpu.setYGyroOffset(6);
-    mpu.setZGyroOffset(-55);
+    mpu.setXGyroOffset(74);
+    mpu.setYGyroOffset(-4);
+    mpu.setZGyroOffset(-60);
     
     mpu.setZAccelOffset(993); //  factory default for my test chip
     //    mpu.setZAccelOffset(417); 
@@ -823,11 +822,12 @@ void loop() {
         if(mySerial.available())
         {
           c=mySerial.read();
+          Serial.println("Read");
         }
         // This stopping mechanism should be reviewed again
         //c==0: slave ratio <0.9, >0.7
         //c==1: slave ratio <0.7
-        if((c==0 && ratio<0.7) || (c==1 && ratio<0.9) )// Stop
+        if((c==0 && ratio<0.7) || (c==1 && ratio<0.92) )// Stop
         {
           Serial.print("ST,");
           analogWrite(10,0);
