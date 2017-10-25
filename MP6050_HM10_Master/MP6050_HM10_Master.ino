@@ -182,7 +182,7 @@ float peak_speed,avg_peak_speed,ratio,peak_speeds[5],abs_x;// we will monitor 4 
 float xx[5]={1,2,3,4,5};
 //============================
 
-int const NumOfSamples=5;
+int const NumOfSamples=3;//
 
 int16_t AccelX[NumOfSamples+1], AccelY[NumOfSamples+1], AccelZ[NumOfSamples+1];
 
@@ -471,8 +471,8 @@ void setup() {
         else
            delay(10);
       }
-//      analogWrite(10,75);
-//      analogWrite(9,75);
+      analogWrite(10,75);
+      analogWrite(9,75);
   //==============================================================
   
     // join I2C bus (I2Cdev library doesn't do this automatically)
