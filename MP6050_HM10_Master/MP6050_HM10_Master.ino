@@ -837,7 +837,7 @@ void loop() {
         //  c==1: slave ratio <0.7
         if((c==0 && ratio<0.7) || (c==1 && ratio<0.92) )// Stop
         {
-          Serial.print("ST,");
+          Serial.println("ST");
           analogWrite(10,0);
           analogWrite(9,0);}
         else if(c==0 && ratio>0.7 && ratio<0.9)
