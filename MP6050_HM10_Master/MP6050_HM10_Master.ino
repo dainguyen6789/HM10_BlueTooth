@@ -152,7 +152,7 @@ uint8_t fifoBuffer[64]; // FIFO storage buffer
 unsigned long time1=0,time_old;
 float delta_t,SumMagAccel;
 //float delta_time;
-int run1=1,j,n_reset=15;
+int run1=1,j,n_reset=20;
 
 //============================
 //For Normal and Faster Speed
@@ -588,7 +588,7 @@ void setup() {
     mySerial.print("AT+ROLE1");
     delay(1000);
     mySerial.print("AT+COND43639D711FA");
-    delay(3000);
+    delay(1000);
 }
 
 // ================================================================
@@ -725,7 +725,8 @@ void loop() {
                           spd[1].z=0; 
                           AVAWorld.x=0;
                           AVAWorld.y=0;
-                          AVAWorld.z=0;                         
+                          AVAWorld.z=0; 
+                          peak_speed=0;                        
                         }
                         speed_calc(&spd[1],AVAWorld, delta_t);
                         //==================================================================//
@@ -779,8 +780,8 @@ void loop() {
                               
                               if(j==n_reset)// use j as a delay variable to reset peak_speed to Zero in order to catch another peak.
                               {
-                                peak_speed=0;
-                                Serial.print("RS");
+//                                peak_speed=0;
+//                                Serial.print("RS");
                               }
                          }
                          else
@@ -825,18 +826,21 @@ void loop() {
         {
           c=mySerial.read();
           Serial.println(c);
+          analogWrite(10,70);
+          analogWrite(9,70);
         }
-        // This stopping mechanism should be reviewed again
-        //c==0: slave ratio <0.9, >0.7
-        //c==1: slave ratio <0.7
+        
+        //  This stopping mechanism should be reviewed again
+        //  c==0: slave ratio <0.9, >0.7
+        //  c==1: slave ratio <0.7
         if((c==0 && ratio<0.7) || (c==1 && ratio<0.92) )// Stop
         {
           Serial.print("ST,");
           analogWrite(10,0);
           analogWrite(9,0);}
         else if(c==0 && ratio>0.7 && ratio<0.9)
-        {
-          Serial.print("Dec,");
+        {          
+          Serial.println("Dec");
           analogWrite(10,70);
           analogWrite(9,70);
         }

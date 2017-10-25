@@ -149,7 +149,7 @@ uint8_t fifoBuffer[64]; // FIFO storage buffer
 unsigned long time1=0,time_old;
 float delta_t,SumMagAccel;
 //float delta_time;
-int run1=1,j,n_reset=15;
+int run1=1,j,n_reset=20;
 
 //============================
 //For Normal and Faster Speed
@@ -539,7 +539,7 @@ Data is printed as: acelX acelY acelZ giroX giroY giroZ
     //  =======================================================
 
     mySerial.begin(9600);
-    //delay(3000);
+    delay(3000);
 }
 
 
@@ -677,7 +677,8 @@ void loop() {
                           spd[1].z=0;   
                           AVAWorld.x=0;
                           AVAWorld.y=0;
-                          AVAWorld.z=0;                        
+                          AVAWorld.z=0; 
+                          peak_speed=0;                       
                         }
                         speed_calc(&spd[1],AVAWorld, delta_t);
                         //==================================================================//
@@ -728,7 +729,7 @@ void loop() {
                               // the value n_reset should be tuned, if it is too large then we can't reset the peak_speed, ex: 20 still fails in some case.
                               if(j==n_reset)// use j as a delay variable to reset peak_speed to Zero in order to catch another peak.
                               {
-                                peak_speed=0;
+//                                peak_speed=0;
                               }
                          }
                          else
