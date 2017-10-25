@@ -471,8 +471,8 @@ void setup() {
         else
            delay(10);
       }
-      analogWrite(10,75);
-      analogWrite(9,75);
+//      analogWrite(10,75);
+//      analogWrite(9,75);
   //==============================================================
   
     // join I2C bus (I2Cdev library doesn't do this automatically)
@@ -671,6 +671,8 @@ void loop() {
     
                 if(run1==1)
                 {
+                    analogWrite(10,75);
+                    analogWrite(9,75);
                     if (AVAWorld.mag()<AccelMagThreshold)
                       {
                         AVAWorldMagSeries[NumSamplesToSetZero-1]=0;
