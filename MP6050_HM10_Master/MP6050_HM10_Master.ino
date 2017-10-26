@@ -471,8 +471,8 @@ void setup() {
         else
            delay(10);
       }
-      analogWrite(10,75);
-      analogWrite(9,75);
+//      analogWrite(10,75);
+//      analogWrite(9,75);
   //==============================================================
   
     // join I2C bus (I2Cdev library doesn't do this automatically)
@@ -748,7 +748,8 @@ void loop() {
                           
                         // peak_speed>0.5 to prevent the small negative value at the beginning of foot step .
                         // absolute(spd[1].x)==0 before the condition j==n_reset is met, then we can't reset the temp var "peak_speed".
-                        if (abs_x < peak_speed && peak_speed>0.6 && abs_x!=0 ) //the value is going down (absolute(spd[1].x) < peak_speed) and the acceleration is zero.
+                        //if (abs_x < peak_speed && peak_speed>0.6 && abs_x!=0 ) //the value is going down (absolute(spd[1].x) < peak_speed) and the acceleration is zero.
+                        if (absolute(spd[1].x) < peak_speed && peak_speed>0.5 && absolute(spd[1].x)!=0 ) //the value is going down and the acceleration is zero.
                         {
                              
                               if (!j)// j==0
@@ -765,13 +766,17 @@ void loop() {
                                 ratio=peak_speeds[4]/avg_peak_speed;
                                 
                                 // this is at Master side
-//                                if (ratio<0.6)
-//                                {
-//                                  //mySerial.println(ratio);
-//                                  Serial.println("ST");
-//                                  analogWrite(10,0);
-//                                  analogWrite(9,0);
-//                                }
+                                if (ratio<0.92 && ratio >=0.7)
+                                {
+                                  //note on this
+                                  mySerial.write((byte)0x00);
+                                  Serial.println("Se1M");
+                                }
+                                else if(ratio<0.7 && ratio>0)
+                                {
+                                  mySerial.write(1);
+                                  Serial.println("Se2M");
+                                }
                               }
                               
                               j++;
@@ -839,10 +844,13 @@ void loop() {
         {
           Serial.println("ST");
           analogWrite(10,0);
-          analogWrite(9,0);}
-        else if(c==0 && ratio>0.7 && ratio<0.9)
+          analogWrite(9,0);
+          //mySerial.write(1);// signal the Slave to stop
+          }
+        else if(c==0 && ratio>0.7 && ratio<=0.92)
         {          
           Serial.println("Dec");
+          //mySerial.write(byte(0x00));  // signal the Slave to decrease speed
           analogWrite(10,70);
           analogWrite(9,70);
         }

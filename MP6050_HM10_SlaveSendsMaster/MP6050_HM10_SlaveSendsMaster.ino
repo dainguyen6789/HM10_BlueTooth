@@ -133,7 +133,10 @@ SoftwareSerial mySerial(7, 8); // RX, TX
 
 #define AccelSensitivity_8G
 
-
+//---------------------------------------------------------------------
+int fadeAmount = 5;     // how many points to fade the LED by
+int num_loop=0;
+int brightness = 55;    // how bright the LED is
 //---------------------------------------------------------------------
 
 #define LED_PIN 13 // (Arduino is 13, Teensy is 11, Teensy++ is 6)
@@ -150,7 +153,7 @@ unsigned long time1=0,time_old;
 float delta_t,SumMagAccel;
 //float delta_time;
 int run1=1,j,n_reset=20;
-
+char c=2;
 //============================
 //For Normal and Faster Speed
 //============================
@@ -179,7 +182,7 @@ float peak_speed,avg_peak_speed,ratio,peak_speeds[5];// we will monitor 4 previo
 float xx[5]={1,2,3,4,5};
 //============================
 
-int const NumOfSamples=5;
+int const NumOfSamples=3;//
 
 int16_t AccelX[NumOfSamples+1], AccelY[NumOfSamples+1], AccelZ[NumOfSamples+1];
 
@@ -429,6 +432,48 @@ uint8_t dmpGetLinearAccel_8G(VectorInt16 *v, VectorInt16 *vRaw, VectorFloat *gra
 // ================================================================
 
 void setup() {
+      // ================================================================
+      // ===                      Motor SETUP                       ===
+      // ================================================================
+      // declare pin 10 to be an output:
+       pinMode(10, OUTPUT);
+      //analogWrite(10, 0);
+      setPwmFrequency(10, 8);           //  3921.16 Hz
+      //analogWrite(10, 0);
+    
+    
+       pinMode(9, OUTPUT);
+      //analogWrite(10, 0);
+      setPwmFrequency(9, 8);           //  3921.16 Hz
+      //analogWrite(10, 0);
+    
+      //analogWrite(9, 0);
+      //analogWrite(10, 0);
+      while (num_loop<=25)
+      {
+
+        analogWrite(10,brightness);
+    
+        analogWrite(9,brightness);
+        
+        brightness = brightness + fadeAmount;
+        
+        num_loop++;
+        
+        if (brightness <= 0 || brightness >= 255) 
+        {
+          fadeAmount = -fadeAmount;      
+        }
+        if ( num_loop<=1 )
+        {
+           delay(3000);
+        }
+        else
+           delay(10);
+      }
+//      analogWrite(10,75);
+//      analogWrite(9,75);
+  //==============================================================
     // join I2C bus (I2Cdev library doesn't do this automatically)
     #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
         Wire.begin();
@@ -627,6 +672,8 @@ void loop() {
     
                 if(run1==1)
                 {
+                    analogWrite(10,75);
+                    analogWrite(9,75);
                     if (AVAWorld.mag()<AccelMagThreshold)
                       {
                         AVAWorldMagSeries[NumSamplesToSetZero-1]=0;
@@ -723,7 +770,7 @@ void loop() {
                                 {
                                   mySerial.write(1);
                                   Serial.println("Se2");}
-                                }
+                              }
                               
                               j++;
                               // the value n_reset should be tuned, if it is too large then we can't reset the peak_speed, ex: 20 still fails in some case.
@@ -778,6 +825,33 @@ void loop() {
             }
         #endif
 
+        
+        // if there is any signal from Master module, that means slave has to react 
+        if(mySerial.available())
+        {
+          c=mySerial.read();
+          Serial.println("RX");
+          analogWrite(10,70);
+          analogWrite(9,70);
+        }
+        
+        //  This stopping mechanism should be reviewed again
+        //  c==0: slave ratio <0.9, >0.7
+        //  c==1: slave ratio <0.7
+        if((c==0 && ratio<0.7) || (c==1 && ratio<0.92) )// Stop
+        {
+          Serial.println("ST");
+          analogWrite(10,0);
+          analogWrite(9,0);
+          //mySerial.write(1);// signal the Slave to stop
+          }
+        else if(c==0 && ratio>0.7 && ratio<=0.92)
+        {          
+          Serial.println("Dec");
+          analogWrite(10,70);
+          analogWrite(9,70);
+        }
+
 }
 
 float absolute(float x)
@@ -789,7 +863,45 @@ float absolute(float x)
 }
 
 
+void setPwmFrequency(int pin, int divisor) {
+  byte mode;
+  if(pin == 5 || pin == 6 || pin == 9 || pin == 10) {
+  /*    http://playground.arduino.cc/Main/TimerPWMCheatsheet
+   *     Setting   Divisor   Frequency
+  0x01    1     31372.55
+  0x02    8     3921.16
+  0x03      64    490.20   <--DEFAULT
+  0x04      256     122.55
+  0x05    1024    30.64
+  TCCR1B = (TCCR1B & 0b11111000) | <setting>; */
 
+    switch(divisor) {
+      case 1: mode = 0x01; break;
+      case 8: mode = 0x02; break;
+      case 64: mode = 0x03; break;
+      case 256: mode = 0x04; break;
+      case 1024: mode = 0x05; break;
+      default: return;
+    }
+    if(pin == 5 || pin == 6) {
+      TCCR0B = TCCR0B & 0b11111000 | mode;
+    } else {
+      TCCR1B = TCCR1B & 0b11111000 | mode;
+    }
+  } else if(pin == 3 || pin == 11) {
+    switch(divisor) {
+      case 1: mode = 0x01; break;
+      case 8: mode = 0x02; break;
+      case 32: mode = 0x03; break;
+      case 64: mode = 0x04; break;
+      case 128: mode = 0x05; break;
+      case 256: mode = 0x06; break;
+      case 1024: mode = 0x07; break;
+      default: return;
+    }
+    TCCR2B = TCCR2B & 0b11111000 | mode;
+  }
+}
 
 
 
