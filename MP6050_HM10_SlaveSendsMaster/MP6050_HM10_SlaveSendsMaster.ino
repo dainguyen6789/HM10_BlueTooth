@@ -449,7 +449,7 @@ void setup() {
     
       //analogWrite(9, 0);
       //analogWrite(10, 0);
-      while (num_loop<=25)
+      while (num_loop<=10) // 10 is used for XM20A ESC, 25 is used for SN40A ESC
       {
 
         analogWrite(10,brightness);
@@ -471,8 +471,8 @@ void setup() {
         else
            delay(10);
       }
-//      analogWrite(10,75);
-//      analogWrite(9,75);
+      analogWrite(10,45);
+      analogWrite(9,45);
   //==============================================================
     // join I2C bus (I2Cdev library doesn't do this automatically)
     #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
@@ -645,6 +645,8 @@ void loop() {
             if( time1<5000)
             {
               time1=millis();
+//              analogWrite(10,75);
+//              analogWrite(9,75);              
               }
             
             if (time1>5000)

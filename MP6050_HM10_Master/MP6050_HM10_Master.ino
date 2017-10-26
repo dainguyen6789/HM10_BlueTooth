@@ -449,7 +449,7 @@ void setup() {
     
       //analogWrite(9, 0);
       //analogWrite(10, 0);
-      while (num_loop<=25)
+      while (num_loop<=10)
       {
 
         analogWrite(10,brightness);
@@ -471,8 +471,8 @@ void setup() {
         else
            delay(10);
       }
-//      analogWrite(10,75);
-//      analogWrite(9,75);
+      analogWrite(10,45);
+      analogWrite(9,45);
   //==============================================================
   
     // join I2C bus (I2Cdev library doesn't do this automatically)
@@ -641,12 +641,12 @@ void loop() {
 
     
             #ifdef OUTPUT_READABLE_WORLDACCEL
-            if( time1<=2500)
+            if( time1<=5000)
             {
               time1=millis();
               }
             
-            if (time1>2500)
+            if (time1>5000)
             {
                 // display initial world-frame acceleration, adjusted to remove gravity
                 // and rotated based on known orientation from quaternion
