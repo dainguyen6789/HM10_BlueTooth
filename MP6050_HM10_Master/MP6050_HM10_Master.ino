@@ -182,7 +182,7 @@ float peak_speed,avg_peak_speed,ratio,peak_speeds[5],abs_x;// we will monitor 4 
 float xx[5]={1,2,3,4,5};
 //============================
 
-int const NumOfSamples=3;//
+int const NumOfSamples=1;//
 
 int16_t AccelX[NumOfSamples+1], AccelY[NumOfSamples+1], AccelZ[NumOfSamples+1];
 
@@ -588,7 +588,7 @@ void setup() {
     mySerial.print("AT+ROLE1");
     delay(1000);
     mySerial.print("AT+COND43639D711FA");
-    delay(1000);
+    delay(2000);
 }
 
 // ================================================================
@@ -826,7 +826,34 @@ void loop() {
                         Serial.print(peak_speeds[3]); 
                         Serial.print(",");
                         Serial.println(peak_speeds[4]); 
-                                               
+                                        
+                        if(mySerial.available())
+                        {
+                          c=mySerial.read();
+                          Serial.println("RX");
+                //          Serial.println(c);
+//                          analogWrite(10,70);
+//                          analogWrite(9,70);
+                        }
+                        
+                        //  This stopping mechanism should be reviewed again
+                        //  c==0: slave ratio <0.9, >0.7
+                        //  c==1: slave ratio <0.7
+                        if((c==0 && ratio<0.7) || (c==1 && ratio<0.92) )  // Stop
+                        {
+                          Serial.println("ST");
+                          analogWrite(10,0);
+                          analogWrite(9,0);
+                          mySerial.write(1);// signal the Slave to stop
+                          }
+                        else if(c==0 && ratio>0.7 && ratio<=0.92)
+                        {          
+                          Serial.println("Dec");
+                          //mySerial.write(byte(0x00));  // signal the Slave to decrease speed
+                          analogWrite(10,70);
+                          analogWrite(9,70);
+                        }
+                                                               
                         
               }
             //==================================================================//
@@ -838,32 +865,6 @@ void loop() {
             }
         #endif
 
-        if(mySerial.available())
-        {
-          c=mySerial.read();
-          Serial.println("RX");
-//          Serial.println(c);
-          analogWrite(10,70);
-          analogWrite(9,70);
-        }
-        
-        //  This stopping mechanism should be reviewed again
-        //  c==0: slave ratio <0.9, >0.7
-        //  c==1: slave ratio <0.7
-        if((c==0 && ratio<0.7) || (c==1 && ratio<0.92) )  // Stop
-        {
-          Serial.println("ST");
-          analogWrite(10,0);
-          analogWrite(9,0);
-          //  mySerial.write(1);// signal the Slave to stop
-          }
-        else if(c==0 && ratio>0.7 && ratio<=0.92)
-        {          
-          Serial.println("Dec");
-          //mySerial.write(byte(0x00));  // signal the Slave to decrease speed
-          analogWrite(10,70);
-          analogWrite(9,70);
-        }
          
 }
 

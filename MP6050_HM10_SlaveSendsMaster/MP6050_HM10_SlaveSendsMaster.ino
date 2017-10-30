@@ -182,7 +182,7 @@ float peak_speed,avg_peak_speed,ratio,peak_speeds[5];// we will monitor 4 previo
 float xx[5]={1,2,3,4,5};
 //============================
 
-int const NumOfSamples=3;//
+int const NumOfSamples=1;//
 
 int16_t AccelX[NumOfSamples+1], AccelY[NumOfSamples+1], AccelZ[NumOfSamples+1];
 
@@ -425,7 +425,54 @@ uint8_t dmpGetLinearAccel_8G(VectorInt16 *v, VectorInt16 *vRaw, VectorFloat *gra
     return 0;
 }
 
+void setPwmFrequency(int pin, int divisor) {
+  byte mode;
+  if(pin == 5 || pin == 6 || pin == 9 || pin == 10) {
+  /*    http://playground.arduino.cc/Main/TimerPWMCheatsheet
+   *     Setting   Divisor   Frequency
+  0x01    1     31372.55
+  0x02    8     3921.16
+  0x03      64    490.20   <--DEFAULT
+  0x04      256     122.55
+  0x05    1024    30.64
+  TCCR1B = (TCCR1B & 0b11111000) | <setting>; */
 
+    switch(divisor) {
+      case 1: mode = 0x01; break;
+      case 8: mode = 0x02; break;
+      case 64: mode = 0x03; break;
+      case 256: mode = 0x04; break;
+      case 1024: mode = 0x05; break;
+      default: return;
+    }
+    if(pin == 5 || pin == 6) {
+      TCCR0B = TCCR0B & 0b11111000 | mode;
+    } else {
+      TCCR1B = TCCR1B & 0b11111000 | mode;
+    }
+  } else if(pin == 3 || pin == 11) {
+    switch(divisor) {
+      case 1: mode = 0x01; break;
+      case 8: mode = 0x02; break;
+      case 32: mode = 0x03; break;
+      case 64: mode = 0x04; break;
+      case 128: mode = 0x05; break;
+      case 256: mode = 0x06; break;
+      case 1024: mode = 0x07; break;
+      default: return;
+    }
+    TCCR2B = TCCR2B & 0b11111000 | mode;
+  }
+}
+
+
+float absolute(float x)
+{
+  if (x>0)
+    return x;
+  else
+    return -x;
+}
 
 // ================================================================
 // ===                      INITIAL SETUP                       ===
@@ -438,7 +485,7 @@ void setup() {
       // declare pin 10 to be an output:
        pinMode(10, OUTPUT);
       //analogWrite(10, 0);
-      setPwmFrequency(10, 8);           //  3921.16 Hz
+      setPwmFrequency(10,8);           //  3921.16 Hz
       //analogWrite(10, 0);
     
     
@@ -854,8 +901,8 @@ void loop() {
           Serial.println("ST");
           analogWrite(10,0);
           analogWrite(9,0);
-          //mySerial.write(1);// signal the Slave to stop
-          }
+          mySerial.write(1);// signal the Slave to stop
+        }
         else if(c==0 && ratio>0.7 && ratio<=0.92)
         {          
           Serial.println("Dec");
@@ -865,54 +912,10 @@ void loop() {
 
 }
 
-float absolute(float x)
-{
-  if (x>0)
-    return x;
-  else
-    return -x;
-}
 
 
-void setPwmFrequency(int pin, int divisor) {
-  byte mode;
-  if(pin == 5 || pin == 6 || pin == 9 || pin == 10) {
-  /*    http://playground.arduino.cc/Main/TimerPWMCheatsheet
-   *     Setting   Divisor   Frequency
-  0x01    1     31372.55
-  0x02    8     3921.16
-  0x03      64    490.20   <--DEFAULT
-  0x04      256     122.55
-  0x05    1024    30.64
-  TCCR1B = (TCCR1B & 0b11111000) | <setting>; */
 
-    switch(divisor) {
-      case 1: mode = 0x01; break;
-      case 8: mode = 0x02; break;
-      case 64: mode = 0x03; break;
-      case 256: mode = 0x04; break;
-      case 1024: mode = 0x05; break;
-      default: return;
-    }
-    if(pin == 5 || pin == 6) {
-      TCCR0B = TCCR0B & 0b11111000 | mode;
-    } else {
-      TCCR1B = TCCR1B & 0b11111000 | mode;
-    }
-  } else if(pin == 3 || pin == 11) {
-    switch(divisor) {
-      case 1: mode = 0x01; break;
-      case 8: mode = 0x02; break;
-      case 32: mode = 0x03; break;
-      case 64: mode = 0x04; break;
-      case 128: mode = 0x05; break;
-      case 256: mode = 0x06; break;
-      case 1024: mode = 0x07; break;
-      default: return;
-    }
-    TCCR2B = TCCR2B & 0b11111000 | mode;
-  }
-}
+
 
 
 
