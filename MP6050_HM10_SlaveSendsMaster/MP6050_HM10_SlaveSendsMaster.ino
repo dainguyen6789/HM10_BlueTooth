@@ -674,8 +674,17 @@ void loop() {
     
                 if(run1==1)
                 {
+                    analogWrite(10,70);
+                    analogWrite(9,70);  
+                    delay(250);                  
                     analogWrite(10,75);
-                    analogWrite(9,75);
+                    analogWrite(9,75);   
+                    delay(250);                    
+                    analogWrite(10,85);
+                    analogWrite(9,85);
+                    delay(250);   
+                    analogWrite(10,90);
+                    analogWrite(9,90);
                     if (AVAWorld.mag()<AccelMagThreshold)
                       {
                         AVAWorldMagSeries[NumSamplesToSetZero-1]=0;
@@ -833,8 +842,8 @@ void loop() {
         {
           c=mySerial.read();
           Serial.println("RX");
-          analogWrite(10,70);
-          analogWrite(9,70);
+//          analogWrite(10,70);
+//          analogWrite(9,70);
         }
         
         //  This stopping mechanism should be reviewed again

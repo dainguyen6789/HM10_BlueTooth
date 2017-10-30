@@ -671,8 +671,17 @@ void loop() {
     
                 if(run1==1)
                 {
+                    analogWrite(10,70);
+                    analogWrite(9,70);  
+                    delay(250);                  
                     analogWrite(10,75);
-                    analogWrite(9,75);
+                    analogWrite(9,75);   
+                    delay(250);                    
+                    analogWrite(10,85);
+                    analogWrite(9,85);
+                    delay(250);   
+                    analogWrite(10,90);
+                    analogWrite(9,90);
                     if (AVAWorld.mag()<AccelMagThreshold)
                       {
                         AVAWorldMagSeries[NumSamplesToSetZero-1]=0;
@@ -823,7 +832,7 @@ void loop() {
             //==================================================================//
             //==============       BLE SoftwareSerial Print      ===============//
             //==================================================================//  
-//            mySerial.println(AVAWorld.x);
+            //            mySerial.println(AVAWorld.x);
 
 
             }
@@ -832,7 +841,8 @@ void loop() {
         if(mySerial.available())
         {
           c=mySerial.read();
-          Serial.println(c);
+          Serial.println("RX");
+//          Serial.println(c);
           analogWrite(10,70);
           analogWrite(9,70);
         }
@@ -840,12 +850,12 @@ void loop() {
         //  This stopping mechanism should be reviewed again
         //  c==0: slave ratio <0.9, >0.7
         //  c==1: slave ratio <0.7
-        if((c==0 && ratio<0.7) || (c==1 && ratio<0.92) )// Stop
+        if((c==0 && ratio<0.7) || (c==1 && ratio<0.92) )  // Stop
         {
           Serial.println("ST");
           analogWrite(10,0);
           analogWrite(9,0);
-          //mySerial.write(1);// signal the Slave to stop
+          //  mySerial.write(1);// signal the Slave to stop
           }
         else if(c==0 && ratio>0.7 && ratio<=0.92)
         {          
