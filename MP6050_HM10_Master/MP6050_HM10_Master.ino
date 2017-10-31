@@ -182,7 +182,7 @@ float peak_speed,avg_peak_speed,ratio,peak_speeds[5],abs_x;// we will monitor 4 
 float xx[5]={1,2,3,4,5};
 //============================
 
-int const NumOfSamples=5;
+int const NumOfSamples=3;
 
 int16_t AccelX[NumOfSamples+1], AccelY[NumOfSamples+1], AccelZ[NumOfSamples+1];
 
@@ -716,7 +716,7 @@ void loop() {
                         abs_x=absolute(spd[1].x);
                         //==================================================================//
                         
-                        if(SumMagAccel==0 && abs_x<0.7)// add abs_x<0.8 to prevent wrong speed reset :((
+                        if(SumMagAccel==0)// add abs_x<0.8 to prevent wrong speed reset :((
                         {
                           // we should realize the peak value and do not reset the speed to zero
 //                          Serial.print("here,");
@@ -799,6 +799,8 @@ void loop() {
                                           
 //                        Serial.print(time1);
 //                        Serial.print(",");
+                        Serial.print(AVAWorld.x);
+                        Serial.print(",");
                         Serial.print(spd[1].x);
                         Serial.print(",");
                         Serial.print(peak_speeds[0]);
