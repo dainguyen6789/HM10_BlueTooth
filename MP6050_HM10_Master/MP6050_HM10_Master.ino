@@ -143,7 +143,7 @@ int brightness = 55;    // how bright the LED is
 bool blinkState = false;
 
 // MPU control/status vars
-bool dmpReady = false;  // set true if DMP init was successful
+bool dmpReady = false,ignore_next_pk=false;  // set true if DMP init was successful
 uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
 uint8_t devStatus;      // return status after each device operation (0 = success, !0 = error)
 uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
@@ -730,7 +730,7 @@ void loop() {
                         
                         if(SumMagAccel==0 )// if add abs_x<0.8 can prevent wrong speed reset, but fail to reset spd to Zero in some cases :((
                         {
-                          peak_count=0;
+                          
                           // we should realize the peak value and do not reset the speed to zero
                           // if(abs_x<0.7)
                           {
@@ -752,9 +752,7 @@ void loop() {
 
 //                      per our test, the peak value of normal walk will never drop below 0.8
                         if (abs_x>0.8)
-                        {
-                          if (abs_x>peak_speed)
-                          peak_count++;// peak_count will be 1 at the wrong peak reset, and can't increase his value.
+                        {                          
                           peak_speed=max(peak_speed,abs_x); // we have to use our own absolute function because built-in abs() returns int value
                         }
                         
@@ -765,55 +763,82 @@ void loop() {
                         //==================================================================//  
                         //==================================================================//    
                           
-                        // peak_speed>0.5 to prevent the small negative value at the beginning of foot step .
-                        // absolute(spd[1].x)==0 before the condition j==n_reset is met, then we can't reset the temp var "peak_speed".
-                        //if (abs_x < peak_speed && peak_speed>0.6 && abs_x!=0 ) //the value is going down (absolute(spd[1].x) < peak_speed) and the acceleration is zero.
-                        if (absolute(spd[1].x) < peak_speed && peak_speed>0.5 && absolute(spd[1].x)!=0 && peak_count>2) //the value is going down and the acceleration is zero.
+                        //  peak_speed>0.5 to prevent the small negative value at the beginning of foot step .
+                        //  absolute(spd[1].x)==0 before the condition j==n_reset is met, then we can't reset the temp var "peak_speed".
+                        //  if (abs_x < peak_speed && peak_speed>0.6 && abs_x!=0 ) //the value is going down (absolute(spd[1].x) < peak_speed) and the acceleration is zero.
+                        if (absolute(spd[1].x) < peak_speed && peak_speed>0.5 && ignore_next_pk==false) //the value is going down and the acceleration is zero.
                         {
-                             
-                              if (!j)// j==0
+                              if (absolute(spd[1].x)==0 && ignore_next_pk==false)
                               {
-                                peak_speeds[0]=peak_speeds[1];
-                                peak_speeds[1]=peak_speeds[2];
-                                peak_speeds[2]=peak_speeds[3];
-                                peak_speeds[3]=peak_speeds[4]; 
-                                peak_speeds[4]=peak_speed;
-                                
-                                avg_peak_speed=(peak_speeds[0]+peak_speeds[1]+peak_speeds[2]+peak_speeds[3])/4;
-                                
-                                //  tend to reduce the user's speed
-                                ratio=peak_speeds[4]/avg_peak_speed;
-                                
-                                // this is at Master side
-                                if (ratio<0.92 && ratio >=0.7)
+                                ignore_next_pk=true;
+                                if (!j)// j==0
                                 {
-                                  //note on this
-                                  mySerial.write((byte)0x00);
-                                  Serial.println("Se1M");
+                                  peak_speeds[0]=peak_speeds[1];
+                                  peak_speeds[1]=peak_speeds[2];
+                                  peak_speeds[2]=peak_speeds[3];
+                                  peak_speeds[3]=peak_speeds[4]; 
+                                  peak_speeds[4]=peak_speed;
+                                  
+                                  avg_peak_speed=(peak_speeds[0]+peak_speeds[1]+peak_speeds[2]+peak_speeds[3])/4;
+                                  
+                                  //  tend to reduce the user's speed
+                                  ratio=peak_speeds[4]/avg_peak_speed;
+                                  
+                                  // this is at Master side
+                                  if (ratio<0.92 && ratio >=0.7)
+                                  {
+                                    //note on this
+                                    mySerial.write((byte)0x00);
+                                    Serial.println("Se1M");
+                                  }
+                                  else if(ratio<0.7 && ratio>0)
+                                  {
+                                    mySerial.write(1);
+                                    Serial.println("Se2M");
+                                  }
                                 }
-                                else if(ratio<0.7 && ratio>0)
+                              }
+                              else if ( absolute(spd[1].x)==0 && ignore_next_pk==true)
+                              {
+                                ignore_next_pk=false;
+                              }
+                              else //absolute(spd[1].x)!=0
+                              {
+                                 ignore_next_pk=false;
+                                 if (!j)// j==0
                                 {
-                                  mySerial.write(1);
-                                  Serial.println("Se2M");
+                                  peak_speeds[0]=peak_speeds[1];
+                                  peak_speeds[1]=peak_speeds[2];
+                                  peak_speeds[2]=peak_speeds[3];
+                                  peak_speeds[3]=peak_speeds[4]; 
+                                  peak_speeds[4]=peak_speed;
+                                  
+                                  avg_peak_speed=(peak_speeds[0]+peak_speeds[1]+peak_speeds[2]+peak_speeds[3])/4;
+                                  
+                                  //  tend to reduce the user's speed
+                                  ratio=peak_speeds[4]/avg_peak_speed;
+                                  
+                                  // this is at Master side
+                                  if (ratio<0.92 && ratio >=0.7)
+                                  {
+                                    //note on this
+                                    mySerial.write((byte)0x00);
+                                    Serial.println("Se1M");
+                                  }
+                                  else if(ratio<0.7 && ratio>0)
+                                  {
+                                    mySerial.write(1);
+                                    Serial.println("Se2M");
+                                  }
                                 }
                               }
                               
-                              j++;
-                              
-                              // the value n_reset should be tuned, if it is too large then we can't reset the peak_speed, ex: 20 still fails in some case.
-                              // n_reset should be dynamically changed depend on the peak value
-                              // idea: catch the time from the beginning of foot step and at its peak speed
-                              
-                              if(j==n_reset)// use j as a delay variable to reset peak_speed to Zero in order to catch another peak.
-                              {
-//                                peak_speed=0;
-//                                Serial.print("RS");
-                              }
+                             j++;
                          }
                          else
                          {
                           j=0;
-                          }
+                         }
 
 
 
