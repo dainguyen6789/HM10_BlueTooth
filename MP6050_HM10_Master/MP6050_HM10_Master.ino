@@ -182,13 +182,14 @@ float peak_speed,avg_peak_speed,ratio,peak_speeds[5],abs_x;// we will monitor 4 
 float xx[5]={1,2,3,4,5};
 //============================
 
-int const NumOfSamples=1;//
+int const NumOfSamples=3;//
 
 int16_t AccelX[NumOfSamples+1], AccelY[NumOfSamples+1], AccelZ[NumOfSamples+1];
 
 //============================
-
-int count=0;            // initial value to count the number of samples to compute average
+// Add peak_count variable in order to combat with wrong reset speed, this variable will help to ignore wrong peaks
+// The idea is that peak value can only be obtained after a finite number of loops (>10 loop), we can not obtain it immediately after reseting the speed
+int count=0,peak_count;            // initial value to count the number of samples to compute average
 
 VectorFloat gravity;    // [x, y, z]            gravity vector, ///////////////////class VectorFloat is defined in helper_3dmath.h
 float euler[3];         // [psi, theta, phi]    Euler angle container
@@ -721,32 +722,41 @@ void loop() {
                         for(int ii=0;ii<NumSamplesToSetZero;ii++)
                         {
                            SumMagAccel+=AVAWorldMagSeries[ii];
-                          }
+                         }
                           
                         //==================================================================//
-                        abs_x=absolute(spd[1].x);
+                        //abs_x=absolute(spd[1].x);
                         //==================================================================//
                         
-                        if(SumMagAccel==0 && abs_x<0.7)// add abs_x<0.8 to prevent wrong speed reset :((
+                        if(SumMagAccel==0 )// if add abs_x<0.8 can prevent wrong speed reset, but fail to reset spd to Zero in some cases :((
                         {
+                          peak_count=0;
                           // we should realize the peak value and do not reset the speed to zero
-//                          Serial.print("here,");
-                          spd[1].x=0;
-                          spd[1].y=0;
-                          spd[1].z=0; 
+                          // if(abs_x<0.7)
+                          {
+                            spd[1].x=0;
+                            spd[1].y=0;
+                            spd[1].z=0; 
+                            peak_speed=0;                        
+
+                          }
                           AVAWorld.x=0;
                           AVAWorld.y=0;
                           AVAWorld.z=0; 
-                          peak_speed=0;                        
                         }
                         speed_calc(&spd[1],AVAWorld, delta_t);
+                        abs_x=absolute(spd[1].x);
                         //==================================================================//
                         //  Catch the peak speed value, minor bug when move at low speed
                         //==================================================================//
 
 //                      per our test, the peak value of normal walk will never drop below 0.8
                         if (abs_x>0.8)
-                        peak_speed=max(peak_speed,abs_x); // we have to use our own absolute function because built-in abs() returns int value
+                        {
+                          if (abs_x>peak_speed)
+                          peak_count++;// peak_count will be 1 at the wrong peak reset, and can't increase his value.
+                          peak_speed=max(peak_speed,abs_x); // we have to use our own absolute function because built-in abs() returns int value
+                        }
                         
                         //==================================================================//
                         //        CATCH PEAK SPEED VALUES
@@ -758,7 +768,7 @@ void loop() {
                         // peak_speed>0.5 to prevent the small negative value at the beginning of foot step .
                         // absolute(spd[1].x)==0 before the condition j==n_reset is met, then we can't reset the temp var "peak_speed".
                         //if (abs_x < peak_speed && peak_speed>0.6 && abs_x!=0 ) //the value is going down (absolute(spd[1].x) < peak_speed) and the acceleration is zero.
-                        if (absolute(spd[1].x) < peak_speed && peak_speed>0.5 && absolute(spd[1].x)!=0 ) //the value is going down and the acceleration is zero.
+                        if (absolute(spd[1].x) < peak_speed && peak_speed>0.5 && absolute(spd[1].x)!=0 && peak_count>2) //the value is going down and the acceleration is zero.
                         {
                              
                               if (!j)// j==0
