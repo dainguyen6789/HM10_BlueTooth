@@ -143,13 +143,13 @@ int brightness = 55;    // how bright the LED is
 bool blinkState = false;
 
 // MPU control/status vars
-bool dmpReady = false;  // set true if DMP init was successful
+bool dmpReady = false,fst_peak=true;  // set true if DMP init was successful
 uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
 uint8_t devStatus;      // return status after each device operation (0 = success, !0 = error)
 uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
 uint16_t fifoCount;     // count of all bytes currently in FIFO
 uint8_t fifoBuffer[64]; // FIFO storage buffer
-unsigned long time1=0,time_old,peak_time1,peak_time2,pk_time_threshold=600;
+unsigned long time1=0,time_old,pk_time1,pk_time2,pk_time_threshold=1000;
 float delta_t,SumMagAccel;
 //float delta_time;
 int run1=1,j,n_reset=20;
@@ -164,7 +164,7 @@ int run1=1,j,n_reset=20;
 //============================
 //For Fastest Speed;
 //============================
-float AccelMagThreshold=1.5;
+float AccelMagThreshold=2.5;
 const int NumSamplesToSetZero=2;
 
 // orientation/motion vars
@@ -724,10 +724,11 @@ void loop() {
                           }
                           
                         //==================================================================//
-                        abs_x=absolute(spd[1].x);
+
                         //==================================================================//
-                        
-                        if(SumMagAccel==0 && abs_x<0.7)// add abs_x<0.8 to prevent wrong speed reset :((
+                        speed_calc(&spd[1],AVAWorld, delta_t);
+                                              
+                        if(SumMagAccel==0 )// add abs_x<0.8 to prevent wrong speed reset :((
                         {
                           // we should realize the peak value and do not reset the speed to zero
 //                          Serial.print("here,");
@@ -737,13 +738,13 @@ void loop() {
                           AVAWorld.x=0;
                           AVAWorld.y=0;
                           AVAWorld.z=0; 
-                          peak_speed=0;                        
+                          peak_speed=0; 
+                          peak_speed=0;                       
                         }
-                        speed_calc(&spd[1],AVAWorld, delta_t);
                         //==================================================================//
                         //  Catch the peak speed value, minor bug when move at low speed
                         //==================================================================//
-
+                        abs_x=absolute(spd[1].x);  
 //                      per our test, the peak value of normal walk will never drop below 0.8
                         if (abs_x>0.8)
                         peak_speed=max(peak_speed,abs_x); // we have to use our own absolute function because built-in abs() returns int value
@@ -761,10 +762,10 @@ void loop() {
                         if (absolute(spd[1].x) < peak_speed && peak_speed>0.5 && absolute(spd[1].x)!=0 ) //the value is going down and the acceleration is zero.
                         {
                               
-                             if(1st_peak)
+                             if(fst_peak)
                              {
                               pk_time1=millis();
-                              1st_peak=false;
+                              fst_peak=false;
                               }
                               else
                               {
