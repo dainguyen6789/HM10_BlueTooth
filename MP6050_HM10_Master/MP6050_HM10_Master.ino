@@ -149,7 +149,7 @@ uint8_t devStatus;      // return status after each device operation (0 = succes
 uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
 uint16_t fifoCount;     // count of all bytes currently in FIFO
 uint8_t fifoBuffer[64]; // FIFO storage buffer
-unsigned long time1=0,time_old;
+unsigned long time1=0,time_old,peak_time1,peak_time2,pk_time_threshold=600;
 float delta_t,SumMagAccel;
 //float delta_time;
 int run1=1,j,n_reset=20;
@@ -760,32 +760,46 @@ void loop() {
                         //if (abs_x < peak_speed && peak_speed>0.6 && abs_x!=0 ) //the value is going down (absolute(spd[1].x) < peak_speed) and the acceleration is zero.
                         if (absolute(spd[1].x) < peak_speed && peak_speed>0.5 && absolute(spd[1].x)!=0 ) //the value is going down and the acceleration is zero.
                         {
-                             
-                              if (!j)// j==0
+                              
+                             if(1st_peak)
+                             {
+                              pk_time1=millis();
+                              1st_peak=false;
+                              }
+                              else
                               {
-                                peak_speeds[0]=peak_speeds[1];
-                                peak_speeds[1]=peak_speeds[2];
-                                peak_speeds[2]=peak_speeds[3];
-                                peak_speeds[3]=peak_speeds[4]; 
-                                peak_speeds[4]=peak_speed;
-                                
-                                avg_peak_speed=(peak_speeds[0]+peak_speeds[1]+peak_speeds[2]+peak_speeds[3])/4;
-                                
-                                //  tend to reduce the user's speed
-                                ratio=peak_speeds[4]/avg_peak_speed;
-                                
-                                // this is at Master side
-                                if (ratio<0.92 && ratio >=0.7)
+                                if (!j)// j==0
                                 {
-                                  //note on this
-                                  mySerial.write((byte)0x00);
-                                  Serial.println("Se1M");
-                                }
-                                else if(ratio<0.7 && ratio>0)
-                                {
-                                  mySerial.write(1);
-                                  Serial.println("Se2M");
-                                }
+                                    // use time to detect infeasible peaks
+                                    pk_time2=pk_time1;
+                                    pk_time1=millis();
+                                    if(pk_time1-pk_time2>pk_time_threshold)
+                                    {
+                                      peak_speeds[0]=peak_speeds[1];
+                                      peak_speeds[1]=peak_speeds[2];
+                                      peak_speeds[2]=peak_speeds[3];
+                                      peak_speeds[3]=peak_speeds[4]; 
+                                      peak_speeds[4]=peak_speed;
+                                      
+                                      avg_peak_speed=(peak_speeds[0]+peak_speeds[1]+peak_speeds[2]+peak_speeds[3])/4;
+                                      
+                                      //  tend to reduce the user's speed
+                                      ratio=peak_speeds[4]/avg_peak_speed;
+                                      
+                                      // this is at Master side
+                                      if (ratio<0.92 && ratio >=0.7)
+                                      {
+                                        //note on this
+                                        mySerial.write((byte)0x00);
+                                        Serial.println("Se1M");
+                                      }
+                                      else if(ratio<0.7 && ratio>0)
+                                      {
+                                        mySerial.write(1);
+                                        Serial.println("Se2M");
+                                      }
+                                    }
+                                  }
                               }
                               
                               j++;
