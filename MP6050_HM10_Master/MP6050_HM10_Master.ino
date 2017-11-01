@@ -179,7 +179,7 @@ float aaWorldY;
 float aaWorldZ;
 
 float peak_speed,avg_peak_speed,ratio,peak_speeds[5],abs_x;// we will monitor 4 previous peak speed values
-float xx[5]={1,2,3,4,5};
+//float xx[5]={1,2,3,4,5};
 //============================
 
 int const NumOfSamples=1;// num of sample to average
@@ -764,44 +764,39 @@ void loop() {
                         if (absolute(spd[1].x) < peak_speed && peak_speed>0.5 && absolute(spd[1].x)!=0 ) //the value is going down and the acceleration is zero.
                         {
                               
-                                if (!j)// j==0
+                          if (!j)// j==0
+                          {
+  
+                                peak_speeds[0]=peak_speeds[1];
+                                peak_speeds[1]=peak_speeds[2];
+                                peak_speeds[2]=peak_speeds[3];
+                                peak_speeds[3]=peak_speeds[4]; 
+                                peak_speeds[4]=peak_speed;
+                                
+                                avg_peak_speed=(peak_speeds[0]+peak_speeds[1]+peak_speeds[2]+peak_speeds[3])/4;
+                                
+                                //  tend to reduce the user's speed
+                                ratio=peak_speeds[4]/avg_peak_speed;
+                                
+                                // this is at Master side
+                                if (ratio<0.92 && ratio >=0.7)
                                 {
-
-                                      peak_speeds[0]=peak_speeds[1];
-                                      peak_speeds[1]=peak_speeds[2];
-                                      peak_speeds[2]=peak_speeds[3];
-                                      peak_speeds[3]=peak_speeds[4]; 
-                                      peak_speeds[4]=peak_speed;
-                                      
-                                      avg_peak_speed=(peak_speeds[0]+peak_speeds[1]+peak_speeds[2]+peak_speeds[3])/4;
-                                      
-                                      //  tend to reduce the user's speed
-                                      ratio=peak_speeds[4]/avg_peak_speed;
-                                      
-                                      // this is at Master side
-                                      if (ratio<0.92 && ratio >=0.7)
-                                      {
-                                        //note on this
-                                        mySerial.write((byte)0x00);
-                                        Serial.println("Se1M");
-                                      }
-                                      else if(ratio<0.7 && ratio>0)
-                                      {
-                                        mySerial.write(1);
-                                        Serial.println("Se2M");
-                                      }
-                                    
-                                  
-                              }
-                              
-                              j=1;
-                              
-
+                                  //note on this
+                                  mySerial.write((byte)0x00);
+                                  Serial.println("Se1M");
+                                }
+                                else if(ratio<0.7 && ratio>0)
+                                {
+                                  mySerial.write(1);
+                                  Serial.println("Se2M");
+                                }
+                          }
+                          j=1;
                          }
                          else
                          {
                           j=0;
-                          }
+                         }
 
 
 
