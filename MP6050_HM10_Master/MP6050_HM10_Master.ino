@@ -149,10 +149,10 @@ uint8_t devStatus;      // return status after each device operation (0 = succes
 uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
 uint16_t fifoCount;     // count of all bytes currently in FIFO
 uint8_t fifoBuffer[64]; // FIFO storage buffer
-unsigned long time1=0,time_old,pk_time1,pk_time2,pk_time_threshold=1000;
+unsigned long time1=0,time_old;
 float delta_t,SumMagAccel;
 //float delta_time;
-int run1=1,j,n_reset=20;
+int run1=1,j;
 
 //============================
 //For Normal and Faster Speed
@@ -165,7 +165,7 @@ int run1=1,j,n_reset=20;
 //For Fastest Speed;
 //============================
 float AccelMagThreshold=1.5;
-const int NumSamplesToSetZero=10;
+const int NumSamplesToSetZero=12;
 
 // orientation/motion vars
 Quaternion q;           // [w, x, y, z]         quaternion container
@@ -182,7 +182,7 @@ float peak_speed,avg_peak_speed,ratio,peak_speeds[5],abs_x;// we will monitor 4 
 float xx[5]={1,2,3,4,5};
 //============================
 
-int const NumOfSamples=1;//
+int const NumOfSamples=1;// num of sample to average
 
 int16_t AccelX[NumOfSamples+1], AccelY[NumOfSamples+1], AccelZ[NumOfSamples+1];
 
@@ -211,13 +211,13 @@ class AvgAccel{
   
   };
   
-int const NumOfAccelSampletoZero=3;
+//int const NumOfAccelSampletoZero=3;
 
 AvgAccel AVAWorld,AVAWorld_Zero;
 float AVAWorldMagSeries[NumSamplesToSetZero];
 
 
-AvgAccel aaWorld5[NumOfAccelSampletoZero];
+//AvgAccel aaWorld5[NumOfAccelSampletoZero];
 
 class Speed{
   public:
@@ -742,7 +742,6 @@ void loop() {
                           AVAWorld.y=0;
                           AVAWorld.z=0; 
                           peak_speed=0; 
-                          peak_speed=0;                       
                         }
                         //==================================================================//
                         //  Catch the peak speed value, minor bug when move at low speed
