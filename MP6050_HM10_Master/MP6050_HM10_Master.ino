@@ -767,11 +767,7 @@ void loop() {
                               
                                 if (!j)// j==0
                                 {
-                                    // use time to detect infeasible peaks
-                                    pk_time2=pk_time1;
-                                    pk_time1=millis();
-                                    if(pk_time1-pk_time2>pk_time_threshold)
-                                    {
+
                                       peak_speeds[0]=peak_speeds[1];
                                       peak_speeds[1]=peak_speeds[2];
                                       peak_speeds[2]=peak_speeds[3];
@@ -795,11 +791,11 @@ void loop() {
                                         mySerial.write(1);
                                         Serial.println("Se2M");
                                       }
-                                    }
+                                    
                                   
                               }
                               
-                              j++;
+                              j=1;
                               
 
                          }
@@ -810,33 +806,29 @@ void loop() {
 
 
 
-//                        spd[0].x=abs(spd[1].x);
+
 
                         //==================================================================//
                         //==============              Serial Print           ===============//
                         //==================================================================//  
-                                          
-//                        Serial.print(time1);
+                        Serial.print(AVAWorld.x); 
+                        Serial.print(",");             
+                        Serial.println(spd[1].x);
 //                        Serial.print(",");
-                        Serial.print(spd[1].x);
-                        Serial.print(",");
-                        Serial.print(peak_speeds[0]);
-                        Serial.print(",");
-                        Serial.print(peak_speeds[1]);
-                        Serial.print(",");
-                        Serial.print(peak_speeds[2]);
-                        Serial.print(",");
-                        Serial.print(peak_speeds[3]); 
-                        Serial.print(",");
-                        Serial.println(peak_speeds[4]); 
+//                        Serial.print(peak_speeds[0]);
+//                        Serial.print(",");
+//                        Serial.print(peak_speeds[1]);
+//                        Serial.print(",");
+//                        Serial.print(peak_speeds[2]);
+//                        Serial.print(",");
+//                        Serial.print(peak_speeds[3]); 
+//                        Serial.print(",");
+//                        Serial.println(peak_speeds[4]); 
                                         
                         if(mySerial.available())
                         {
                           c=mySerial.read();
                           Serial.println("RX");
-                //          Serial.println(c);
-//                          analogWrite(10,70);
-//                          analogWrite(9,70);
                         }
                         
                         //  This stopping mechanism should be reviewed again
@@ -852,7 +844,7 @@ void loop() {
                         else if(c==0 && ratio>0.7 && ratio<=0.92)
                         {          
                           Serial.println("Dec");
-                          //mySerial.write(byte(0x00));  // signal the Slave to decrease speed
+                          mySerial.write(byte(0x00));  // signal the Slave to decrease speed
                           analogWrite(10,70);
                           analogWrite(9,70);
                         }
