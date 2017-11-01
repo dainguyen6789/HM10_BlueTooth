@@ -667,8 +667,11 @@ void loop() {
                 #endif
                 
                 mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
-                AverageAccel(&AVAWorld);
-    
+                //AverageAccel(&AVAWorld);
+                AVAWorld.x= (float) aaWorld.x*9.81/2048.0;
+                AVAWorld.y= (float) aaWorld.y*9.81/2048.0;
+                AVAWorld.z= (float) aaWorld.z*9.81/2048.0;
+                
                 if(run1==1)
                 {
                     analogWrite(10,70);
@@ -682,13 +685,13 @@ void loop() {
                     delay(250);   
                     analogWrite(10,90);
                     analogWrite(9,90);
-                    if (AVAWorld.mag()<AccelMagThreshold)
+                    if (absolute(AVAWorld.x)<AccelMagThreshold)
                       {
                         AVAWorldMagSeries[NumSamplesToSetZero-1]=0;
                       }
                       else
                       {
-                        AVAWorldMagSeries[NumSamplesToSetZero-1]= AVAWorld.mag(); 
+                        AVAWorldMagSeries[NumSamplesToSetZero-1]= absolute(AVAWorld.x); 
                       }
                     time1=millis();
                     run1++;
@@ -700,13 +703,13 @@ void loop() {
                         AVAWorldMagSeries[ii]= AVAWorldMagSeries[ii+1];
                       }
                    
-                    if (AVAWorld.mag()<AccelMagThreshold)
+                    if (absolute(AVAWorld.x)<AccelMagThreshold)
                       {
                         AVAWorldMagSeries[NumSamplesToSetZero-1]=0;
                       }
                       else
                       {
-                        AVAWorldMagSeries[NumSamplesToSetZero-1]= AVAWorld.mag(); 
+                        AVAWorldMagSeries[NumSamplesToSetZero-1]= absolute(AVAWorld.x); 
                       }
                     
                     time_old=time1;
@@ -762,13 +765,6 @@ void loop() {
                         if (absolute(spd[1].x) < peak_speed && peak_speed>0.5 && absolute(spd[1].x)!=0 ) //the value is going down and the acceleration is zero.
                         {
                               
-                             if(fst_peak)
-                             {
-                              pk_time1=millis();
-                              fst_peak=false;
-                              }
-                              else
-                              {
                                 if (!j)// j==0
                                 {
                                     // use time to detect infeasible peaks
@@ -800,20 +796,12 @@ void loop() {
                                         Serial.println("Se2M");
                                       }
                                     }
-                                  }
+                                  
                               }
                               
                               j++;
                               
-                              // the value n_reset should be tuned, if it is too large then we can't reset the peak_speed, ex: 20 still fails in some case.
-                              // n_reset should be dynamically changed depend on the peak value
-                              // idea: catch the time from the beginning of foot step and at its peak speed
-                              
-                              if(j==n_reset)// use j as a delay variable to reset peak_speed to Zero in order to catch another peak.
-                              {
-//                                peak_speed=0;
-//                                Serial.print("RS");
-                              }
+
                          }
                          else
                          {
