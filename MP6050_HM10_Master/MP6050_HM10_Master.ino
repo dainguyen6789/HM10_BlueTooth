@@ -164,7 +164,7 @@ int run1=1,j,n_reset=20;
 //============================
 //For Fastest Speed;
 //============================
-float AccelMagThreshold=2.5;
+float AccelMagThreshold=1.5;
 const int NumSamplesToSetZero=10;
 
 // orientation/motion vars
