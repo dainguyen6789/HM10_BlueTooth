@@ -232,79 +232,17 @@ class Speed{
   
 Speed spd[2]; // WE NEED TWO SPDs IN ORDER TO CHECK THE RESET CONDITION
 
-void AverageAccel(AvgAccel *AAccel) 
-{
-  
-              if (count==0)   // 1st average
-              {
-                do
-                {
-                  mpu.dmpGetQuaternion(&q, fifoBuffer);
-                  mpu.dmpGetAccel(&aa, fifoBuffer);
-                  mpu.dmpGetGravity(&gravity, &q);
-                  
-                  #ifdef AccelSensitivity_2G
-                  mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
-                  #endif
-
-                                    
-                  #ifdef AccelSensitivity_4G
-                  dmpGetLinearAccel_4G(&aaReal, &aa, &gravity);
-                  #endif
-
-                  #ifdef AccelSensitivity_8G
-                  dmpGetLinearAccel_8G(&aaReal, &aa, &gravity);
-                  #endif
-                  
-                  mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
-                  
-                  AccelX[count]=aaWorld.x;
-                  AccelY[count]=aaWorld.y;
-                  AccelZ[count]=aaWorld.z;
-                  count++;
-                  }
-                while(count<NumOfSamples);
-    
-                  int16_t aaWorldX_sum=0;
-                  int16_t aaWorldY_sum=0;
-                  int16_t aaWorldZ_sum=0;
-                
-                  for (int i=0;i<NumOfSamples;i++)
-                  {
-                    aaWorldX_sum+=AccelX[i];
-                    aaWorldY_sum+=AccelY[i];
-                    aaWorldZ_sum+=AccelZ[i];
-                  }
-                  ///=== For 2g sensitivity=====
-                  #ifdef AccelSensitivity_2G
-                  AAccel->x= (float) aaWorldX_sum/NumOfSamples*9.81/8192;
-                  AAccel->y= (float) aaWorldY_sum/NumOfSamples*9.81/8192;
-                  AAccel->z= (float) aaWorldZ_sum/NumOfSamples*9.81/8192;
-                  #endif
-                  
-                  ///=== For 4G sensitivity=====
-                  #ifdef AccelSensitivity_4G
-                  AAccel->x= (float) aaWorldX_sum/NumOfSamples*9.81/4096;
-                  AAccel->y= (float) aaWorldY_sum/NumOfSamples*9.81/4096;
-                  AAccel->z= (float) aaWorldZ_sum/NumOfSamples*9.81/4096;
-                  #endif
-
-                  ///=== For 8G sensitivity=====
-                  #ifdef AccelSensitivity_8G
-                  AAccel->x= (float) aaWorldX_sum/NumOfSamples*9.81/2048;
-                  AAccel->y= (float) aaWorldY_sum/NumOfSamples*9.81/2048;
-                  AAccel->z= (float) aaWorldZ_sum/NumOfSamples*9.81/2048;
-                  #endif
-                  
-                  
-                }
-
-            else
-            {
-//              mpu.dmpGetQuaternion(&q, fifoBuffer);
-//              mpu.dmpGetAccel(&aa, fifoBuffer);
-//              mpu.dmpGetGravity(&gravity, &q);
-//              
+//void AverageAccel(AvgAccel *AAccel) 
+//{
+//  
+//              if (count==0)   // 1st average
+//              {
+//                do
+//                {
+//                  mpu.dmpGetQuaternion(&q, fifoBuffer);
+//                  mpu.dmpGetAccel(&aa, fifoBuffer);
+//                  mpu.dmpGetGravity(&gravity, &q);
+//                  
 //                  #ifdef AccelSensitivity_2G
 //                  mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
 //                  #endif
@@ -313,58 +251,120 @@ void AverageAccel(AvgAccel *AAccel)
 //                  #ifdef AccelSensitivity_4G
 //                  dmpGetLinearAccel_4G(&aaReal, &aa, &gravity);
 //                  #endif
-//                  
+//
 //                  #ifdef AccelSensitivity_8G
 //                  dmpGetLinearAccel_8G(&aaReal, &aa, &gravity);
-//                  #endif            
+//                  #endif
+//                  
+//                  mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
+//                  
+//                  AccelX[count]=aaWorld.x;
+//                  AccelY[count]=aaWorld.y;
+//                  AccelZ[count]=aaWorld.z;
+//                  count++;
+//                  }
+//                while(count<NumOfSamples);
+//    
+//                  int16_t aaWorldX_sum=0;
+//                  int16_t aaWorldY_sum=0;
+//                  int16_t aaWorldZ_sum=0;
+//                
+//                  for (int i=0;i<NumOfSamples;i++)
+//                  {
+//                    aaWorldX_sum+=AccelX[i];
+//                    aaWorldY_sum+=AccelY[i];
+//                    aaWorldZ_sum+=AccelZ[i];
+//                  }
+//                  ///=== For 2g sensitivity=====
+//                  #ifdef AccelSensitivity_2G
+//                  AAccel->x= (float) aaWorldX_sum/NumOfSamples*9.81/8192;
+//                  AAccel->y= (float) aaWorldY_sum/NumOfSamples*9.81/8192;
+//                  AAccel->z= (float) aaWorldZ_sum/NumOfSamples*9.81/8192;
+//                  #endif
+//                  
+//                  ///=== For 4G sensitivity=====
+//                  #ifdef AccelSensitivity_4G
+//                  AAccel->x= (float) aaWorldX_sum/NumOfSamples*9.81/4096;
+//                  AAccel->y= (float) aaWorldY_sum/NumOfSamples*9.81/4096;
+//                  AAccel->z= (float) aaWorldZ_sum/NumOfSamples*9.81/4096;
+//                  #endif
+//
+//                  ///=== For 8G sensitivity=====
+//                  #ifdef AccelSensitivity_8G
+//                  AAccel->x= (float) aaWorldX_sum/NumOfSamples*9.81/2048;
+//                  AAccel->y= (float) aaWorldY_sum/NumOfSamples*9.81/2048;
+//                  AAccel->z= (float) aaWorldZ_sum/NumOfSamples*9.81/2048;
+//                  #endif
+//                  
+//                  
+//                }
+//
+//            else
+//            {
+////              mpu.dmpGetQuaternion(&q, fifoBuffer);
+////              mpu.dmpGetAccel(&aa, fifoBuffer);
+////              mpu.dmpGetGravity(&gravity, &q);
+////              
+////                  #ifdef AccelSensitivity_2G
+////                  mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
+////                  #endif
+////
+////                                    
+////                  #ifdef AccelSensitivity_4G
+////                  dmpGetLinearAccel_4G(&aaReal, &aa, &gravity);
+////                  #endif
+////                  
+////                  #ifdef AccelSensitivity_8G
+////                  dmpGetLinearAccel_8G(&aaReal, &aa, &gravity);
+////                  #endif            
+////                        
+////              mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
+//              
+//              for (int i=0;i<=NumOfSamples;i++)
+//              {
+//                AccelX[i]=AccelX[i+1];
+//                AccelY[i]=AccelY[i+1];
+//                AccelZ[i]=AccelZ[i+1];
+//              }
+//              AccelX[NumOfSamples]=aaWorld.x;
+//              AccelY[NumOfSamples]=aaWorld.y;
+//              AccelZ[NumOfSamples]=aaWorld.z; 
+//  
+//              int16_t aaWorldX_sum=0;
+//              int16_t aaWorldY_sum=0;
+//              int16_t aaWorldZ_sum=0;
+//              
+//              for (int i=0;i<NumOfSamples;i++)
+//              {
+//                aaWorldX_sum+=AccelX[i];
+//                aaWorldY_sum+=AccelY[i];
+//                aaWorldZ_sum+=AccelZ[i];
+//              }
+//              ///
+//                  #ifdef AccelSensitivity_2G
+//                  AAccel->x= (float) aaWorldX_sum/NumOfSamples*9.81/8192;
+//                  AAccel->y= (float) aaWorldY_sum/NumOfSamples*9.81/8192;
+//                  AAccel->z= (float) aaWorldZ_sum/NumOfSamples*9.81/8192;
+//                  #endif
+//                  
+//                  /// For 4G sensitivity
+//                  #ifdef AccelSensitivity_4G
+//                  AAccel->x= (float) aaWorldX_sum/NumOfSamples*9.81/4096;
+//                  AAccel->y= (float) aaWorldY_sum/NumOfSamples*9.81/4096;
+//                  AAccel->z= (float) aaWorldZ_sum/NumOfSamples*9.81/4096;
+//                  #endif  
+//                  
+//                  /// For 8G sensitivity
+//                  #ifdef AccelSensitivity_8G
+//                  AAccel->x= (float) aaWorldX_sum/NumOfSamples*9.81/2048.0;
+//                  AAccel->y= (float) aaWorldY_sum/NumOfSamples*9.81/2048.0;
+//                  AAccel->z= (float) aaWorldZ_sum/NumOfSamples*9.81/2048.0;
+//                  #endif
 //                        
-//              mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
-              
-              for (int i=0;i<=NumOfSamples;i++)
-              {
-                AccelX[i]=AccelX[i+1];
-                AccelY[i]=AccelY[i+1];
-                AccelZ[i]=AccelZ[i+1];
-              }
-              AccelX[NumOfSamples]=aaWorld.x;
-              AccelY[NumOfSamples]=aaWorld.y;
-              AccelZ[NumOfSamples]=aaWorld.z; 
-  
-              int16_t aaWorldX_sum=0;
-              int16_t aaWorldY_sum=0;
-              int16_t aaWorldZ_sum=0;
-              
-              for (int i=0;i<NumOfSamples;i++)
-              {
-                aaWorldX_sum+=AccelX[i];
-                aaWorldY_sum+=AccelY[i];
-                aaWorldZ_sum+=AccelZ[i];
-              }
-              ///
-                  #ifdef AccelSensitivity_2G
-                  AAccel->x= (float) aaWorldX_sum/NumOfSamples*9.81/8192;
-                  AAccel->y= (float) aaWorldY_sum/NumOfSamples*9.81/8192;
-                  AAccel->z= (float) aaWorldZ_sum/NumOfSamples*9.81/8192;
-                  #endif
-                  
-                  /// For 4G sensitivity
-                  #ifdef AccelSensitivity_4G
-                  AAccel->x= (float) aaWorldX_sum/NumOfSamples*9.81/4096;
-                  AAccel->y= (float) aaWorldY_sum/NumOfSamples*9.81/4096;
-                  AAccel->z= (float) aaWorldZ_sum/NumOfSamples*9.81/4096;
-                  #endif  
-                  
-                  /// For 8G sensitivity
-                  #ifdef AccelSensitivity_8G
-                  AAccel->x= (float) aaWorldX_sum/NumOfSamples*9.81/2048.0;
-                  AAccel->y= (float) aaWorldY_sum/NumOfSamples*9.81/2048.0;
-                  AAccel->z= (float) aaWorldZ_sum/NumOfSamples*9.81/2048.0;
-                  #endif
-                        
-            
-            }
-  
-  }
+//            
+//            }
+//  
+//  }
 
 // ================================================================
 // ===                     SPEED CALCULATION                    ===
@@ -377,7 +377,7 @@ void speed_calc(Speed *spd,AvgAccel accel, float delta_t)
   
   spd->y = spd->y + accel.y*delta_t/1000.0;
   
-  spd->z = spd->z + accel.z*delta_t/1000.0;
+//  spd->z = spd->z + accel.z*delta_t/1000.0;
   
  }
 
