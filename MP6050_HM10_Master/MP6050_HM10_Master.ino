@@ -164,8 +164,8 @@ int run1=1,j;
 //============================
 //For Fastest Speed;
 //============================
-float AccelMagThreshold=1.5;
-const int NumSamplesToSetZero=12;
+float AccelMagThreshold=0.5;
+const int NumSamplesToSetZero=6;
 
 // orientation/motion vars
 Quaternion q;           // [w, x, y, z]         quaternion container
