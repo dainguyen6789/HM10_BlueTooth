@@ -725,8 +725,8 @@ void loop() {
                 }         
                         delta_t=(time1-time_old);
                         RoCh=(AVAWorld.x-AVAWorld1.x)*1000.0/(float)delta_t;
-                        Serial.print(RoCh);
-                        Serial.print(",");
+//                        Serial.print(RoCh);
+//                        Serial.print(",");
                         //==================================================================//
                         //==============    RESET SPEED TO ZERO IF NECESSARY ===============//
                         //==================================================================//
