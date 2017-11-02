@@ -164,8 +164,8 @@ int run1=1,j;
 //============================
 //For Fastest Speed;
 //============================
-float AccelMagThreshold=0.5;
-const int NumSamplesToSetZero=6;
+float AccelMagThreshold=0.6,RoCh,RoChThreshold=15;// Rate of Accel change
+const int NumSamplesToSetZero=2;
 
 // orientation/motion vars
 Quaternion q;           // [w, x, y, z]         quaternion container
@@ -213,7 +213,7 @@ class AvgAccel{
   
 //int const NumOfAccelSampletoZero=3;
 
-AvgAccel AVAWorld,AVAWorld_Zero;
+AvgAccel AVAWorld, AVAWorld1,AVAWorld_Zero;
 float AVAWorldMagSeries[NumSamplesToSetZero];
 
 
@@ -644,7 +644,7 @@ void loop() {
             if( time1<=5000)
             {
               time1=millis();
-              }
+            }
             
             if (time1>5000)
             {
@@ -667,10 +667,18 @@ void loop() {
                 #endif
                 
                 mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
-                //AverageAccel(&AVAWorld);
+
+                //save old value to compute the rate of change
+                
+                AVAWorld1.x= AVAWorld.x;
+                AVAWorld1.y= AVAWorld.x;
+                AVAWorld1.z= AVAWorld.x;
+                
+                // current value of accel
                 AVAWorld.x= (float) aaWorld.x*9.81/2048.0;
                 AVAWorld.y= (float) aaWorld.y*9.81/2048.0;
                 AVAWorld.z= (float) aaWorld.z*9.81/2048.0;
+                
                 
                 if(run1==1)
                 {
@@ -686,13 +694,13 @@ void loop() {
                     analogWrite(10,90);
                     analogWrite(9,90);
                     if (absolute(AVAWorld.x)<AccelMagThreshold)
-                      {
-                        AVAWorldMagSeries[NumSamplesToSetZero-1]=0;
-                      }
-                      else
-                      {
-                        AVAWorldMagSeries[NumSamplesToSetZero-1]= absolute(AVAWorld.x); 
-                      }
+                    {
+                      AVAWorldMagSeries[NumSamplesToSetZero-1]=0;
+                    }
+                    else
+                    {
+                      AVAWorldMagSeries[NumSamplesToSetZero-1]= absolute(AVAWorld.x); 
+                    }
                     time1=millis();
                     run1++;
                 }
@@ -707,15 +715,18 @@ void loop() {
                       {
                         AVAWorldMagSeries[NumSamplesToSetZero-1]=0;
                       }
-                      else
-                      {
-                        AVAWorldMagSeries[NumSamplesToSetZero-1]= absolute(AVAWorld.x); 
-                      }
+                    else
+                    {
+                      AVAWorldMagSeries[NumSamplesToSetZero-1]= absolute(AVAWorld.x); 
+                    }
                     
                     time_old=time1;
                     time1=millis();
                 }         
                         delta_t=(time1-time_old);
+                        RoCh=(AVAWorld.x-AVAWorld1.x)*1000.0/(float)delta_t;
+                        Serial.print(RoCh);
+                        Serial.print(",");
                         //==================================================================//
                         //==============    RESET SPEED TO ZERO IF NECESSARY ===============//
                         //==================================================================//
@@ -724,23 +735,23 @@ void loop() {
                         for(int ii=0;ii<NumSamplesToSetZero;ii++)
                         {
                            SumMagAccel+=AVAWorldMagSeries[ii];
-                          }
+                        }
                           
                         //==================================================================//
 
                         //==================================================================//
                         speed_calc(&spd[1],AVAWorld, delta_t);
                                               
-                        if(SumMagAccel==0 )// add abs_x<0.8 to prevent wrong speed reset :((
+                        if(SumMagAccel==0 && absolute(RoCh)<RoChThreshold)// add abs_x<0.8 to prevent wrong speed reset :((
                         {
                           // we should realize the peak value and do not reset the speed to zero
 //                          Serial.print("here,");
                           spd[1].x=0;
                           spd[1].y=0;
                           spd[1].z=0; 
-                          AVAWorld.x=0;
-                          AVAWorld.y=0;
-                          AVAWorld.z=0; 
+//                          AVAWorld.x=0;
+//                          AVAWorld.y=0;
+//                          AVAWorld.z=0; 
                           peak_speed=0; 
                         }
                         //==================================================================//
@@ -822,7 +833,7 @@ void loop() {
                         if(mySerial.available())
                         {
                           c=mySerial.read();
-                          Serial.println("RX");
+//                          Serial.println("RX");
                         }
                         
                         //  This stopping mechanism should be reviewed again
@@ -830,14 +841,14 @@ void loop() {
                         //  c==1: slave ratio <0.7
                         if((c==0 && ratio<0.7) || (c==1 && ratio<0.92) )  // Stop
                         {
-                          Serial.println("ST");
+//                          Serial.println("ST");
                           analogWrite(10,0);
                           analogWrite(9,0);
                           mySerial.write(1);// signal the Slave to stop
                           }
                         else if(c==0 && ratio>0.7 && ratio<=0.92)
                         {          
-                          Serial.println("Dec");
+//                          Serial.println("Dec");
                           mySerial.write(byte(0x00));  // signal the Slave to decrease speed
                           analogWrite(10,70);
                           analogWrite(9,70);
