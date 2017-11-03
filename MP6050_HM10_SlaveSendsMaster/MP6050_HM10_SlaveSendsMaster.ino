@@ -828,6 +828,7 @@ void loop() {
                                 
                                 //  tend to reduce the user's speed
                                 ratio=peak_speeds[4]/avg_peak_speed;
+                                Serial.println(ratio);
                                 if (ratio<0.92 && ratio >0.7)
                                 {
                                   //note on this
@@ -893,6 +894,7 @@ void loop() {
         {
           c=mySerial.read();
           Serial.println("RX");
+          Serial.println(ratio);
 //          analogWrite(10,70);
 //          analogWrite(9,70);
         }

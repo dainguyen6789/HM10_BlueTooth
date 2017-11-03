@@ -788,7 +788,7 @@ void loop() {
                                 
                                 //  tend to reduce the user's speed
                                 ratio=peak_speeds[4]/avg_peak_speed;
-                                
+                                Serial.println(ratio);
                                 // this is at Master side
                                 if (ratio<0.92 && ratio >=0.7)
                                 {
@@ -819,6 +819,8 @@ void loop() {
                         Serial.print(AVAWorld.x); 
                         Serial.print(",");             
                         Serial.println(spd[1].x);
+//                        Serial.print(",");
+//                        Serial.print(spd[1].x);
 //                        Serial.print(",");
 //                        Serial.print(peak_speeds[0]);
 //                        Serial.print(",");
