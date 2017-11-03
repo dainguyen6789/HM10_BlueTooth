@@ -164,7 +164,7 @@ char c=2;
 //============================
 //For Fastest Speed;
 //============================
-float AccelMagThreshold=1.5;
+float AccelMagThreshold=0.7,RoCh,RoChThreshold=8;// Rate of Accel change
 const int NumSamplesToSetZero=2;
 
 // orientation/motion vars
@@ -211,13 +211,13 @@ class AvgAccel{
   
   };
   
-int const NumOfAccelSampletoZero=3;
+//int const NumOfAccelSampletoZero=3;
 
-AvgAccel AVAWorld,AVAWorld_Zero;
+AvgAccel AVAWorld,AVAWorld1,AVAWorld_Zero;
 float AVAWorldMagSeries[NumSamplesToSetZero];
 
 
-AvgAccel aaWorld5[NumOfAccelSampletoZero];
+//AvgAccel aaWorld5[NumOfAccelSampletoZero];
 
 class Speed{
   public:
@@ -232,79 +232,17 @@ class Speed{
   
 Speed spd[2]; // WE NEED TWO SPDs IN ORDER TO CHECK THE RESET CONDITION
 
-void AverageAccel(AvgAccel *AAccel) 
-{
-  
-              if (count==0)   // 1st average
-              {
-                do
-                {
-                  mpu.dmpGetQuaternion(&q, fifoBuffer);
-                  mpu.dmpGetAccel(&aa, fifoBuffer);
-                  mpu.dmpGetGravity(&gravity, &q);
-                  
-                  #ifdef AccelSensitivity_2G
-                  mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
-                  #endif
-
-                                    
-                  #ifdef AccelSensitivity_4G
-                  dmpGetLinearAccel_4G(&aaReal, &aa, &gravity);
-                  #endif
-
-                  #ifdef AccelSensitivity_8G
-                  dmpGetLinearAccel_8G(&aaReal, &aa, &gravity);
-                  #endif
-                  
-                  mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
-                  
-                  AccelX[count]=aaWorld.x;
-                  AccelY[count]=aaWorld.y;
-                  AccelZ[count]=aaWorld.z;
-                  count++;
-                  }
-                while(count<NumOfSamples);
-    
-                  int16_t aaWorldX_sum=0;
-                  int16_t aaWorldY_sum=0;
-                  int16_t aaWorldZ_sum=0;
-                
-                  for (int i=0;i<NumOfSamples;i++)
-                  {
-                    aaWorldX_sum+=AccelX[i];
-                    aaWorldY_sum+=AccelY[i];
-                    aaWorldZ_sum+=AccelZ[i];
-                  }
-                  ///=== For 2g sensitivity=====
-                  #ifdef AccelSensitivity_2G
-                  AAccel->x= (float) aaWorldX_sum/NumOfSamples*9.81/8192;
-                  AAccel->y= (float) aaWorldY_sum/NumOfSamples*9.81/8192;
-                  AAccel->z= (float) aaWorldZ_sum/NumOfSamples*9.81/8192;
-                  #endif
-                  
-                  ///=== For 4G sensitivity=====
-                  #ifdef AccelSensitivity_4G
-                  AAccel->x= (float) aaWorldX_sum/NumOfSamples*9.81/4096;
-                  AAccel->y= (float) aaWorldY_sum/NumOfSamples*9.81/4096;
-                  AAccel->z= (float) aaWorldZ_sum/NumOfSamples*9.81/4096;
-                  #endif
-
-                  ///=== For 8G sensitivity=====
-                  #ifdef AccelSensitivity_8G
-                  AAccel->x= (float) aaWorldX_sum/NumOfSamples*9.81/2048;
-                  AAccel->y= (float) aaWorldY_sum/NumOfSamples*9.81/2048;
-                  AAccel->z= (float) aaWorldZ_sum/NumOfSamples*9.81/2048;
-                  #endif
-                  
-                  
-                }
-
-            else
-            {
-//              mpu.dmpGetQuaternion(&q, fifoBuffer);
-//              mpu.dmpGetAccel(&aa, fifoBuffer);
-//              mpu.dmpGetGravity(&gravity, &q);
-//              
+//void AverageAccel(AvgAccel *AAccel) 
+//{
+//  
+//              if (count==0)   // 1st average
+//              {
+//                do
+//                {
+//                  mpu.dmpGetQuaternion(&q, fifoBuffer);
+//                  mpu.dmpGetAccel(&aa, fifoBuffer);
+//                  mpu.dmpGetGravity(&gravity, &q);
+//                  
 //                  #ifdef AccelSensitivity_2G
 //                  mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
 //                  #endif
@@ -313,58 +251,120 @@ void AverageAccel(AvgAccel *AAccel)
 //                  #ifdef AccelSensitivity_4G
 //                  dmpGetLinearAccel_4G(&aaReal, &aa, &gravity);
 //                  #endif
-//                  
+//
 //                  #ifdef AccelSensitivity_8G
 //                  dmpGetLinearAccel_8G(&aaReal, &aa, &gravity);
-//                  #endif            
+//                  #endif
+//                  
+//                  mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
+//                  
+//                  AccelX[count]=aaWorld.x;
+//                  AccelY[count]=aaWorld.y;
+//                  AccelZ[count]=aaWorld.z;
+//                  count++;
+//                  }
+//                while(count<NumOfSamples);
+//    
+//                  int16_t aaWorldX_sum=0;
+//                  int16_t aaWorldY_sum=0;
+//                  int16_t aaWorldZ_sum=0;
+//                
+//                  for (int i=0;i<NumOfSamples;i++)
+//                  {
+//                    aaWorldX_sum+=AccelX[i];
+//                    aaWorldY_sum+=AccelY[i];
+//                    aaWorldZ_sum+=AccelZ[i];
+//                  }
+//                  ///=== For 2g sensitivity=====
+//                  #ifdef AccelSensitivity_2G
+//                  AAccel->x= (float) aaWorldX_sum/NumOfSamples*9.81/8192;
+//                  AAccel->y= (float) aaWorldY_sum/NumOfSamples*9.81/8192;
+//                  AAccel->z= (float) aaWorldZ_sum/NumOfSamples*9.81/8192;
+//                  #endif
+//                  
+//                  ///=== For 4G sensitivity=====
+//                  #ifdef AccelSensitivity_4G
+//                  AAccel->x= (float) aaWorldX_sum/NumOfSamples*9.81/4096;
+//                  AAccel->y= (float) aaWorldY_sum/NumOfSamples*9.81/4096;
+//                  AAccel->z= (float) aaWorldZ_sum/NumOfSamples*9.81/4096;
+//                  #endif
+//
+//                  ///=== For 8G sensitivity=====
+//                  #ifdef AccelSensitivity_8G
+//                  AAccel->x= (float) aaWorldX_sum/NumOfSamples*9.81/2048;
+//                  AAccel->y= (float) aaWorldY_sum/NumOfSamples*9.81/2048;
+//                  AAccel->z= (float) aaWorldZ_sum/NumOfSamples*9.81/2048;
+//                  #endif
+//                  
+//                  
+//                }
+//
+//            else
+//            {
+////              mpu.dmpGetQuaternion(&q, fifoBuffer);
+////              mpu.dmpGetAccel(&aa, fifoBuffer);
+////              mpu.dmpGetGravity(&gravity, &q);
+////              
+////                  #ifdef AccelSensitivity_2G
+////                  mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
+////                  #endif
+////
+////                                    
+////                  #ifdef AccelSensitivity_4G
+////                  dmpGetLinearAccel_4G(&aaReal, &aa, &gravity);
+////                  #endif
+////                  
+////                  #ifdef AccelSensitivity_8G
+////                  dmpGetLinearAccel_8G(&aaReal, &aa, &gravity);
+////                  #endif            
+////                        
+////              mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
+//              
+//              for (int i=0;i<=NumOfSamples;i++)
+//              {
+//                AccelX[i]=AccelX[i+1];
+//                AccelY[i]=AccelY[i+1];
+//                AccelZ[i]=AccelZ[i+1];
+//              }
+//              AccelX[NumOfSamples]=aaWorld.x;
+//              AccelY[NumOfSamples]=aaWorld.y;
+//              AccelZ[NumOfSamples]=aaWorld.z; 
+//  
+//              int16_t aaWorldX_sum=0;
+//              int16_t aaWorldY_sum=0;
+//              int16_t aaWorldZ_sum=0;
+//              
+//              for (int i=0;i<NumOfSamples;i++)
+//              {
+//                aaWorldX_sum+=AccelX[i];
+//                aaWorldY_sum+=AccelY[i];
+//                aaWorldZ_sum+=AccelZ[i];
+//              }
+//              ///
+//                  #ifdef AccelSensitivity_2G
+//                  AAccel->x= (float) aaWorldX_sum/NumOfSamples*9.81/8192;
+//                  AAccel->y= (float) aaWorldY_sum/NumOfSamples*9.81/8192;
+//                  AAccel->z= (float) aaWorldZ_sum/NumOfSamples*9.81/8192;
+//                  #endif
+//                  
+//                  /// For 4G sensitivity
+//                  #ifdef AccelSensitivity_4G
+//                  AAccel->x= (float) aaWorldX_sum/NumOfSamples*9.81/4096;
+//                  AAccel->y= (float) aaWorldY_sum/NumOfSamples*9.81/4096;
+//                  AAccel->z= (float) aaWorldZ_sum/NumOfSamples*9.81/4096;
+//                  #endif  
+//                  
+//                  /// For 8G sensitivity
+//                  #ifdef AccelSensitivity_8G
+//                  AAccel->x= (float) aaWorldX_sum/NumOfSamples*9.81/2048.0;
+//                  AAccel->y= (float) aaWorldY_sum/NumOfSamples*9.81/2048.0;
+//                  AAccel->z= (float) aaWorldZ_sum/NumOfSamples*9.81/2048.0;
+//                  #endif
 //                        
-//              mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
-              
-              for (int i=0;i<=NumOfSamples;i++)
-              {
-                AccelX[i]=AccelX[i+1];
-                AccelY[i]=AccelY[i+1];
-                AccelZ[i]=AccelZ[i+1];
-              }
-              AccelX[NumOfSamples]=aaWorld.x;
-              AccelY[NumOfSamples]=aaWorld.y;
-              AccelZ[NumOfSamples]=aaWorld.z; 
-  
-              int16_t aaWorldX_sum=0;
-              int16_t aaWorldY_sum=0;
-              int16_t aaWorldZ_sum=0;
-              
-              for (int i=0;i<NumOfSamples;i++)
-              {
-                aaWorldX_sum+=AccelX[i];
-                aaWorldY_sum+=AccelY[i];
-                aaWorldZ_sum+=AccelZ[i];
-              }
-              ///
-                  #ifdef AccelSensitivity_2G
-                  AAccel->x= (float) aaWorldX_sum/NumOfSamples*9.81/8192;
-                  AAccel->y= (float) aaWorldY_sum/NumOfSamples*9.81/8192;
-                  AAccel->z= (float) aaWorldZ_sum/NumOfSamples*9.81/8192;
-                  #endif
-                  
-                  /// For 4G sensitivity
-                  #ifdef AccelSensitivity_4G
-                  AAccel->x= (float) aaWorldX_sum/NumOfSamples*9.81/4096;
-                  AAccel->y= (float) aaWorldY_sum/NumOfSamples*9.81/4096;
-                  AAccel->z= (float) aaWorldZ_sum/NumOfSamples*9.81/4096;
-                  #endif  
-                  
-                  /// For 8G sensitivity
-                  #ifdef AccelSensitivity_8G
-                  AAccel->x= (float) aaWorldX_sum/NumOfSamples*9.81/2048.0;
-                  AAccel->y= (float) aaWorldY_sum/NumOfSamples*9.81/2048.0;
-                  AAccel->z= (float) aaWorldZ_sum/NumOfSamples*9.81/2048.0;
-                  #endif
-                        
-            
-            }
-  
-  }
+//            
+//            }
+//  
+//  }
 
 // ================================================================
 // ===                     SPEED CALCULATION                    ===
@@ -717,7 +717,16 @@ void loop() {
                 #endif
                 
                 mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
-                AverageAccel(&AVAWorld);
+                
+                AVAWorld1.x= AVAWorld.x;
+                AVAWorld1.y= AVAWorld.x;
+                AVAWorld1.z= AVAWorld.x;
+                
+                // current value of accel
+                
+                AVAWorld.x= (float) aaWorld.x*9.81/2048.0;
+                AVAWorld.y= (float) aaWorld.y*9.81/2048.0;
+                AVAWorld.z= (float) aaWorld.z*9.81/2048.0;
     
                 if(run1==1)
                 {
@@ -732,14 +741,14 @@ void loop() {
                     delay(250);   
                     analogWrite(10,90);
                     analogWrite(9,90);
-                    if (AVAWorld.mag()<AccelMagThreshold)
-                      {
-                        AVAWorldMagSeries[NumSamplesToSetZero-1]=0;
-                      }
-                      else
-                      {
-                        AVAWorldMagSeries[NumSamplesToSetZero-1]= AVAWorld.mag(); 
-                      }
+                    if (absolute(AVAWorld.x)<AccelMagThreshold)
+                    {
+                      AVAWorldMagSeries[NumSamplesToSetZero-1]=0;
+                    }
+                    else
+                    {
+                      AVAWorldMagSeries[NumSamplesToSetZero-1]= absolute(AVAWorld.x); 
+                    }
                     time1=millis();
                     run1++;
                 }
@@ -750,19 +759,20 @@ void loop() {
                         AVAWorldMagSeries[ii]= AVAWorldMagSeries[ii+1];
                       }
                    
-                    if (AVAWorld.mag()<AccelMagThreshold)
+                    if (absolute(AVAWorld.x)<AccelMagThreshold)
                       {
                         AVAWorldMagSeries[NumSamplesToSetZero-1]=0;
                       }
                       else
                       {
-                        AVAWorldMagSeries[NumSamplesToSetZero-1]= AVAWorld.mag(); 
+                        AVAWorldMagSeries[NumSamplesToSetZero-1]= absolute(AVAWorld.x); 
                       }
                     
                     time_old=time1;
                     time1=millis();
                 }         
                         delta_t=(time1-time_old);
+                        RoCh=(AVAWorld.x-AVAWorld1.x)*1000.0/(float)delta_t;
                         //==================================================================//
                         //==============    RESET SPEED TO ZERO IF NECESSARY ===============//
                         //==================================================================//
@@ -774,15 +784,15 @@ void loop() {
                            SumMagAccel+=AVAWorldMagSeries[ii];
                           }
                           
-                        if(SumMagAccel==0 && absolute(spd[1].x)<0.8)
+                        if(SumMagAccel==0 && absolute(RoCh)<RoChThreshold)
                         //if(SumMagAccel==0)
                         {
                           spd[1].x=0;
                           spd[1].y=0;
                           spd[1].z=0;   
-                          AVAWorld.x=0;
-                          AVAWorld.y=0;
-                          AVAWorld.z=0; 
+//                          AVAWorld.x=0;
+//                          AVAWorld.y=0;
+//                          AVAWorld.z=0; 
                           peak_speed=0;                       
                         }
                         speed_calc(&spd[1],AVAWorld, delta_t);
@@ -829,13 +839,7 @@ void loop() {
                                   mySerial.write(1);
                                   Serial.println("Se2");}
                               }
-                              
-                              j++;
-                              // the value n_reset should be tuned, if it is too large then we can't reset the peak_speed, ex: 20 still fails in some case.
-                              if(j==n_reset)// use j as a delay variable to reset peak_speed to Zero in order to catch another peak.
-                              {
-//                                peak_speed=0;
-                              }
+                              j=1;
                          }
                          else
                          {
@@ -849,20 +853,20 @@ void loop() {
                         //==================================================================//
                         //==============              Serial Print           ===============//
                         //==================================================================//  
-                                          
-//                        Serial.print(time1);
+                        Serial.print(AVAWorld.x); 
+                        Serial.print(",");             
+                        Serial.println(spd[1].x);
+//                        Serial.print(spd[1].x);
 //                        Serial.print(",");
-                        Serial.print(spd[1].x);
-                        Serial.print(",");
-                        Serial.print(peak_speeds[0]);
-                        Serial.print(",");
-                        Serial.print(peak_speeds[1]);
-                        Serial.print(",");
-                        Serial.print(peak_speeds[2]);
-                        Serial.print(",");
-                        Serial.print(peak_speeds[3]); 
-                        Serial.print(",");
-                        Serial.println(peak_speeds[4]);                         
+//                        Serial.print(peak_speeds[0]);
+//                        Serial.print(",");
+//                        Serial.print(peak_speeds[1]);
+//                        Serial.print(",");
+//                        Serial.print(peak_speeds[2]);
+//                        Serial.print(",");
+//                        Serial.print(peak_speeds[3]); 
+//                        Serial.print(",");
+//                        Serial.println(peak_speeds[4]);                         
 //                        Serial.print(peak_speeds[3]);                         
 //                        Serial.print(",");
 //                        Serial.print(AVAWorld.x); 
@@ -906,6 +910,7 @@ void loop() {
         else if(c==0 && ratio>0.7 && ratio<=0.92)
         {          
           Serial.println("Dec");
+          mySerial.write(byte(0x00));  // signal the Slave to decrease speed
           analogWrite(10,70);
           analogWrite(9,70);
         }
