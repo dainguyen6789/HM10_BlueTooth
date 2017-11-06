@@ -682,17 +682,18 @@ void loop() {
                 
                 if(run1==1)
                 {
+                    delay(800);
                     analogWrite(10,70);
                     analogWrite(9,70);  
                     delay(250);                  
                     analogWrite(10,75);
                     analogWrite(9,75);   
-                    delay(250);                    
-                    analogWrite(10,85);
-                    analogWrite(9,85);
+                    delay(500);                    
+                    analogWrite(10,80);
+                    analogWrite(9,80);
                     delay(250);   
-                    analogWrite(10,90);
-                    analogWrite(9,90);
+//                    analogWrite(10,90);
+//                    analogWrite(9,90);
                     if (absolute(AVAWorld.x)<AccelMagThreshold)
                     {
                       AVAWorldMagSeries[NumSamplesToSetZero-1]=0;

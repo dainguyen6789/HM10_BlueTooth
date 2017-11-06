@@ -735,12 +735,12 @@ void loop() {
                     delay(250);                  
                     analogWrite(10,75);
                     analogWrite(9,75);   
-                    delay(250);                    
-                    analogWrite(10,85);
-                    analogWrite(9,85);
+                    delay(500);                    
+                    analogWrite(10,80);
+                    analogWrite(9,80);
                     delay(250);   
-                    analogWrite(10,90);
-                    analogWrite(9,90);
+//                    analogWrite(10,90);
+//                    analogWrite(9,90);
                     if (absolute(AVAWorld.x)<AccelMagThreshold)
                     {
                       AVAWorldMagSeries[NumSamplesToSetZero-1]=0;
@@ -828,7 +828,6 @@ void loop() {
                                 
                                 //  tend to reduce the user's speed
                                 ratio=peak_speeds[4]/avg_peak_speed;
-                                Serial.println(ratio);
                                 if (ratio<0.92 && ratio >0.7)
                                 {
                                   //note on this
