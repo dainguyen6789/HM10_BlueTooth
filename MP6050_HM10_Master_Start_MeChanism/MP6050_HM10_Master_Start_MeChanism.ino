@@ -136,7 +136,7 @@ SoftwareSerial mySerial(7, 8); // RX, TX
 
 //---------------------------------------------------------------------
 int fadeAmount = 5;     // how many points to fade the LED by
-int num_loop=0;
+int num_loop=0,motor_init;
 int brightness = 55;    // how bright the LED is
 
 #define LED_PIN 13 // (Arduino is 13, Teensy is 11, Teensy++ is 6)
@@ -149,7 +149,7 @@ uint8_t devStatus;      // return status after each device operation (0 = succes
 uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
 uint16_t fifoCount;     // count of all bytes currently in FIFO
 uint8_t fifoBuffer[64]; // FIFO storage buffer
-unsigned long time1=0,time_old;
+unsigned long time1=0,time_old,step_start_time,half_step_time,step_peak_time,Current_time,t0;
 float delta_t,SumMagAccel;
 //float delta_time;
 int run1=1,j;
@@ -682,16 +682,16 @@ void loop() {
                 
                 if(run1==1)
                 {
-                    delay(800);
-                    analogWrite(10,70);
-                    analogWrite(9,70);  
-                    delay(250);                  
-                    analogWrite(10,75);
-                    analogWrite(9,75);   
-                    delay(500);                    
-                    analogWrite(10,80);
-                    analogWrite(9,80);
-                    delay(250);   
+//                    delay(800);
+//                    analogWrite(10,70);
+//                    analogWrite(9,70);  
+//                    delay(250);                  
+//                    analogWrite(10,75);
+//                    analogWrite(9,75);   
+//                    delay(500);                    
+//                    analogWrite(10,80);
+//                    analogWrite(9,80);
+//                    delay(250);   
 //                    analogWrite(10,90);
 //                    analogWrite(9,90);
                     if (absolute(AVAWorld.x)<AccelMagThreshold)
@@ -741,6 +741,9 @@ void loop() {
                         //==================================================================//
 
                         //==================================================================//
+                        spd[0].x=spd[1].x;
+                        spd[0].y=spd[1].y;
+                        
                         speed_calc(&spd[1],AVAWorld, delta_t);
                                               
                         if(SumMagAccel==0 && absolute(RoCh)<RoChThreshold)// add abs_x<0.8 to prevent wrong speed reset :((
@@ -758,6 +761,13 @@ void loop() {
                         //==================================================================//
                         //  Catch the peak speed value, minor bug when move at low speed
                         //==================================================================//
+                        if (spd[0].x==0 && absolute(spd[1].x)>=0.01)
+                        {
+                          Serial.print("Here,");
+                          Serial.print(spd[0].x);
+                          Serial.println(spd[1].x);
+                          step_start_time=millis();
+                          }
                         abs_x=absolute(spd[1].x);  
 //                      per our test, the peak value of normal walk will never drop below 0.8
                         if (abs_x>0.8)
@@ -775,53 +785,86 @@ void loop() {
                         //if (abs_x < peak_speed && peak_speed>0.6 && abs_x!=0 ) //the value is going down (absolute(spd[1].x) < peak_speed) and the acceleration is zero.
                         if (absolute(spd[1].x) < peak_speed && peak_speed>0.5 && absolute(spd[1].x)!=0 ) //the value is going down and the acceleration is zero.
                         {
-                              
-                          if (!j)// j==0
-                          {
+                            step_peak_time=millis();
+                            half_step_time=step_peak_time-step_start_time;
+                            Serial.println("HST");
+                            Serial.println(half_step_time);
+//                            Serial.println("T"+half_step_time);
+                                
+                            if (!j)// j==0
+                            {
   
-                                peak_speeds[0]=peak_speeds[1];
-                                peak_speeds[1]=peak_speeds[2];
-                                peak_speeds[2]=peak_speeds[3];
-                                peak_speeds[3]=peak_speeds[4]; 
-                                peak_speeds[4]=peak_speed;
-                                
-                                avg_peak_speed=(peak_speeds[0]+peak_speeds[1]+peak_speeds[2]+peak_speeds[3])/4;
-                                
-                                //  tend to reduce the user's speed
-                                ratio=peak_speeds[4]/avg_peak_speed;
-                                Serial.println(ratio);
-                                // this is at Master side
-                                if (ratio<0.92 && ratio >=0.7)
-                                {
-                                  //note on this
-                                  mySerial.write((byte)0x00);
-                                  Serial.println("Se1M");
-                                }
-                                else if(ratio<0.7 && ratio>0)
-                                {
-                                  mySerial.write(1);
-                                  Serial.println("Se2M");
-                                }
-                          }
-                          j=1;
+                                  peak_speeds[0]=peak_speeds[1];
+                                  peak_speeds[1]=peak_speeds[2];
+                                  peak_speeds[2]=peak_speeds[3];
+                                  peak_speeds[3]=peak_speeds[4]; 
+                                  peak_speeds[4]=peak_speed;
+                                  
+                                  avg_peak_speed=(peak_speeds[0]+peak_speeds[1]+peak_speeds[2]+peak_speeds[3])/4;
+                                  
+                                  //  tend to reduce the user's speed
+                                  ratio=peak_speeds[4]/avg_peak_speed;
+                                  Serial.println(ratio);
+                                  // this is at Master side
+                                  if (ratio<0.92 && ratio >=0.7)
+                                  {
+                                    //note on this
+                                    mySerial.write((byte)0x00);
+                                    Serial.println("Se1M");
+                                  }
+                                  else if(ratio<0.7 && ratio>0)
+                                  {
+                                    mySerial.write(1);
+                                    Serial.println("Se2M");
+                                  }
+
+                            }
+                            j=1;
                          }
                          else
                          {
                           j=0;
                          }
+                         
+                        //===================================================================
+                        // This code is designed for Starting Mechanism
+                        //===================================================================
+                        Current_time=millis();                        
+                        if(peak_speeds[4]>0 && peak_speeds[3]==0 && (Current_time-step_peak_time) > half_step_time/2 && (Current_time-step_peak_time) < half_step_time) // 1st step
+                        {
+                          //  how to capture t0 ?
+                          
+                          if (!motor_init)
+                          {
+                            t0=Current_time;
+                            motor_init=1;                          
+                          }
+                          
+                          analogWrite(10,(int)80*(Current_time-t0)/(half_step_time/2));
+                          analogWrite(9,(int)80*(Current_time-t0)/(half_step_time/2)) ; 
 
-
+                          Serial.print("aa");
+                          Serial.println((int)80*(Current_time-t0)/(half_step_time/2)); 
+//                          if (Current_time-t0>(half_step_time/2))                                        
+//                          {
+//                            motor_init=0;// in order to capture new value of t0 
+//                            }
+                        }
+  
 
 
 
                         //==================================================================//
                         //==============              Serial Print           ===============//
-                        //==================================================================//  
+                        //==================================================================//
+                        
+//                        Serial.print(Current_time); 
+//                        Serial.print(","); 
                         Serial.print(AVAWorld.x); 
                         Serial.print(",");             
-                        Serial.println(spd[1].x);
+                        Serial.println(spd[1].x); 
 //                        Serial.print(",");
-//                        Serial.print(spd[1].x);
+//                        Serial.print(1].x);
 //                        Serial.print(",");
 //                        Serial.print(peak_speeds[0]);
 //                        Serial.print(",");
