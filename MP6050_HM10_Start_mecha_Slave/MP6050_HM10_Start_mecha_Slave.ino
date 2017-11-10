@@ -133,17 +133,17 @@ SoftwareSerial mySerial(7, 8); // RX, TX
 
 #define AccelSensitivity_8G
 
-
 //---------------------------------------------------------------------
 int fadeAmount = 5,duty;     // how many points to fade the LED by
 int num_loop=0,motor_init,second_step_init;
 int brightness = 55;    // how bright the LED is
+//---------------------------------------------------------------------
 
 #define LED_PIN 13 // (Arduino is 13, Teensy is 11, Teensy++ is 6)
 bool blinkState = false;
 
 // MPU control/status vars
-bool dmpReady = false,fst_peak=true;  // set true if DMP init was successful
+bool dmpReady = false;  // set true if DMP init was successful
 uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
 uint8_t devStatus;      // return status after each device operation (0 = success, !0 = error)
 uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
@@ -152,8 +152,8 @@ uint8_t fifoBuffer[64]; // FIFO storage buffer
 unsigned long time1=0,time_old,step_start_time,half_step_time,step_peak_time,Current_time,t0,t2;
 float delta_t,SumMagAccel;
 //float delta_time;
-int run1=1,j;
-
+int run1=1,j,n_reset=20;
+char c=2;
 //============================
 //For Normal and Faster Speed
 //============================
@@ -178,11 +178,11 @@ float aaWorldX;
 float aaWorldY;
 float aaWorldZ;
 
-float peak_speed,avg_peak_speed,ratio,peak_speeds[5],abs_x;// we will monitor 4 previous peak speed values
-//float xx[5]={1,2,3,4,5};
+float peak_speed,avg_peak_speed,ratio,peak_speeds[5];// we will monitor 4 previous peak speed values
+float xx[5]={1,2,3,4,5};
 //============================
 
-int const NumOfSamples=1;// num of sample to average
+int const NumOfSamples=1;//
 
 int16_t AccelX[NumOfSamples+1], AccelY[NumOfSamples+1], AccelZ[NumOfSamples+1];
 
@@ -197,14 +197,14 @@ float vx,vy,vz;
 // packet structure for InvenSense teapot demo
 uint8_t teapotPacket[14] = { '$', 0x02, 0,0, 0,0, 0,0, 0,0, 0x00, 0x00, '\r', '\n' };
 
-char c=2;
+
 
 
 class AvgAccel{
   public:
-  float x=0;
-  float y=0;
-  float z=0;
+  float x;
+  float y;
+  float z;
    float mag(){
     return sqrt(pow(x,2)+pow(y,2)+pow(z,2));
     }
@@ -213,7 +213,7 @@ class AvgAccel{
   
 //int const NumOfAccelSampletoZero=3;
 
-AvgAccel AVAWorld, AVAWorld1,AVAWorld_Zero;
+AvgAccel AVAWorld,AVAWorld1,AVAWorld_Zero;
 float AVAWorldMagSeries[NumSamplesToSetZero];
 
 
@@ -221,9 +221,9 @@ float AVAWorldMagSeries[NumSamplesToSetZero];
 
 class Speed{
   public:
-  float x;
-  float y;
-  float z;
+  float x=0;
+  float y=0;
+  float z=0;
   float mag(){
     return sqrt(pow(x,2)+pow(y,2)+pow(z,2));
   }
@@ -377,7 +377,7 @@ void speed_calc(Speed *spd,AvgAccel accel, float delta_t)
   
   spd->y = spd->y + accel.y*delta_t/1000.0;
   
-//  spd->z = spd->z + accel.z*delta_t/1000.0;
+  spd->z = spd->z + accel.z*delta_t/1000.0;
   
  }
 
@@ -425,7 +425,54 @@ uint8_t dmpGetLinearAccel_8G(VectorInt16 *v, VectorInt16 *vRaw, VectorFloat *gra
     return 0;
 }
 
+void setPwmFrequency(int pin, int divisor) {
+  byte mode;
+  if(pin == 5 || pin == 6 || pin == 9 || pin == 10) {
+  /*    http://playground.arduino.cc/Main/TimerPWMCheatsheet
+   *     Setting   Divisor   Frequency
+  0x01    1     31372.55
+  0x02    8     3921.16
+  0x03      64    490.20   <--DEFAULT
+  0x04      256     122.55
+  0x05    1024    30.64
+  TCCR1B = (TCCR1B & 0b11111000) | <setting>; */
 
+    switch(divisor) {
+      case 1: mode = 0x01; break;
+      case 8: mode = 0x02; break;
+      case 64: mode = 0x03; break;
+      case 256: mode = 0x04; break;
+      case 1024: mode = 0x05; break;
+      default: return;
+    }
+    if(pin == 5 || pin == 6) {
+      TCCR0B = TCCR0B & 0b11111000 | mode;
+    } else {
+      TCCR1B = TCCR1B & 0b11111000 | mode;
+    }
+  } else if(pin == 3 || pin == 11) {
+    switch(divisor) {
+      case 1: mode = 0x01; break;
+      case 8: mode = 0x02; break;
+      case 32: mode = 0x03; break;
+      case 64: mode = 0x04; break;
+      case 128: mode = 0x05; break;
+      case 256: mode = 0x06; break;
+      case 1024: mode = 0x07; break;
+      default: return;
+    }
+    TCCR2B = TCCR2B & 0b11111000 | mode;
+  }
+}
+
+
+float absolute(float x)
+{
+  if (x>0)
+    return x;
+  else
+    return -x;
+}
 
 // ================================================================
 // ===                      INITIAL SETUP                       ===
@@ -438,7 +485,7 @@ void setup() {
       // declare pin 10 to be an output:
        pinMode(10, OUTPUT);
       //analogWrite(10, 0);
-      setPwmFrequency(10, 8);           //  3921.16 Hz
+      setPwmFrequency(10,8);           //  3921.16 Hz
       //analogWrite(10, 0);
     
     
@@ -449,7 +496,7 @@ void setup() {
     
       //analogWrite(9, 0);
       //analogWrite(10, 0);
-      while (num_loop<=10)
+      while (num_loop<=10) // 10 is used for XM20A ESC, 25 is used for SN40A ESC
       {
 
         analogWrite(10,brightness);
@@ -474,7 +521,6 @@ void setup() {
       analogWrite(10,45);
       analogWrite(9,45);
   //==============================================================
-  
     // join I2C bus (I2Cdev library doesn't do this automatically)
     #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
         Wire.begin();
@@ -526,19 +572,20 @@ void setup() {
     #ifdef AccelSensitivity_8G
     mpu.setFullScaleAccelRange(2);  //0 = +/- 2g | 1 = +/- 4g | 2 = +/- 8g | 3 =  +/- 16g 
     #endif
-//Your MPU6050 should be placed in horizontal position, with package letters facing up. 
-//Sensor readings with offsets:  4 1 16374 -1  0 0
-//Your offsets: -2182 -1810 4667  74  -4  -60
-//
-//Data is printed as: acelX acelY acelZ giroX giroY giroZ
-//Check that your sensor readings are close to 0 0 16384 0 0 0
+
+/*
+Sensor readings with offsets:  5 4 16383 1 0 0
+Your offsets: -1036 -2044 851 19  -13 -23
+
+Data is printed as: acelX acelY acelZ giroX giroY giroZ
+*/
 
     // supply your own gyro offsets here, scaled for min sensitivity
-    mpu.setXGyroOffset(74);
-    mpu.setYGyroOffset(-4);
-    mpu.setZGyroOffset(-60);
+    mpu.setXGyroOffset(22);
+    mpu.setYGyroOffset(-13);
+    mpu.setZGyroOffset(-35);
     
-    mpu.setZAccelOffset(993); //  factory default for my test chip
+    mpu.setZAccelOffset(805); //  factory default for my test chip
     //    mpu.setZAccelOffset(417); 
     //    mpu.setXAccelOffset(-1036);
     //    mpu.setYAccelOffset(-2044);
@@ -577,23 +624,24 @@ void setup() {
     // configure LED for output
     pinMode(LED_PIN, OUTPUT);
     
-    Serial.println("I am Master!");
+    Serial.println("I am Slave!");
     
     //  =======================================================
     // set the data rate for the SoftwareSerial port
     //  =======================================================
 
     mySerial.begin(9600);
-    // set Master mode
-    mySerial.print("AT+ROLE1");
-    delay(1000);
-    mySerial.print("AT+COND43639D711FA");
-    delay(2000);
+    delay(3000);
 }
 
-// ================================================================
-// ===                    MAIN PROGRAM LOOP                     ===
-// ================================================================
+
+
+
+
+
+
+
+
 
 
 // ================================================================
@@ -641,10 +689,12 @@ void loop() {
 
     
             #ifdef OUTPUT_READABLE_WORLDACCEL
-            if( time1<=5000)
+            if( time1<5000)
             {
               time1=millis();
-            }
+//              analogWrite(10,75);
+//              analogWrite(9,75);              
+              }
             
             if (time1>5000)
             {
@@ -667,31 +717,28 @@ void loop() {
                 #endif
                 
                 mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
-
-                //save old value to compute the rate of change
                 
                 AVAWorld1.x= AVAWorld.x;
                 AVAWorld1.y= AVAWorld.x;
                 AVAWorld1.z= AVAWorld.x;
                 
                 // current value of accel
+                
                 AVAWorld.x= (float) aaWorld.x*9.81/2048.0;
                 AVAWorld.y= (float) aaWorld.y*9.81/2048.0;
                 AVAWorld.z= (float) aaWorld.z*9.81/2048.0;
-                
-                
+    
                 if(run1==1)
                 {
-//                    delay(800);
-//                    analogWrite(10,70);
-//                    analogWrite(9,70);  
-//                    delay(250);                  
-//                    analogWrite(10,75);
-//                    analogWrite(9,75);   
-//                    delay(500);                    
-//                    analogWrite(10,80);
-//                    analogWrite(9,80);
-//                    delay(250);   
+                    analogWrite(10,70);
+                    analogWrite(9,70);  
+                    delay(250);                  
+                    analogWrite(10,75);
+                    analogWrite(9,75);   
+                    delay(500);                    
+                    analogWrite(10,80);
+                    analogWrite(9,80);
+                    delay(250);   
 //                    analogWrite(10,90);
 //                    analogWrite(9,90);
                     if (absolute(AVAWorld.x)<AccelMagThreshold)
@@ -716,31 +763,27 @@ void loop() {
                       {
                         AVAWorldMagSeries[NumSamplesToSetZero-1]=0;
                       }
-                    else
-                    {
-                      AVAWorldMagSeries[NumSamplesToSetZero-1]= absolute(AVAWorld.x); 
-                    }
+                      else
+                      {
+                        AVAWorldMagSeries[NumSamplesToSetZero-1]= absolute(AVAWorld.x); 
+                      }
                     
                     time_old=time1;
                     time1=millis();
                 }         
                         delta_t=(time1-time_old);
                         RoCh=(AVAWorld.x-AVAWorld1.x)*1000.0/(float)delta_t;
-//                        Serial.print(RoCh);
-//                        Serial.print(",");
                         //==================================================================//
                         //==============    RESET SPEED TO ZERO IF NECESSARY ===============//
                         //==================================================================//
                         SumMagAccel=0;
                         
+
                         for(int ii=0;ii<NumSamplesToSetZero;ii++)
                         {
                            SumMagAccel+=AVAWorldMagSeries[ii];
-                        }
-                          
-                        //==================================================================//
+                          }
 
-                        //==================================================================//
                         Spds[0].x=Spds[1].x;
                         Spds[0].y=Spds[1].y;
                         Spds[1].x=Spds[2].x;
@@ -749,21 +792,19 @@ void loop() {
                         Spds[2].y=Spds[3].y;
                         Spds[3].x=spd[1].x;
                         Spds[3].y=spd[1].y;
-                        
-                        speed_calc(&spd[1],AVAWorld, delta_t);
-                                              
-                        if(SumMagAccel==0 && absolute(RoCh)<RoChThreshold)// add abs_x<0.8 to prevent wrong speed reset :((
+                        speed_calc(&spd[1],AVAWorld, delta_t);  
+                        if(SumMagAccel==0 && absolute(RoCh)<RoChThreshold)
+                        //if(SumMagAccel==0)
                         {
-                          // we should realize the peak value and do not reset the speed to zero
-//                          Serial.print("here,");
                           spd[1].x=0;
                           spd[1].y=0;
-                          spd[1].z=0; 
+                          spd[1].z=0;   
 //                          AVAWorld.x=0;
 //                          AVAWorld.y=0;
 //                          AVAWorld.z=0; 
-                          peak_speed=0; 
+                          peak_speed=0;                       
                         }
+                        
                         //  ==================================================================//
                         //  Catch the peak speed value, minor bug when move at low speed
                         //  ==================================================================//
@@ -776,10 +817,9 @@ void loop() {
                           Serial.println(spd[1].x);
                           step_start_time=millis();
                          }
-                        abs_x=absolute(spd[1].x);  
-//                      per our test, the peak value of normal walk will never drop below 0.8
-                        if (abs_x>0.8)
-                        peak_speed=max(peak_speed,abs_x); // we have to use our own absolute function because built-in abs() returns int value
+//
+                        if (absolute(spd[1].x)>0.8)                    // this condition to prevent the wrong peak value after reset peak_speed
+                        peak_speed=max(peak_speed,absolute(spd[1].x)); // we have to use our own absolute function because built-in abs() returns int value
                         
                         //==================================================================//
                         //        CATCH PEAK SPEED VALUES
@@ -790,51 +830,46 @@ void loop() {
                           
                         // peak_speed>0.5 to prevent the small negative value at the beginning of foot step .
                         // absolute(spd[1].x)==0 before the condition j==n_reset is met, then we can't reset the temp var "peak_speed".
-                        //if (abs_x < peak_speed && peak_speed>0.6 && abs_x!=0 ) //the value is going down (absolute(spd[1].x) < peak_speed) and the acceleration is zero.
                         if (absolute(spd[1].x) < peak_speed && peak_speed>0.5 && absolute(spd[1].x)!=0 ) //the value is going down and the acceleration is zero.
                         {
-
-//                            Serial.println("T"+half_step_time);
+                             
+                              if (!j)// j==0
+                              {
+                                step_peak_time=millis();
+                                half_step_time=step_peak_time-step_start_time;
+                                Serial.println("HST");
+                                Serial.println(half_step_time);
                                 
-                            if (!j)// j==0
-                            {
-                                  step_peak_time=millis();
-                                  half_step_time=step_peak_time-step_start_time;
-                                  Serial.println("HST");
-                                  Serial.println(half_step_time);
-                                  
-                                  peak_speeds[0]=peak_speeds[1];
-                                  peak_speeds[1]=peak_speeds[2];
-                                  peak_speeds[2]=peak_speeds[3];
-                                  peak_speeds[3]=peak_speeds[4]; 
-                                  peak_speeds[4]=peak_speed;
-                                  
-                                  avg_peak_speed=(peak_speeds[0]+peak_speeds[1]+peak_speeds[2]+peak_speeds[3])/4;
-                                  
-                                  //  tend to reduce the user's speed
-                                  ratio=peak_speeds[4]/avg_peak_speed;
-                                  Serial.println(ratio);
-                                  // this is at Master side
-                                  if (ratio<0.92 && ratio >=0.7)
-                                  {
-                                    //note on this
-                                    mySerial.write((byte)0x00);
-                                    Serial.println("Se1M");
-                                  }
-                                  else if(ratio<0.7 && ratio>0)
-                                  {
-                                    mySerial.write(1);
-                                    Serial.println("Se2M");
-                                  }
-
-                            }
-                            j=1;
+                                peak_speeds[0]=peak_speeds[1];
+                                peak_speeds[1]=peak_speeds[2];
+                                peak_speeds[2]=peak_speeds[3];
+                                peak_speeds[3]=peak_speeds[4]; 
+                                peak_speeds[4]=peak_speed;
+                                
+                                avg_peak_speed=(peak_speeds[0]+peak_speeds[1]+peak_speeds[2]+peak_speeds[3])/4;
+                                
+                                //  tend to reduce the user's speed
+                                ratio=peak_speeds[4]/avg_peak_speed;
+                                if (ratio<0.92 && ratio >0.7)
+                                {
+                                  //note on this
+                                  mySerial.write((byte)0x00);
+                                  Serial.println("Se1");
+                                }
+                                else if(ratio<0.7 && ratio>0)
+                                {
+                                  mySerial.write(1);
+                                  Serial.println("Se2");}
+                              }
+                              j=1;
                          }
                          else
                          {
                           j=0;
-                         }
-                         
+                          }
+
+
+                          
                         //===================================================================
                         // This code is designed for Starting Mechanism 
                         //===================================================================
@@ -849,8 +884,9 @@ void loop() {
                           if (!motor_init)
                           {
                             t0=Current_time;
-                            motor_init=1;                          
+                            motor_init=1;              
                           }
+                          
                           duty=(int)80*(Current_time-t0)/(half_step_time/2);
                           
                           analogWrite(10,duty);
@@ -861,42 +897,17 @@ void loop() {
                           if(duty>30)
                           mySerial.write(duty);
                         }
-                        
-//                        //===================================================================
-//                        // for the 2nd foot step   
-//                        //=================================================================== 
-//                        else if(peak_speeds[4]>0 && peak_speeds[3]>0 && peak_speeds[2]==0 && (Current_time-step_peak_time) >= half_step_time/2 && (Current_time-step_peak_time) <= half_step_time) // 2nd step
-//                        {
-//                          //  how to capture t0 ?
-//                          
-//                          if (!second_step_init)
-//                          {
-//                            t2=Current_time;
-//                            second_step_init=1;                          
-//                          }
-//                          
-//                          analogWrite(10,(int)80*(Current_time-t2)/(half_step_time/2));
-//                          analogWrite(9,(int)80*(Current_time-t2)/(half_step_time/2)) ; 
-//
-//                          Serial.print("aa2");
-//                          Serial.println((int)80*(Current_time-t2)/(half_step_time/2)); 
-//                        }
-
-                        
 
 
+//                        spd[0].x=abs(spd[1].x);
 
                         //==================================================================//
                         //==============              Serial Print           ===============//
-                        //==================================================================//
-                        
-//                        Serial.print(Current_time); 
-//                        Serial.print(","); 
+                        //==================================================================//  
                         Serial.print(AVAWorld.x); 
                         Serial.print(",");             
-                        Serial.println(spd[1].x); 
-//                        Serial.print(",");
-//                        Serial.print(1].x);
+                        Serial.println(spd[1].x);
+//                        Serial.print(spd[1].x);
 //                        Serial.print(",");
 //                        Serial.print(peak_speeds[0]);
 //                        Serial.print(",");
@@ -906,31 +917,42 @@ void loop() {
 //                        Serial.print(",");
 //                        Serial.print(peak_speeds[3]); 
 //                        Serial.print(",");
-//                        Serial.println(peak_speeds[4]); 
-                                        
+//                        Serial.println(peak_speeds[4]);                         
+//                        Serial.print(peak_speeds[3]);                         
+//                        Serial.print(",");
+//                        Serial.print(AVAWorld.x); 
+//                        Serial.print("");
+//                        Serial.print(AVAWorld.y); 
+//                        Serial.print(",");
+//                        Serial.println(AVAWorld.z); 
 
-                                                               
+                                               
                         
               }
             //==================================================================//
             //==============       BLE SoftwareSerial Print      ===============//
             //==================================================================//  
-            //            mySerial.println(AVAWorld.x);
+//            mySerial.println(AVAWorld.x);
 
 
             }
         #endif
+
         
+        // if there is any signal from Master module, that means slave has to react 
         if(mySerial.available())
         {
           c=mySerial.read();
           Serial.println("RX");
+          Serial.println(ratio);
+//          analogWrite(10,70);
+//          analogWrite(9,70);
         }
         
         //  This stopping mechanism should be reviewed again
         //  c==0: slave ratio <0.9, >0.7
         //  c==1: slave ratio <0.7
-        if((c==0 && ratio<0.7) || (c==1 && ratio<0.92) )  // Stop
+        if((c==0 && ratio<0.7) || (c==1 && ratio<0.92) )// Stop
         {
           Serial.println("ST");
           analogWrite(10,0);
@@ -944,66 +966,18 @@ void loop() {
           analogWrite(10,70);
           analogWrite(9,70);
         }
-        else if(c>30)
+        else if (c>30)
         {
           Serial.print("RX %D,");
           Serial.println(c);
           
           analogWrite(10,c);
           analogWrite(9,c) ;
-          }        
-         
+          }
+
 }
 
 
-
-float absolute(float x)
-{
-  if (x>0)
-    return x;
-  else
-    return -x;
-}
-
-void setPwmFrequency(int pin, int divisor) {
-  byte mode;
-  if(pin == 5 || pin == 6 || pin == 9 || pin == 10) {
-  /*    http://playground.arduino.cc/Main/TimerPWMCheatsheet
-   *     Setting   Divisor   Frequency
-  0x01    1     31372.55
-  0x02    8     3921.16
-  0x03      64    490.20   <--DEFAULT
-  0x04      256     122.55
-  0x05    1024    30.64
-  TCCR1B = (TCCR1B & 0b11111000) | <setting>; */
-
-    switch(divisor) {
-      case 1: mode = 0x01; break;
-      case 8: mode = 0x02; break;
-      case 64: mode = 0x03; break;
-      case 256: mode = 0x04; break;
-      case 1024: mode = 0x05; break;
-      default: return;
-    }
-    if(pin == 5 || pin == 6) {
-      TCCR0B = TCCR0B & 0b11111000 | mode;
-    } else {
-      TCCR1B = TCCR1B & 0b11111000 | mode;
-    }
-  } else if(pin == 3 || pin == 11) {
-    switch(divisor) {
-      case 1: mode = 0x01; break;
-      case 8: mode = 0x02; break;
-      case 32: mode = 0x03; break;
-      case 64: mode = 0x04; break;
-      case 128: mode = 0x05; break;
-      case 256: mode = 0x06; break;
-      case 1024: mode = 0x07; break;
-      default: return;
-    }
-    TCCR2B = TCCR2B & 0b11111000 | mode;
-  }
-}
 
 
 
@@ -1021,3 +995,4 @@ void setPwmFrequency(int pin, int divisor) {
 
 
   
+
