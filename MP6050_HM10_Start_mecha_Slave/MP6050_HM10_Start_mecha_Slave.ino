@@ -632,6 +632,7 @@ Data is printed as: acelX acelY acelZ giroX giroY giroZ
 
     mySerial.begin(9600);
     delay(3000);
+    Serial.println(10);
 }
 
 
@@ -943,6 +944,14 @@ void loop() {
         if(mySerial.available())
         {
           c=mySerial.read();
+          if (c>30) // c is the duty of the pulse if c>30
+          {
+            Serial.print("RX Dt,");// receive duty
+            Serial.println(c);
+            
+            analogWrite(10,c);
+            analogWrite(9,c) ;
+            }          
           Serial.println("RX");
           Serial.println(ratio);
 //          analogWrite(10,70);
@@ -966,14 +975,7 @@ void loop() {
           analogWrite(10,70);
           analogWrite(9,70);
         }
-        else if (c>30)
-        {
-          Serial.print("RX %D,");
-          Serial.println(c);
-          
-          analogWrite(10,c);
-          analogWrite(9,c) ;
-          }
+
 
 }
 
