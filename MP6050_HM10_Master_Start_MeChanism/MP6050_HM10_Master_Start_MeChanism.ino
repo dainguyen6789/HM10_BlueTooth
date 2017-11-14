@@ -471,8 +471,8 @@ void setup() {
         else
            delay(10);
       }
-      analogWrite(10,45);
-      analogWrite(9,45);
+      analogWrite(10,20);
+      analogWrite(9,20);
   //==============================================================
   
     // join I2C bus (I2Cdev library doesn't do this automatically)
@@ -583,12 +583,14 @@ void setup() {
     // set the data rate for the SoftwareSerial port
     //  =======================================================
 
-    mySerial.begin(9600);
-    // set Master mode
-    mySerial.print("AT+ROLE1");
-    delay(1000);
-    mySerial.print("AT+COND43639D711FA");
-    delay(2000);
+//    mySerial.begin(9600);
+//    // set Master mode
+//    mySerial.print("AT+ROLE1");
+//    delay(1000);
+//    mySerial.print("AT+COND43639D711FA");
+//    delay(2000);
+//    analogWrite(10,20);
+//    analogWrite(9,20);
 }
 
 // ================================================================
