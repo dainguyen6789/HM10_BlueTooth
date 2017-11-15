@@ -2,7 +2,7 @@
 // 6/21/2012 by Jeff Rowberg <jeff@rowberg.net>
 // Updates should (hopefully) always be available at https://github.com/jrowberg/i2cdevlib
 //
-//Be careful with the accelerometer
+//Be careful with the accelerometer, still have noise in the beginning
 //
 //We must wait until the accel value is small (speed is reset to zero), we can only walk and record speed data correctly after the waiting period
 // Changelog:
