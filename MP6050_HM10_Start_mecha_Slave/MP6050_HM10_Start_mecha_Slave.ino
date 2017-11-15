@@ -521,6 +521,8 @@ void setup() {
       analogWrite(10,45);
       analogWrite(9,45);
   //==============================================================
+    mySerial.begin(9600);
+    delay(3000);
     // join I2C bus (I2Cdev library doesn't do this automatically)
     #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
         Wire.begin();
@@ -630,9 +632,7 @@ Data is printed as: acelX acelY acelZ giroX giroY giroZ
     // set the data rate for the SoftwareSerial port
     //  =======================================================
 
-    mySerial.begin(9600);
-    delay(3000);
-    Serial.println(10);
+
 }
 
 
@@ -731,15 +731,15 @@ void loop() {
     
                 if(run1==1)
                 {
-                    analogWrite(10,70);
-                    analogWrite(9,70);  
-                    delay(250);                  
-                    analogWrite(10,75);
-                    analogWrite(9,75);   
-                    delay(500);                    
-                    analogWrite(10,80);
-                    analogWrite(9,80);
-                    delay(250);   
+//                    analogWrite(10,70);
+//                    analogWrite(9,70);  
+//                    delay(250);                  
+//                    analogWrite(10,75);
+//                    analogWrite(9,75);   
+//                    delay(500);                    
+//                    analogWrite(10,80);
+//                    analogWrite(9,80);
+//                    delay(250);   
 //                    analogWrite(10,90);
 //                    analogWrite(9,90);
                     if (absolute(AVAWorld.x)<AccelMagThreshold)
@@ -889,9 +889,15 @@ void loop() {
                           }
                           
                           duty=(int)80*(Current_time-t0)/(half_step_time/2);
-                          
-                          analogWrite(10,duty);
-                          analogWrite(9,duty) ;
+                          if(duty>80)
+                          {
+                            duty=80;
+                            }
+                          if(duty>20)
+                          {
+                            analogWrite(10,duty);
+                            analogWrite(9,duty) ;
+                          }
                           
                           Serial.print("aa");
                           Serial.println(duty);
@@ -944,7 +950,7 @@ void loop() {
         if(mySerial.available())
         {
           c=mySerial.read();
-          if (c>30) // c is the duty of the pulse if c>30
+          if (millis()>15000 && c>30) // c is the duty of the pulse if c>30
           {
             Serial.print("RX Dt,");// receive duty
             Serial.println(c);

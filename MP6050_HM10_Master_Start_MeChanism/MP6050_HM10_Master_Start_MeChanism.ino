@@ -543,11 +543,11 @@ void setup() {
 //Check that your sensor readings are close to 0 0 16384 0 0 0
 
     // supply your own gyro offsets here, scaled for min sensitivity
-    mpu.setXGyroOffset(74);
-    mpu.setYGyroOffset(-4);
-    mpu.setZGyroOffset(-60);
+    mpu.setXGyroOffset(88);
+    mpu.setYGyroOffset(-14);
+    mpu.setZGyroOffset(-65);
     
-    mpu.setZAccelOffset(993); //  factory default for my test chip
+    mpu.setZAccelOffset(996); //  factory default for my test chip
     //    mpu.setZAccelOffset(417); 
     //    mpu.setXAccelOffset(-1036);
     //    mpu.setYAccelOffset(-2044);
