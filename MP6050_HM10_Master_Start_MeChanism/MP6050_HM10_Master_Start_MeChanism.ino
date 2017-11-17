@@ -543,7 +543,7 @@ void setup() {
 //Check that your sensor readings are close to 0 0 16384 0 0 0
 
     // supply your own gyro offsets here, scaled for min sensitivity
-    mpu.setXGyroOffset(90);
+    mpu.setXGyroOffset(88);
     mpu.setYGyroOffset(-14);
     mpu.setZGyroOffset(-65);
     
@@ -947,6 +947,7 @@ void loop() {
         //  This stopping mechanism should be reviewed again
         //  c==0: slave ratio <0.9, >0.7
         //  c==1: slave ratio <0.7
+        if((c==0 && ratio<0.7) || (c==1 && ratio<0.92) )  // Stop
         {
           Serial.println("ST");
           analogWrite(10,0);
