@@ -855,10 +855,10 @@ void loop() {
                             t0=Current_time;
                             motor_init=1;                          
                           }
-                          duty=(int)80*(Current_time-t0)/(half_step_time/2);
-                          if(duty>80)
+                          duty=(int)90*(Current_time-t0)/(half_step_time/2);
+                          if(duty>90)
                           {
-                            duty=80;
+                            duty=90;
                             }
                           if(duty>20)
                           {
