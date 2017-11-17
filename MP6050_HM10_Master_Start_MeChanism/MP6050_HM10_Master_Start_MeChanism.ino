@@ -167,7 +167,7 @@ int run1=1,j;
 //============================
 //For Fastest Speed;
 //============================
-float AccelMagThreshold=1,RoCh,RoChThreshold=8;// Rate of Accel change
+float AccelMagThreshold=1.25,RoCh,RoChThreshold=8;// Rate of Accel change
 const int NumSamplesToSetZero=2;
 
 // orientation/motion vars
@@ -947,7 +947,6 @@ void loop() {
         //  This stopping mechanism should be reviewed again
         //  c==0: slave ratio <0.9, >0.7
         //  c==1: slave ratio <0.7
-        if((c==0 && ratio<0.7) || (c==1 && ratio<0.92) )  // Stop
         {
           Serial.println("ST");
           analogWrite(10,0);
