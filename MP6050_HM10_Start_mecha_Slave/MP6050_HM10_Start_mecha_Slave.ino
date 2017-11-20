@@ -583,11 +583,11 @@ Data is printed as: acelX acelY acelZ giroX giroY giroZ
 */
 
     // supply your own gyro offsets here, scaled for min sensitivity
-    mpu.setXGyroOffset(20);
-    mpu.setYGyroOffset(-9);
-    mpu.setZGyroOffset(-4);
+    mpu.setXGyroOffset(22);
+    mpu.setYGyroOffset(-13);
+    mpu.setZGyroOffset(-35);
     
-    mpu.setZAccelOffset(861); //  factory default for my test chip
+    mpu.setZAccelOffset(805); //  factory default for my test chip
     //    mpu.setZAccelOffset(417); 
     //    mpu.setXAccelOffset(-1036);
     //    mpu.setYAccelOffset(-2044);
