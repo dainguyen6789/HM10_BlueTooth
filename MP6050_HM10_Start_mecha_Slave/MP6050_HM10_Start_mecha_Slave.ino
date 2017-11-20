@@ -891,7 +891,7 @@ void loop() {
                           
                           duty=(int)35*peak_speeds[4]*(Current_time-t0)/(half_step_time/2); // the motor speed will proportional to the peak foot speed
                           if(duty>90)
-                          {
+                          { 
                             duty=90;
                             }
                           if(duty>20)
@@ -900,7 +900,7 @@ void loop() {
                             analogWrite(9,duty) ;
                           }
                           
-                          Serial.print("aa");
+                          Serial.print("aa:");
                           Serial.println(duty);
                           if(duty>30)
                           mySerial.write(duty);
