@@ -889,7 +889,7 @@ void loop() {
                             motor_init=1;              
                           }
                           
-                          duty=(int)35*peak_speeds[4]*(Current_time-t0)/(half_step_time/2); // the motor speed will proportional to the peak foot speed
+                          duty=(int)90*peak_speeds[4]*(Current_time-t0)/(half_step_time/2); // the motor speed will proportional to the peak foot speed
                           if(duty>90)
                           { 
                             duty=90;
@@ -956,7 +956,7 @@ void loop() {
             Serial.print("RX Dt,");// receive duty
             Serial.println(c);
             
-            analogWrite(10,c);
+            analogWrite(10,c);            
             analogWrite(9,c) ;
             }          
           Serial.println("RX");

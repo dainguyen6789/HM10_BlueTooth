@@ -852,8 +852,8 @@ void loop() {
                           
                           if (!motor_init)
                           {
-                            t0=Current_time;
-                            motor_init=1;                          
+                            t0=Current_time;              
+                            motor_init=1;                           
                           }
                           duty=90*peak_speeds[4]*(Current_time-t0)/(half_step_time/2); // the motor speed will proportional to the peak foot speed
                           if(duty>90)
