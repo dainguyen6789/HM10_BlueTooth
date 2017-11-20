@@ -865,7 +865,7 @@ void loop() {
                             analogWrite(10,duty);
                             analogWrite(9,duty) ;
                           }
-                          Serial.print("aa:");
+                          Serial.print("dt:");
                           Serial.println(duty);
                           if(duty>30)
                             mySerial.write(duty);
