@@ -164,7 +164,7 @@ char RX_Data_BLE=2;
 //============================
 //For Fastest Speed;
 //============================
-float AccelMagThreshold=1.25,RoCh,RoChThreshold=8;// Rate of Accel change
+float AccelMagThreshold=1,RoCh,RoChThreshold=8;// Rate of Accel change
 const int NumSamplesToSetZero=2;
 
 // orientation/motion vars
@@ -980,26 +980,26 @@ void loop() {
         else if(RX_Data_BLE==0 && ratio>0.7 && ratio<=0.92)
         {  
           Serial.print("Dec:");
-          Serial.println(90*peak_speeds[4]);
+          Serial.println(150*log(peak_speeds[4]));
           mySerial.write(byte(0x00));                                         // signal the Master to decrease speed
-          analogWrite(10,90*peak_speeds[4]);
-          analogWrite(9,90*peak_speeds[4]);
+          analogWrite(10,150*log(peak_speeds[4]));
+          analogWrite(9,150*log(peak_speeds[4]));
         }
         else if (ratio>0.92 && ratio <1)
         {
           Serial.print("Nrml:");
-          Serial.println(90*avg_peak_speed);
-          analogWrite(10,90*avg_peak_speed);
-          analogWrite(9,90*avg_peak_speed);
+          Serial.println(150*log(avg_peak_speed));
+          analogWrite(10,150*log(avg_peak_speed));
+          analogWrite(9,150*log(avg_peak_speed));
          }
         // what happens if we increase the foot speed ratio > 1
         // modify because ratio >1 at the initial foot steps
         else if( ratio>1 && peak_count>4)
         {
           Serial.print("Inc:");
-          Serial.println(90*peak_speeds[4]);
-          analogWrite(10,90*peak_speeds[4]);
-          analogWrite(9,90*peak_speeds[4]);
+          Serial.println(150*log(peak_speeds[4]));
+          analogWrite(10,150*log(peak_speeds[4]));
+          analogWrite(9,150*log(peak_speeds[4]));
           }
 }
 
