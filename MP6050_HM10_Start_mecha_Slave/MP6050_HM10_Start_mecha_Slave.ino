@@ -152,8 +152,8 @@ uint8_t fifoBuffer[64]; // FIFO storage buffer
 unsigned long time1=0,time_old,step_start_time,half_step_time,step_peak_time,Current_time,t0,t2;
 float delta_t,SumMagAccel;
 //float delta_time;
-int run1=1,j,n_reset=20;
-char c=2;
+int run1=1,j,n_reset=20, count_decreased_step;
+char RX_Data_BLE=2;
 //============================
 //For Normal and Faster Speed
 //============================
@@ -950,14 +950,15 @@ void loop() {
         // if there is any signal from Master module, that means slave has to react 
         if(mySerial.available())
         {
-          c=mySerial.read();
-          if (millis()>15000 && c>30) // c is the duty of the pulse if c>30
+          RX_Data_BLE=mySerial.read();
+          // This code is used for starting mechanism.
+          if (millis()>15000 && RX_Data_BLE>30) // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
           {
             Serial.print("RX Dt,");// receive duty
-            Serial.println(c);
+            Serial.println(RX_Data_BLE);
             
-            analogWrite(10,c);            
-            analogWrite(9,c) ;
+            analogWrite(10,RX_Data_BLE);            
+            analogWrite(9,RX_Data_BLE) ;
             }          
           Serial.println("RX");
           Serial.println(ratio);
@@ -966,24 +967,38 @@ void loop() {
         }
         
         //  This stopping mechanism should be reviewed again
-        //  c==0: slave ratio <0.9, >0.7
-        //  c==1: slave ratio <0.7
-        if((c==0 && ratio<0.7) || (c==1 && ratio<0.92) )// Stop
+        //  RX_Data_BLE==0: slave ratio <0.9, >0.7
+        //  RX_Data_BLE==1: slave ratio <0.7
+        if((RX_Data_BLE==0 && ratio<0.7) || (RX_Data_BLE==1 && ratio<0.92) )  // stop mechanism
         {
           Serial.println("ST");
           analogWrite(10,0);
           analogWrite(9,0);
-          mySerial.write(1);// signal the Slave to stop
+          mySerial.write(1);                                                  // signal the Slave to stop
         }
-        else if(c==0 && ratio>0.7 && ratio<=0.92)
-        {          
-          Serial.println("Dec");
-          mySerial.write(byte(0x00));  // signal the Slave to decrease speed
-          analogWrite(10,70);
-          analogWrite(9,70);
+        else if(RX_Data_BLE==0 && ratio>0.7 && ratio<=0.92)
+        {  
+          Serial.print("Dec:");
+          Serial.println(90*peak_speeds[4]);
+          mySerial.write(byte(0x00));                                         // signal the Master to decrease speed
+          analogWrite(10,90*peak_speeds[4]);
+          analogWrite(9,90*peak_speeds[4]);
         }
-
-
+        else if (ratio>0.92 && ratio <1)
+        {
+          Serial.print("Nrml:");
+          Serial.println(90*avg_peak_speed);
+          analogWrite(10,90*avg_peak_speed);
+          analogWrite(9,90*avg_peak_speed);
+         }
+        // what happens if we increase the foot speed ratio > 1
+        else if( ratio>1)
+        {
+          Serial.print("Inc:");
+          Serial.println(90*peak_speeds[4]);
+          analogWrite(10,90*peak_speeds[4]);
+          analogWrite(9,90*peak_speeds[4]);
+          }
 }
 
 

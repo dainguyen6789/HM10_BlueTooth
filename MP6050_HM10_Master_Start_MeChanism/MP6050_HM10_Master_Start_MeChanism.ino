@@ -200,7 +200,7 @@ float vx,vy,vz;
 // packet structure for InvenSense teapot demo
 uint8_t teapotPacket[14] = { '$', 0x02, 0,0, 0,0, 0,0, 0,0, 0x00, 0x00, '\r', '\n' };
 
-char c=2;
+char RX_Data_BLE=2;
 
 
 class AvgAccel{
@@ -870,30 +870,6 @@ void loop() {
                           if(duty>30)
                             mySerial.write(duty);
                         }
-                        
-//                        //===================================================================
-//                        // for the 2nd foot step   
-//                        //=================================================================== 
-//                        else if(peak_speeds[4]>0 && peak_speeds[3]>0 && peak_speeds[2]==0 && (Current_time-step_peak_time) >= half_step_time/2 && (Current_time-step_peak_time) <= half_step_time) // 2nd step
-//                        {
-//                          //  how to capture t0 ?
-//                          
-//                          if (!second_step_init)
-//                          {
-//                            t2=Current_time;
-//                            second_step_init=1;                          
-//                          }
-//                          
-//                          analogWrite(10,(int)80*(Current_time-t2)/(half_step_time/2));
-//                          analogWrite(9,(int)80*(Current_time-t2)/(half_step_time/2)) ; 
-//
-//                          Serial.print("aa2");
-//                          Serial.println((int)80*(Current_time-t2)/(half_step_time/2)); 
-//                        }
-
-                        
-
-
 
                         //==================================================================//
                         //==============              Serial Print           ===============//
@@ -932,35 +908,51 @@ void loop() {
         
         if(mySerial.available())
         {
-          c=mySerial.read();
-          if(millis()>15000 && c>30) // c is the duty of the pulse if c>30
+          RX_Data_BLE=mySerial.read();
+          if(millis()>15000 && RX_Data_BLE>30) // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
           {
             Serial.print("RX Dt,");// receive duty
-            Serial.println(c);
+            Serial.println(RX_Data_BLE);
             
-            analogWrite(10,c);
-            analogWrite(9,c) ;
+            analogWrite(10,RX_Data_BLE);
+            analogWrite(9,RX_Data_BLE) ;
             }   
           Serial.println("RX");
         }
         
         //  This stopping mechanism should be reviewed again
-        //  c==0: slave ratio <0.9, >0.7
-        //  c==1: slave ratio <0.7
-        if((c==0 && ratio<0.7) || (c==1 && ratio<0.92) )  // Stop
+        //  RX_Data_BLE==0: slave ratio <0.9, >0.7
+        //  RX_Data_BLE==1: slave ratio <0.7
+        if((RX_Data_BLE==0 && ratio<0.7) || (RX_Data_BLE==1 && ratio<0.92) )  // Stop mechanism
         {
           Serial.println("ST");
           analogWrite(10,0);
           analogWrite(9,0);
           mySerial.write(1);// signal the Slave to stop
         }
-        else if(c==0 && ratio>0.7 && ratio<=0.92)
-        {          
-          Serial.println("Dec");
-          mySerial.write(byte(0x00));  // signal the Slave to decrease speed
-          analogWrite(10,70);
-          analogWrite(9,70);
+        else if(RX_Data_BLE==0 && ratio>0.7 && ratio<=0.92)
+        {  
+          Serial.print("Dec:");
+          Serial.println(90*peak_speeds[4]);
+          mySerial.write(byte(0x00));                                         // signal the Slave to decrease speed
+          analogWrite(10,90*peak_speeds[4]);
+          analogWrite(9,90*peak_speeds[4]);
         }
+        else if (ratio>0.92 && ratio <1)
+        {
+          Serial.print("Nrml:");
+          Serial.println(90*avg_peak_speed);
+          analogWrite(10,90*avg_peak_speed);
+          analogWrite(9,90*avg_peak_speed);
+         }
+        // what happens if we increase the foot speed ratio > 1
+        else if( ratio>1)
+        {
+          Serial.print("Inc");
+          Serial.println(90*peak_speeds[4]);
+          analogWrite(10,90*peak_speeds[4]);
+          analogWrite(9,90*peak_speeds[4]);
+          }
      
          
 }
