@@ -155,7 +155,7 @@ uint8_t fifoBuffer[64]; // FIFO storage buffer
 unsigned long time1=0,time_old,step_start_time,half_step_time,step_peak_time,Current_time,t0,t2;
 float delta_t,SumMagAccel;
 //float delta_time;
-int run1=1,j;
+int run1=1,j,peak_count;
 
 //============================
 //For Normal and Faster Speed
@@ -543,11 +543,11 @@ void setup() {
 //Check that your sensor readings are close to 0 0 16384 0 0 0
 
     // supply your own gyro offsets here, scaled for min sensitivity
-    mpu.setXGyroOffset(88);
+    mpu.setXGyroOffset(87);
     mpu.setYGyroOffset(-14);
-    mpu.setZGyroOffset(-65);
+    mpu.setZGyroOffset(-55);
     
-    mpu.setZAccelOffset(996); //  factory default for my test chip
+    mpu.setZAccelOffset(999); //  factory default for my test chip
     //    mpu.setZAccelOffset(417); 
     //    mpu.setXAccelOffset(-1036);
     //    mpu.setYAccelOffset(-2044);
@@ -798,10 +798,10 @@ void loop() {
                         if (absolute(spd[1].x) < peak_speed && peak_speed>0.5 && absolute(spd[1].x)!=0 ) //the value is going down and the acceleration is zero.
                         {
 
-//                            Serial.println("T"+half_step_time);
-                                
+//                            Serial.println("T"+half_step_time);   
                             if (!j)// j==0
                             {
+                                  peak_count++;                               
                                   step_peak_time=millis();
                                   half_step_time=step_peak_time-step_start_time;
                                   Serial.println("HST");
@@ -844,7 +844,7 @@ void loop() {
                         //===================================================================
                         Current_time=millis();
                         //===================================================================
-                        // for the very 1st foot step    
+                        // FOR the very 1ST FOOT STEP    
                         //===================================================================                   
                         if(peak_speeds[4]>0 && peak_speeds[3]==0 && (Current_time-step_peak_time) >= half_step_time/2 && (Current_time-step_peak_time) <= half_step_time) // 1st step
                         {
@@ -946,7 +946,8 @@ void loop() {
           analogWrite(9,90*avg_peak_speed);
          }
         // what happens if we increase the foot speed ratio > 1
-        else if( ratio>1)
+        // modify because ratio>1 at the initital foot steps
+        else if( ratio>1 && peak_count>4)
         {
           Serial.print("Inc");
           Serial.println(90*peak_speeds[4]);

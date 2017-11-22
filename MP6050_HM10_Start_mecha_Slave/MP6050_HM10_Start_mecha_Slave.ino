@@ -152,7 +152,7 @@ uint8_t fifoBuffer[64]; // FIFO storage buffer
 unsigned long time1=0,time_old,step_start_time,half_step_time,step_peak_time,Current_time,t0,t2;
 float delta_t,SumMagAccel;
 //float delta_time;
-int run1=1,j,n_reset=20, count_decreased_step;
+int run1=1,j,n_reset=20, count_decreased_step,peak_count;
 char RX_Data_BLE=2;
 //============================
 //For Normal and Faster Speed
@@ -833,9 +833,10 @@ void loop() {
                         // absolute(spd[1].x)==0 before the condition j==n_reset is met, then we can't reset the temp var "peak_speed".
                         if (absolute(spd[1].x) < peak_speed && peak_speed>0.5 && absolute(spd[1].x)!=0 ) //the value is going down and the acceleration is zero.
                         {
-                             
+                              
                               if (!j)// j==0
                               {
+                                peak_count++;
                                 step_peak_time=millis();
                                 half_step_time=step_peak_time-step_start_time;
                                 Serial.println("HST");
@@ -992,7 +993,8 @@ void loop() {
           analogWrite(9,90*avg_peak_speed);
          }
         // what happens if we increase the foot speed ratio > 1
-        else if( ratio>1)
+        // modify because ratio >1 at the initial foot steps
+        else if( ratio>1 && peak_count>4)
         {
           Serial.print("Inc:");
           Serial.println(90*peak_speeds[4]);
