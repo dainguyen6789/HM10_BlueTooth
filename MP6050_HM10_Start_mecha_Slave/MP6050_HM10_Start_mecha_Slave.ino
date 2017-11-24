@@ -975,32 +975,39 @@ void loop() {
           Serial.println("ST");
           analogWrite(10,0);
           analogWrite(9,0);
-          mySerial.write(1);                                                  // signal the Slave to stop
+          mySerial.write(1);                                                  // signal the Master to stop
         }
+        // Decrease the speed
         else if(RX_Data_BLE==0 && ratio>0.7 && ratio<=0.92)
         {  
+          duty=150*log10(peak_speeds[4]);
           Serial.print("Dec:");
-          Serial.println(150*log(peak_speeds[4]));
-          mySerial.write(byte(0x00));                                         // signal the Master to decrease speed
-          analogWrite(10,150*log(peak_speeds[4]));
-          analogWrite(9,150*log(peak_speeds[4]));
+          Serial.println(duty);
+          mySerial.write(duty);                                         // signal the Master to decrease speed
+          analogWrite(10,duty);
+          analogWrite(9,duty);
         }
         else if (ratio>0.92 && ratio <1)
         {
+          duty=150*log10(avg_peak_speed);
+          mySerial.write(duty);  
           Serial.print("Nrml:");
-          Serial.println(150*log(avg_peak_speed));
-          analogWrite(10,150*log(avg_peak_speed));
-          analogWrite(9,150*log(avg_peak_speed));
+          Serial.println(duty);
+          analogWrite(10,duty);
+          analogWrite(9,duty);
+          
          }
         // what happens if we increase the foot speed ratio > 1
-        // modify because ratio >1 at the initial foot steps
+        // modify because ratio > 1 at the initital foot steps
         else if( ratio>1 && peak_count>4)
         {
-          Serial.print("Inc:");
-          Serial.println(150*log(peak_speeds[4]));
-          analogWrite(10,150*log(peak_speeds[4]));
-          analogWrite(9,150*log(peak_speeds[4]));
+          duty=150*log10(peak_speeds[4]);
+          Serial.print("Inc");
+          Serial.println(duty);//150*log(peak_speeds[4]
+          analogWrite(10,duty);
+          analogWrite(9,duty);
           }
+     
 }
 
 
