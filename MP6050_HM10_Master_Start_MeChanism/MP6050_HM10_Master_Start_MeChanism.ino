@@ -916,6 +916,7 @@ void loop() {
             
             analogWrite(10,RX_Data_BLE);
             analogWrite(9,RX_Data_BLE) ;
+            //duty=RX_Data_BLE;
             }   
           Serial.println("RX");
         }
@@ -923,13 +924,23 @@ void loop() {
         //  This stopping mechanism should be reviewed again
         //  RX_Data_BLE==0: slave ratio <0.9, >0.7
         //  RX_Data_BLE==1: slave ratio <0.7
-        if((RX_Data_BLE==0 && ratio<0.7) || (RX_Data_BLE==1 && ratio<0.92) )  // Stop mechanism
+        if((RX_Data_BLE==0 && ratio<0.7))  // Stop by myself
         {
+//          half_step_time=step_peak_time-step_start_time;
+//          duty=90*peak_speeds[4]*(step_peak_time+half_step_time-Current_time)/(half_step_time); // the motor speed will proportional to the peak foot speed
+          gradualStopDuty=duty*(step_peak_time+half_step_time-Current_time)/(half_step_time);
           Serial.println("ST");
-          analogWrite(10,0);
-          analogWrite(9,0);
-          mySerial.write(1);// signal the Slave to stop
+          if (gradualStopDuty>30)
+          {
+            analogWrite(10,gradualStopDuty);
+            analogWrite(9,gradualStopDuty);
+            mySerial.write(gradualStopDuty);// signal the Slave to stop
+          }
         }
+//        else if(RX_Data_BLE==1 && ratio<0.92 && && ratio>0.7)// stop by other foot
+//        {
+//          
+//          }
         // Decrease the speed
         else if(RX_Data_BLE==0 && ratio>0.7 && ratio<=0.92)
         {  
