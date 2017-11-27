@@ -142,7 +142,7 @@ int brightness = 55;    // how bright the LED is
 #define LED_PIN 13 // (Arduino is 13, Teensy is 11, Teensy++ is 6)
 bool blinkState = false;
 
-bool stopbyOther;
+bool stopbyOther,stopbymyself;
 // MPU control/status vars
 bool dmpReady = false;  // set true if DMP init was successful
 uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
@@ -955,7 +955,7 @@ void loop() {
           RX_Data_BLE=mySerial.read();
           if(millis()>15000 && RX_Data_BLE>30) // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
           {
-            Serial.print("RX Dt,");// receive duty
+            Serial.print("RXDt,");// receive duty
             Serial.println(RX_Data_BLE);
             
             analogWrite(10,RX_Data_BLE);
@@ -965,23 +965,26 @@ void loop() {
           if (RX_Data_BLE==1)
           {
             stopbyOther=true;
+            stopbymyself=false;
             }
           else if(RX_Data_BLE==0)
           {
             stopbyOther=false;
+            stopbymyself=true;
             }
-          Serial.println("RX");
+          Serial.print("RX,");
+          Serial.println(RX_Data_BLE);
         }
         
         //  This stopping mechanism should be reviewed again
         //  RX_Data_BLE==0: slave ratio <0.9, >0.7
         //  RX_Data_BLE==1: slave ratio <0.7
-        if((RX_Data_BLE==0 && ratio<0.7))  // Stop by myself
+        if((stopbymyself && ratio<0.7))  // Stop by myself
         {
 //          half_step_time=step_peak_time-step_start_time;
 //          duty=90*peak_speeds[4]*(step_peak_time+half_step_time-Current_time)/(half_step_time); // the motor speed will proportional to the peak foot speed
           gradualStopDuty=duty*(step_peak_time+half_step_time-Current_time)/(half_step_time);
-          Serial.print("ST by myself,");
+          Serial.print("STbymyself,");
           if (gradualStopDuty>30)
           {
             analogWrite(10,gradualStopDuty);
@@ -992,9 +995,9 @@ void loop() {
             
           }
         }
-        else if(stopbyOther && ratio<0.92 && ratio>0.7)// stop by other foot because RX_Data_BLE==1 <=> Master ratio <0.7
+        else if(stopbyOther)// stop by other foot because RX_Data_BLE==1 <=> Master ratio <0.7
         {
-            Serial.print("ST by other,");
+            Serial.print("STbyother,");
             Serial.println(RX_Data_BLE);
             //==========================
             analogWrite(10,RX_Data_BLE);
