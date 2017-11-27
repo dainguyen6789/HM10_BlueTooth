@@ -134,7 +134,7 @@ SoftwareSerial mySerial(7, 8); // RX, TX
 #define AccelSensitivity_8G
 
 //---------------------------------------------------------------------
-int fadeAmount = 5,duty;     // how many points to fade the LED by
+int fadeAmount = 5,duty,gradualStopDuty;     // how many points to fade the LED by
 int num_loop=0,motor_init,second_step_init;
 int brightness = 55;    // how bright the LED is
 //---------------------------------------------------------------------
@@ -142,6 +142,7 @@ int brightness = 55;    // how bright the LED is
 #define LED_PIN 13 // (Arduino is 13, Teensy is 11, Teensy++ is 6)
 bool blinkState = false;
 
+bool stopbyOther;
 // MPU control/status vars
 bool dmpReady = false;  // set true if DMP init was successful
 uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
@@ -952,41 +953,66 @@ void loop() {
         if(mySerial.available())
         {
           RX_Data_BLE=mySerial.read();
-          // This code is used for starting mechanism.
-          if (millis()>15000 && RX_Data_BLE>30) // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
+          if(millis()>15000 && RX_Data_BLE>30) // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
           {
             Serial.print("RX Dt,");// receive duty
             Serial.println(RX_Data_BLE);
             
-            analogWrite(10,RX_Data_BLE);            
+            analogWrite(10,RX_Data_BLE);
             analogWrite(9,RX_Data_BLE) ;
-            }          
+            //duty=RX_Data_BLE;
+            }  
+          if (RX_Data_BLE==1)
+          {
+            stopbyOther=true;
+            }
+          else if(RX_Data_BLE==0)
+          {
+            stopbyOther=false;
+            }
           Serial.println("RX");
-          Serial.println(ratio);
-//          analogWrite(10,70);
-//          analogWrite(9,70);
         }
         
         //  This stopping mechanism should be reviewed again
         //  RX_Data_BLE==0: slave ratio <0.9, >0.7
         //  RX_Data_BLE==1: slave ratio <0.7
-        if((RX_Data_BLE==0 && ratio<0.7) || (RX_Data_BLE==1 && ratio<0.92) )  // stop mechanism
+        if((RX_Data_BLE==0 && ratio<0.7))  // Stop by myself
         {
-          Serial.println("ST");
-          analogWrite(10,0);
-          analogWrite(9,0);
-          mySerial.write(1);                                                  // signal the Master to stop
+//          half_step_time=step_peak_time-step_start_time;
+//          duty=90*peak_speeds[4]*(step_peak_time+half_step_time-Current_time)/(half_step_time); // the motor speed will proportional to the peak foot speed
+          gradualStopDuty=duty*(step_peak_time+half_step_time-Current_time)/(half_step_time);
+          Serial.print("ST by myself,");
+          if (gradualStopDuty>30)
+          {
+            analogWrite(10,gradualStopDuty);
+            analogWrite(9,gradualStopDuty);
+            //================================
+            Serial.println(gradualStopDuty);
+            mySerial.write(gradualStopDuty);// signal the Slave to stop
+            
+          }
         }
+        else if(stopbyOther && ratio<0.92 && ratio>0.7)// stop by other foot because RX_Data_BLE==1 <=> Master ratio <0.7
+        {
+            Serial.print("ST by other,");
+            Serial.println(RX_Data_BLE);
+            //==========================
+            analogWrite(10,RX_Data_BLE);
+            analogWrite(9,RX_Data_BLE);
+          }
+         //===================================================================================
+         //=================================================================================== 
         // Decrease the speed
         else if(RX_Data_BLE==0 && ratio>0.7 && ratio<=0.92)
         {  
           duty=150*log10(peak_speeds[4]);
           Serial.print("Dec:");
           Serial.println(duty);
-          mySerial.write(duty);                                         // signal the Master to decrease speed
+          mySerial.write(duty);                                         // signal the Slave to decrease speed
           analogWrite(10,duty);
           analogWrite(9,duty);
         }
+        // normal walk, speed almost does not change
         else if (ratio>0.92 && ratio <1)
         {
           duty=150*log10(avg_peak_speed);
