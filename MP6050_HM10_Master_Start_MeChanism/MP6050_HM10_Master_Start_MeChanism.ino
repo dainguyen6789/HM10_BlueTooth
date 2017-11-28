@@ -924,7 +924,7 @@ void loop() {
             
           if(millis()>15000 && RX_Data_BLE>30 && !adapttomyself) // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
           {
-            Serial.print("RXDt,");// receive duty
+            Serial.print("RXDtSetSpd,");// receive duty
             Serial.println(RX_Data_BLE);
             
             analogWrite(10,RX_Data_BLE);
@@ -953,7 +953,7 @@ void loop() {
 //          half_step_time=step_peak_time-step_start_time;
 //          duty=90*peak_speeds[4]*(step_peak_time+half_step_time-Current_time)/(half_step_time); // the motor speed will proportional to the peak foot speed
           gradualStopDuty=duty*(step_peak_time+half_step_time-Current_time)/(half_step_time);
-          Serial.println("STbymyself,");
+          Serial.print("STbymyself,");
           if (gradualStopDuty>30)
           {
             analogWrite(10,gradualStopDuty);
@@ -971,40 +971,43 @@ void loop() {
             analogWrite(9,RX_Data_BLE);
           }
          //===================================================================================
+        
          //=================================================================================== 
-        // Decrease the speed
-        else if(RX_Data_BLE==0 && ratio>0.7 && ratio<=0.92)
-        {  
-          duty=150*log10(peak_speeds[4]);
-          Serial.print("Dec:");
-          Serial.println(duty);
-          mySerial.write(duty);                                         // signal the Slave to decrease speed
-          analogWrite(10,duty);
-          analogWrite(9,duty);
-        }
-        // normal walk, speed almost does not change
-        else if (ratio>0.92 && ratio <1)
-        {
-          duty=150*log10(avg_peak_speed);
-          mySerial.write(duty);  
-          Serial.print("Nrml:");
-          Serial.println(duty);
-          analogWrite(10,duty);
-          analogWrite(9,duty);
-          
+         if(adapttomyself)
+         {
+            // Decrease the speed
+            if(RX_Data_BLE==0 && ratio>0.7 && ratio<=0.92)
+            {  
+              duty=150*log10(peak_speeds[4]);
+              Serial.print("Dec:");
+              Serial.println(duty);
+              mySerial.write(duty);                                         // signal the Slave to decrease speed
+              analogWrite(10,duty);
+              analogWrite(9,duty);
+            }
+            // normal walk, speed almost does not change
+            else if (ratio>0.92 && ratio <1)
+            {
+              duty=150*log10(avg_peak_speed);
+              mySerial.write(duty);  
+              Serial.print("Nrml:");
+              Serial.println(duty);
+              analogWrite(10,duty);
+              analogWrite(9,duty);
+              
+             }
+            // what happens if we increase the foot speed ratio > 1
+            // modify because ratio > 1 at the initital foot steps
+            else if( ratio>1 && peak_count>4)
+            {
+              duty=150*log10(peak_speeds[4]);
+              mySerial.write(duty); 
+              Serial.print("Inc");
+              Serial.println(duty);//150*log(peak_speeds[4]
+              analogWrite(10,duty);
+              analogWrite(9,duty);
+              }
          }
-        // what happens if we increase the foot speed ratio > 1
-        // modify because ratio > 1 at the initital foot steps
-        else if( ratio>1 && peak_count>4)
-        {
-          duty=150*log10(peak_speeds[4]);
-          mySerial.write(duty); 
-          Serial.print("Inc");
-          Serial.println(duty);//150*log(peak_speeds[4]
-          analogWrite(10,duty);
-          analogWrite(9,duty);
-          }
-     
          
 }
 
