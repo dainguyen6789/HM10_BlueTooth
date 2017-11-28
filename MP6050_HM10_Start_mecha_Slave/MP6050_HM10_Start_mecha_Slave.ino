@@ -143,6 +143,10 @@ int brightness = 55;    // how bright the LED is
 bool blinkState = false;
 
 bool stopbyOther,stopbymyself;
+
+bool adapttomyself;
+int RXAdaptedSignal=2, TXAdaptedSignal=2;
+
 // MPU control/status vars
 bool dmpReady = false;  // set true if DMP init was successful
 uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
@@ -842,6 +846,8 @@ void loop() {
                                 half_step_time=step_peak_time-step_start_time;
                                 Serial.println("HST");
                                 Serial.println(half_step_time);
+                                adapttomyself=true;
+                                mySerial.write(TXAdaptedSignal);// TXAdaptedSignal=2, we can choose any encoded value
                                 
                                 peak_speeds[0]=peak_speeds[1];
                                 peak_speeds[1]=peak_speeds[2];
@@ -953,7 +959,14 @@ void loop() {
         if(mySerial.available())
         {
           RX_Data_BLE=mySerial.read();
-          if(millis()>15000 && RX_Data_BLE>30) // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
+          
+          if(RX_Data_BLE==RXAdaptedSignal) //reveive the signal from other foot that requires me to sync my speed with it
+          {
+            adapttomyself=false;
+            }
+
+            
+          if(millis()>15000 && RX_Data_BLE>30 && !adapttomyself ) // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
           {
             Serial.print("RXDt,");// receive duty
             Serial.println(RX_Data_BLE);
@@ -1004,38 +1017,43 @@ void loop() {
             analogWrite(9,RX_Data_BLE);
           }
          //===================================================================================
+         // IF ADAPT THE SPEED BY MYSELF
          //=================================================================================== 
         // Decrease the speed
-        else if(RX_Data_BLE==0 && ratio>0.7 && ratio<=0.92)
-        {  
-          duty=150*log10(peak_speeds[4]);
-          Serial.print("Dec:");
-          Serial.println(duty);
-          mySerial.write(duty);                                         // signal the Slave to decrease speed
-          analogWrite(10,duty);
-          analogWrite(9,duty);
+        if(adapttomyself)
+        {
+            if(RX_Data_BLE==0 && ratio>0.7 && ratio<=0.92)
+            {  
+              duty=150*log10(peak_speeds[4]);
+              Serial.print("Dec:");
+              Serial.println(duty);
+              mySerial.write(duty);                                         // signal the Slave to decrease speed
+              analogWrite(10,duty);
+              analogWrite(9,duty);
+            }
+            // normal walk, speed almost does not change
+            else if (ratio>0.92 && ratio <1)
+            {
+              duty=150*log10(avg_peak_speed);
+              mySerial.write(duty);  
+              Serial.print("Nrml:");
+              Serial.println(duty);
+              analogWrite(10,duty);
+              analogWrite(9,duty);
+              
+             }
+            // what happens if we increase the foot speed ratio > 1
+            // modify because ratio > 1 at the initital foot steps
+            else if( ratio>1 && peak_count>4)
+            {
+              duty=150*log10(peak_speeds[4]);
+              mySerial.write(duty); 
+              Serial.print("Inc");
+              Serial.println(duty);//150*log(peak_speeds[4]
+              analogWrite(10,duty);
+              analogWrite(9,duty);
+              }
         }
-        // normal walk, speed almost does not change
-        else if (ratio>0.92 && ratio <1)
-        {
-          duty=150*log10(avg_peak_speed);
-          mySerial.write(duty);  
-          Serial.print("Nrml:");
-          Serial.println(duty);
-          analogWrite(10,duty);
-          analogWrite(9,duty);
-          
-         }
-        // what happens if we increase the foot speed ratio > 1
-        // modify because ratio > 1 at the initital foot steps
-        else if( ratio>1 && peak_count>4)
-        {
-          duty=150*log10(peak_speeds[4]);
-          Serial.print("Inc");
-          Serial.println(duty);//150*log(peak_speeds[4]
-          analogWrite(10,duty);
-          analogWrite(9,duty);
-          }
      
 }
 
