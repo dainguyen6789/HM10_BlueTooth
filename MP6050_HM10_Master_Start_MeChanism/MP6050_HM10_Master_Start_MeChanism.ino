@@ -924,7 +924,7 @@ void loop() {
             
           if(millis()>15000 && RX_Data_BLE>30 && !adapttomyself) // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
           {
-            Serial.print("RXDtSetSpd,");// receive duty
+            Serial.print("RXDtSetSpd");// receive duty
             Serial.println(RX_Data_BLE);
             
             analogWrite(10,RX_Data_BLE);
@@ -941,7 +941,7 @@ void loop() {
             stopbyOther=false;
             stopbymyself=true;
             }
-          Serial.print("RX,");
+          Serial.print("RX");
           Serial.println(RX_Data_BLE);
         }
         
@@ -952,8 +952,11 @@ void loop() {
         {
 //          half_step_time=step_peak_time-step_start_time;
 //          duty=90*peak_speeds[4]*(step_peak_time+half_step_time-Current_time)/(half_step_time); // the motor speed will proportional to the peak foot speed
-          gradualStopDuty=duty*(step_peak_time+half_step_time-Current_time)/(half_step_time);
-          Serial.println("STbymyself");
+          if(step_peak_time+half_step_time>Current_time)
+          {
+            gradualStopDuty=duty*(step_peak_time+half_step_time-Current_time)/(half_step_time);
+          }
+          Serial.print("STbymyself");
           if (gradualStopDuty>30)
           {
             analogWrite(10,gradualStopDuty);
@@ -965,7 +968,7 @@ void loop() {
         }
         else if(stopbyOther)// stop by other foot because RX_Data_BLE==1 <=> slave ratio <0.7
         {
-            Serial.println("STbyother");
+            Serial.print("STbyother:");
             Serial.println((int)RX_Data_BLE);
             analogWrite(10,RX_Data_BLE);
             analogWrite(9,RX_Data_BLE);
