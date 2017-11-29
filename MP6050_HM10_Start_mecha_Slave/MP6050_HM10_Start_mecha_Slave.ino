@@ -1022,7 +1022,7 @@ void loop() {
          //===================================================================================
          // IF ADAPT THE SPEED BY MYSELF
          //=================================================================================== 
-        // Decrease the speed
+         // Decrease the speed
         if(adapttomyself)
         {
             if(RX_Data_BLE==0 && ratio>0.7 && ratio<=0.92)
