@@ -205,7 +205,7 @@ float vx,vy,vz;
 // packet structure for InvenSense teapot demo
 uint8_t teapotPacket[14] = { '$', 0x02, 0,0, 0,0, 0,0, 0,0, 0x00, 0x00, '\r', '\n' };
 
-char RX_Data_BLE=2;
+int RX_Data_BLE=2;
 
 
 class AvgAccel{
@@ -953,7 +953,7 @@ void loop() {
 //          half_step_time=step_peak_time-step_start_time;
 //          duty=90*peak_speeds[4]*(step_peak_time+half_step_time-Current_time)/(half_step_time); // the motor speed will proportional to the peak foot speed
           gradualStopDuty=duty*(step_peak_time+half_step_time-Current_time)/(half_step_time);
-          Serial.print("STbymyself");
+          Serial.println("STbymyself");
           if (gradualStopDuty>30)
           {
             analogWrite(10,gradualStopDuty);
@@ -966,7 +966,7 @@ void loop() {
         else if(stopbyOther)// stop by other foot because RX_Data_BLE==1 <=> slave ratio <0.7
         {
             Serial.println("STbyother");
-            Serial.println(RX_Data_BLE);
+            Serial.println((int)RX_Data_BLE);
             analogWrite(10,RX_Data_BLE);
             analogWrite(9,RX_Data_BLE);
           }

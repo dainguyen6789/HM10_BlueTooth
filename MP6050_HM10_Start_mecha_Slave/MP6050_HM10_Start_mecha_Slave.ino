@@ -158,7 +158,7 @@ unsigned long time1=0,time_old,step_start_time,half_step_time,step_peak_time,Cur
 float delta_t,SumMagAccel;
 //float delta_time;
 int run1=1,j,n_reset=20, count_decreased_step,peak_count;
-char RX_Data_BLE=2;
+int RX_Data_BLE=2;
 //============================
 //For Normal and Faster Speed
 //============================
