@@ -997,7 +997,7 @@ void loop() {
 //          half_step_time=step_peak_time-step_start_time;
 //          duty=90*peak_speeds[4]*(step_peak_time+half_step_time-Current_time)/(half_step_time); // the motor speed will proportional to the peak foot speed
           gradualStopDuty=duty*(step_peak_time+half_step_time-Current_time)/(half_step_time);
-          Serial.print("STbymyself,");
+          Serial.print("STbymyself");
           if (gradualStopDuty>30)
           {
             analogWrite(10,gradualStopDuty);
@@ -1010,7 +1010,7 @@ void loop() {
         }
         else if(stopbyOther)// stop by other foot because RX_Data_BLE==1 <=> Master ratio <0.7
         {
-            Serial.print("STbyother,");
+            Serial.print("STbyother");
             Serial.println(RX_Data_BLE);
             //==========================
             analogWrite(10,RX_Data_BLE);
@@ -1025,7 +1025,7 @@ void loop() {
             if(RX_Data_BLE==0 && ratio>0.7 && ratio<=0.92)
             {  
               duty=150*log10(peak_speeds[4]);
-              Serial.print("Dec:");
+              Serial.print("Dec");
               Serial.println(duty);
               mySerial.write(duty);                                         // signal the Slave to decrease speed
               analogWrite(10,duty);
@@ -1036,7 +1036,7 @@ void loop() {
             {
               duty=150*log10(avg_peak_speed);
               mySerial.write(duty);  
-              Serial.print("Nrml:");
+              Serial.print("Nrml");
               Serial.println(duty);
               analogWrite(10,duty);
               analogWrite(9,duty);
