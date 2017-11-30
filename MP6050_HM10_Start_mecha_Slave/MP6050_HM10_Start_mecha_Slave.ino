@@ -1025,7 +1025,7 @@ void loop() {
          // Decrease the speed
         if(adapttomyself)
         {
-            if(RX_Data_BLE==0 && ratio>0.7 && ratio<=0.92)
+            if(ratio>0.7 && ratio<=0.92)
             {  
               duty=150*log10(peak_speeds[4]);
               Serial.print("Dec");
