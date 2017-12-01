@@ -978,6 +978,7 @@ void loop() {
           if (RX_Data_BLE==1)
           {
             stopbyOther=true;
+            
             stopbymyself=false;
             }
           else if(RX_Data_BLE==0)
@@ -992,7 +993,7 @@ void loop() {
         //  This stopping mechanism should be reviewed again
         //  RX_Data_BLE==0: slave ratio <0.9, >0.7
         //  RX_Data_BLE==1: slave ratio <0.7
-        if((stopbymyself && ratio<0.7))  // Stop by myself
+        if((ratio<0.7))  // Stop by myself
         {
 //          half_step_time=step_peak_time-step_start_time;
 //          duty=90*peak_speeds[4]*(step_peak_time+half_step_time-Current_time)/(half_step_time); // the motor speed will proportional to the peak foot speed
