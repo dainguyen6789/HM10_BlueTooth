@@ -186,7 +186,7 @@ float aaWorldX;
 float aaWorldY;
 float aaWorldZ;
 
-float peak_speed,avg_peak_speed,ratio,peak_speeds[5],abs_x;// we will monitor 4 previous peak speed values
+float peak_speed,avg_peak_speed,ratio=1,peak_speeds[5],abs_x;// we will monitor 4 previous peak speed values
 //float xx[5]={1,2,3,4,5};
 //============================
 
@@ -976,7 +976,7 @@ void loop() {
          //===================================================================================
         
          //=================================================================================== 
-         if(adapttomyself)
+         if(adapttomyself && !mySerial.available())
          {
             // Decrease the speed
             if(ratio>0.7 && ratio<=0.92)
