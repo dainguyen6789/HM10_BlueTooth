@@ -186,7 +186,7 @@ float aaWorldX;
 float aaWorldY;
 float aaWorldZ;
 
-float peak_speed,avg_peak_speed,ratio=1,peak_speeds[5],abs_x;// we will monitor 4 previous peak speed values
+float peak_speed,avg_peak_speed,ratio,peak_speeds[5],abs_x;// we will monitor 4 previous peak speed values
 //float xx[5]={1,2,3,4,5};
 //============================
 
@@ -862,7 +862,7 @@ void loop() {
                             t0=Current_time;              
                             motor_init=1;                           
                           }
-                          duty=90*peak_speeds[4]*(Current_time-t0)/(half_step_time/2); // the motor speed will proportional to the peak foot speed
+                          duty=(8*peak_speeds[4]+68)*(Current_time-t0)/(half_step_time/2); // the motor speed will proportional to the peak foot speed
                           if(duty>90)
                           {
                             duty=90;
@@ -922,7 +922,7 @@ void loop() {
             adapttomyself=false;
             }          
             
-          if(millis()>15000 && RX_Data_BLE>30 && !adapttomyself) // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
+          if(millis()>15000 && RX_Data_BLE>30 && !adapttomyself && !stopbymyself) // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
           {
             Serial.print("RXDtSetSpd");// receive duty
             Serial.println(RX_Data_BLE);
@@ -948,7 +948,7 @@ void loop() {
         //  This stopping mechanism should be reviewed again
         //  RX_Data_BLE==0: slave ratio <0.9, >0.7
         //  RX_Data_BLE==1: slave ratio <0.7
-        if((ratio<0.7))  // Stop by myself
+        if((stopbymyself && ratio<0.7))  // Stop by myself
         {
 //          half_step_time=step_peak_time-step_start_time;
 //          duty=90*peak_speeds[4]*(step_peak_time+half_step_time-Current_time)/(half_step_time); // the motor speed will proportional to the peak foot speed
@@ -974,14 +974,14 @@ void loop() {
             analogWrite(9,RX_Data_BLE);
           }
          //===================================================================================
-        
+         //
          //=================================================================================== 
-         if(adapttomyself && !mySerial.available())
+         if(adapttomyself && !stopbyOther)
          {
             // Decrease the speed
             if(ratio>0.7 && ratio<=0.92)
             {  
-              duty=150*log10(peak_speeds[4]);
+              duty=8*peak_speeds[4]+68;
               Serial.print("Dec");
               Serial.println(duty);
               mySerial.write(duty);                                         // signal the Slave to decrease speed
@@ -991,7 +991,7 @@ void loop() {
             // normal walk, speed almost does not change
             else if (ratio>0.92 && ratio <1)
             {
-              duty=150*log10(avg_peak_speed);
+              duty=8*avg_peak_speed+68;
               mySerial.write(duty);  
               Serial.print("Nrml");
               Serial.println(duty);
@@ -1003,7 +1003,7 @@ void loop() {
             // modify because ratio > 1 at the initital foot steps
             else if( ratio>1 && peak_count>4)
             {
-              duty=150*log10(peak_speeds[4]);
+              duty=8*peak_speeds[4]+68;
               mySerial.write(duty); 
               Serial.print("Inc");
               Serial.println(duty);//150*log(peak_speeds[4]
