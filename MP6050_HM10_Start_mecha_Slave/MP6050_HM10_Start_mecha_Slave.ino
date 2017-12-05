@@ -981,12 +981,12 @@ void loop() {
           if (RX_Data_BLE==1)
           {
             stopbyOther=true;
-            stopbymyself=false;
+//            stopbymyself=false;
             }
           else if(RX_Data_BLE==0)
           {
             stopbyOther=false;
-            stopbymyself=true;
+//            stopbymyself=true;
             }
           Serial.print("RX");
           Serial.println(RX_Data_BLE);
@@ -995,7 +995,7 @@ void loop() {
         //  This stopping mechanism should be reviewed again
         //  RX_Data_BLE==0: slave ratio <0.9, >0.7
         //  RX_Data_BLE==1: slave ratio <0.7
-        if((stopbymyself && ratio<0.7))  // Stop by myself
+        if((ratio<0.7))  // Stop by myself
         {
 //          half_step_time=step_peak_time-step_start_time;
 //          duty=90*peak_speeds[4]*(step_peak_time+half_step_time-Current_time)/(half_step_time); // the motor speed will proportional to the peak foot speed
@@ -1018,7 +1018,7 @@ void loop() {
         {
             Serial.print("STbyother");
             Serial.println(RX_Data_BLE);
-            //==========================
+            //================================
             analogWrite(10,RX_Data_BLE);
             analogWrite(9,RX_Data_BLE);
           }
@@ -1041,7 +1041,7 @@ void loop() {
             else if (ratio>0.92 && ratio <1)
             {
               duty=8*avg_peak_speed+68;
-              mySerial.write(duty);  
+              mySerial.write(duty);
               Serial.print("Nrml");
               Serial.println(duty);
               analogWrite(10,duty);
