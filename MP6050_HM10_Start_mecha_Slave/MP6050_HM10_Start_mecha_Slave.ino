@@ -183,7 +183,7 @@ float aaWorldX;
 float aaWorldY;
 float aaWorldZ;
 
-float peak_speed,avg_peak_speed,ratio,peak_speeds[5];// we will monitor 4 previous peak speed values
+float peak_speed,avg_peak_speed,ratio=1,peak_speeds[5];// we will monitor 4 previous peak speed values
 float xx[5]={1,2,3,4,5};
 //============================
 
@@ -1050,7 +1050,7 @@ void loop() {
              }
             // what happens if we increase the foot speed ratio > 1
             // modify because ratio > 1 at the initital foot steps
-            else if( ratio>1 && peak_count>4)
+            else if( ratio>1 && peak_count>1)
             {
               duty=8*peak_speeds[4]+68;
               mySerial.write(duty); 
