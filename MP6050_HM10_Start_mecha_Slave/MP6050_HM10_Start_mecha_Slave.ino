@@ -964,9 +964,12 @@ void loop() {
           {
             adapttomyself=false;
             }
-
             
-          if(millis()>15000 && RX_Data_BLE>30 && !adapttomyself && !stopbymyself ) // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
+          //==================================================================//
+          //                    SPEED SYNCHRONIZARION  
+          //==================================================================//
+
+          if(millis()>15000 && RX_Data_BLE>30 && !adapttomyself) // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
           {
             Serial.print("RXDtSetSp");// receive duty
             Serial.println(RX_Data_BLE);
