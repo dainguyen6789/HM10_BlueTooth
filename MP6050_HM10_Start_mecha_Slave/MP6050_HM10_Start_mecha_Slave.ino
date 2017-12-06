@@ -1014,7 +1014,7 @@ void loop() {
             
           }
         }
-        else if(stopbyOther)// stop by other foot because RX_Data_BLE==1 <=> Master ratio <0.7
+        else if(stopbyOther)// STOP BY OTHER foot because RX_Data_BLE==1 <=> Master ratio <0.7
         {
             Serial.print("STbyother");
             Serial.println(RX_Data_BLE);
@@ -1023,7 +1023,7 @@ void loop() {
             analogWrite(9,RX_Data_BLE);
           }
          //===================================================================================
-         /// IF ADAPT THE SPEED BY MYSELF
+         ///  ADAPT THE SPEED BY MYSELF and SEND THE SIGNAL TO OTHER MODULE
          //=================================================================================== 
          // Decrease the speed
         if(adapttomyself && !stopbyOther)
@@ -1050,7 +1050,8 @@ void loop() {
              }
             // what happens if we increase the foot speed ratio > 1
             // modify because ratio > 1 at the initital foot steps
-            else if( ratio>1 && peak_count>1)
+            else if( ratio>1 && peak_count>1
+            )
             {
               duty=8*peak_speeds[4]+68;
               mySerial.write(duty); 
