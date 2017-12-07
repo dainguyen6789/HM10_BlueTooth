@@ -159,6 +159,7 @@ float delta_t,SumMagAccel;
 //float delta_time;
 int run1=1,j,n_reset=20, count_decreased_step,peak_count;
 int RX_Data_BLE=2;
+int timer1_counter=57536;
 //============================
 //For Normal and Faster Speed
 //============================
@@ -485,6 +486,18 @@ float absolute(float x)
 
 void setup() {
       // ================================================================
+      // ===     SETUP   Timer1 Interrupt to check BLE signal         ===
+      // ================================================================  
+        noInterrupts();           // disable all interrupts
+        TCCR1A = 0;               // TCCR1A – Timer/Counter1 Control Register A
+        TCCR1B = 0;               // TCCR1B – Timer/Counter1 Control Register B
+
+        TCNT1 = timer1_counter;   // T=1/f*(65536-timer1_counter)
+        TCCR1B |= (1 << CS10);    // Set CS10 bit so timer runs at clock speed: (no prescaling)
+        //TIMSK1: Timer/Counter1 Interrupt Mask Register. It controls which interrupts the timer can trigger
+        TIMSK1 |= (1 << TOIE1);   // enable timer overflow interrupt
+        interrupts();             // enable all interrupts  
+      // ================================================================
       // ===                      Motor SETUP                       ===
       // ================================================================
       // declare pin 10 to be an output:
@@ -640,6 +653,113 @@ Data is printed as: acelX acelY acelZ giroX giroY giroZ
 
 }
 
+// ================================================================
+// ===   check BLE Bluetooth RX data by timer 1 interrupt       ===
+// ================================================================
+ISR(TIMER1_OVF_vect)        // interrupt service routine 
+{
+        TCNT1 = timer1_counter;   // preload timer
+        if(mySerial.available())
+        {
+          RX_Data_BLE=mySerial.read();
+          
+          if(RX_Data_BLE==RXAdaptedSignal) //reveive the signal from other foot that requires me to sync my speed with it
+          {
+            adapttomyself=false;
+            }          
+          //==================================================================//
+          //                    SPEED  SYNCHRONIZATION   
+          //==================================================================//         
+          if(millis()>15000 && RX_Data_BLE>30 && !adapttomyself) // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
+          {
+            Serial.print("RXDtSetSpd");// receive duty
+            Serial.println(RX_Data_BLE);
+            
+            analogWrite(10,RX_Data_BLE);
+            analogWrite(9,RX_Data_BLE) ;
+            //duty=RX_Data_BLE;
+            }  
+          if (RX_Data_BLE==1)
+          {
+            stopbyOther=true;
+//            stopbymyself=false;
+            }
+          else if(RX_Data_BLE==0)
+          {
+            stopbyOther=false;
+//            stopbymyself=true;
+            }
+          Serial.print("RX");
+          Serial.println(RX_Data_BLE);
+        }
+        
+        //  This stopping mechanism should be reviewed again
+        //  RX_Data_BLE==0: slave ratio <0.9, >0.7
+        //  RX_Data_BLE==1: slave ratio <0.7
+        if((ratio<0.7))  // Stop by myself
+        {
+//          half_step_time=step_peak_time-step_start_time;
+//          duty=90*peak_speeds[4]*(step_peak_time+half_step_time-Current_time)/(half_step_time); // the motor speed will proportional to the peak foot speed
+          if(step_peak_time+half_step_time>Current_time)
+          {
+            gradualStopDuty=duty*(step_peak_time+half_step_time-Current_time)/(half_step_time);
+          }
+          Serial.print("STbymyself");
+          if (gradualStopDuty>30)
+          {
+            analogWrite(10,gradualStopDuty);
+            analogWrite(9,gradualStopDuty);
+            
+            mySerial.write(gradualStopDuty);// signal the Slave to stop
+            Serial.println(gradualStopDuty);
+          }
+        }
+        else if(stopbyOther)// stop by other foot because RX_Data_BLE==1 <=> slave ratio <0.7
+        {
+            Serial.print("STbyother:");
+            Serial.println((int)RX_Data_BLE);
+            analogWrite(10,RX_Data_BLE);
+            analogWrite(9,RX_Data_BLE);
+          }
+         // ========================================
+         // SPEED CHANGE BEHAVIOUR. 
+         // ========================================
+         if(adapttomyself && !stopbyOther)
+         {
+            // Decrease the speed
+            if(ratio>0.7 && ratio<=0.92)
+            {  
+              duty=8*peak_speeds[4]+68;
+              Serial.print("Dec");
+              Serial.println(duty);
+              mySerial.write(duty);                                         // signal the Slave to decrease speed
+              analogWrite(10,duty);
+              analogWrite(9,duty);
+            }
+            // normal walk, speed almost does not change
+            else if (ratio>0.92 && ratio <1)
+            {
+              duty=8*avg_peak_speed+68;
+              mySerial.write(duty);  
+              Serial.print("Nrml");
+              Serial.println(duty);
+              analogWrite(10,duty);
+              analogWrite(9,duty);
+              
+             }
+            // what happens if we increase the foot speed ratio > 1
+            // modify because ratio > 1 at the initital foot steps
+            else if( ratio>1 && peak_count>1)
+            {
+              duty=8*peak_speeds[4]+68;
+              mySerial.write(duty); 
+              Serial.print("Inc");
+              Serial.println(duty);//150*log(peak_speeds[4]
+              analogWrite(10,duty);
+              analogWrite(9,duty);
+              }
+         }
+}
 
 
 
@@ -954,113 +1074,7 @@ void loop() {
             }
         #endif
 
-        
-        // if there is any signal from Master module, that means slave has to react 
-        if(mySerial.available())
-        {
-          RX_Data_BLE=mySerial.read();
-          
-          if(RX_Data_BLE==RXAdaptedSignal) //reveive the signal from other foot that requires me to sync my speed with it
-          {
-            adapttomyself=false;
-            }
-            
-          //==================================================================//
-          //                    SPEED SYNCHRONIZARION  
-          //==================================================================//
-
-          if(millis()>15000 && RX_Data_BLE>30 && !adapttomyself) // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
-          {
-            Serial.print("RXDtSetSp");// receive duty
-            Serial.println(RX_Data_BLE);
-            
-            analogWrite(10,RX_Data_BLE);
-            analogWrite(9,RX_Data_BLE) ;
-            //duty=RX_Data_BLE;
-            }  
-          if (RX_Data_BLE==1)
-          {
-            stopbyOther=true;
-//            stopbymyself=false;
-            }
-          else if(RX_Data_BLE==0)
-          {
-            stopbyOther=false;
-//            stopbymyself=true;
-            }
-          Serial.print("RX");
-          Serial.println(RX_Data_BLE);
-        }
-        
-        //  This stopping mechanism should be reviewed again
-        //  RX_Data_BLE==0: slave ratio <0.9, >0.7
-        //  RX_Data_BLE==1: slave ratio <0.7
-        if((ratio<0.7))  // Stop by myself
-        {
-//          half_step_time=step_peak_time-step_start_time;
-//          duty=90*peak_speeds[4]*(step_peak_time+half_step_time-Current_time)/(half_step_time); // the motor speed will proportional to the peak foot speed
-          if(step_peak_time+half_step_time>Current_time)
-          {
-            gradualStopDuty=duty*(step_peak_time+half_step_time-Current_time)/(half_step_time);
-          }
-          Serial.print("STbymyself");
-          if (gradualStopDuty>30)
-          {
-            analogWrite(10,gradualStopDuty);
-            analogWrite(9,gradualStopDuty);
-            //================================
-            Serial.println(gradualStopDuty);
-            mySerial.write(gradualStopDuty);// signal the Slave to stop
-            
-          }
-        }
-        else if(stopbyOther)// STOP BY OTHER foot because RX_Data_BLE==1 <=> Master ratio <0.7
-        {
-            Serial.print("STbyother");
-            Serial.println(RX_Data_BLE);
-            //================================
-            analogWrite(10,RX_Data_BLE);
-            analogWrite(9,RX_Data_BLE);
-          }
-         //===================================================================================
-         ///  ADAPT THE SPEED BY MYSELF and SEND THE SIGNAL TO OTHER MODULE
-         //=================================================================================== 
-         // Decrease the speed
-        if(adapttomyself && !stopbyOther)
-        {
-            if(ratio>0.7 && ratio<=0.92)
-            {  
-              duty=8*peak_speeds[4]+68;
-              Serial.print("Dec");
-              Serial.println(duty);
-              mySerial.write(duty);                                         // signal the Slave to decrease speed
-              analogWrite(10,duty);
-              analogWrite(9,duty);
-            }
-            // normal walk, speed almost does not change
-            else if (ratio>0.92 && ratio <1)
-            {
-              duty=8*avg_peak_speed+68;
-              mySerial.write(duty);
-              Serial.print("Nrml");
-              Serial.println(duty);
-              analogWrite(10,duty);
-              analogWrite(9,duty);
-              
-             }
-            // what happens if we increase the foot speed ratio > 1
-            // modify because ratio > 1 at the initital foot steps
-            else if( ratio>1 && peak_count>1
-            )
-            {
-              duty=8*peak_speeds[4]+68;
-              mySerial.write(duty); 
-              Serial.print("Inc");
-              Serial.println(duty);//150*log(peak_speeds[4]
-              analogWrite(10,duty);
-              analogWrite(9,duty);
-              }
-        }
+       
      
 }
 
