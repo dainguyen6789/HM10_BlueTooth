@@ -926,9 +926,9 @@ void loop() {
           //==================================================================//
           //                    SPEED  SYNCHRONIZATION   
           //==================================================================//         
-          if(millis()>15000 && RX_Data_BLE>30 && !adapttomyself) // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
+          if(millis()>15000 && RX_Data_BLE>30 && RX_Data_BLE<110 && !adapttomyself) // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
           {
-            Serial.print("RXDtSetSpd");// receive duty
+            Serial.print("RSet");// receive duty and set
             Serial.println(RX_Data_BLE);
             
             analogWrite(10,RX_Data_BLE);
