@@ -933,7 +933,7 @@ void loop() {
             
             analogWrite(10,RX_Data_BLE);
             analogWrite(9,RX_Data_BLE) ;
-            //duty=RX_Data_BLE;
+            //duty=RX_Data_BLE; 
             }  
           if (RX_Data_BLE==1)
           {

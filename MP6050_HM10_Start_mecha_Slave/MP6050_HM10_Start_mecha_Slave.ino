@@ -983,7 +983,7 @@ void loop() {
           if (RX_Data_BLE==1)
           {
             stopbyOther=true;
-//            stopbymyself=false;
+//            stopbymyself=false; 
             }
           else if(RX_Data_BLE==0)
           {
