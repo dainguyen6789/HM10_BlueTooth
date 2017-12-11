@@ -986,21 +986,27 @@ void loop() {
             if(ratio>0.7 && ratio<=0.92)
             {  
               duty=8*peak_speeds[4]+68;
-              Serial.print("Dec");
-              Serial.println(duty);
-              mySerial.write(duty);                                         // signal the Slave to decrease speed
-              analogWrite(10,duty);
-              analogWrite(9,duty);
+              if(duty<110)
+              {
+                Serial.print("Dec");
+                Serial.println(duty);
+                mySerial.write(duty);                                         // signal the Slave to decrease speed
+                analogWrite(10,duty);
+                analogWrite(9,duty);
+                }
             }
             // normal walk, speed almost does not change
             else if (ratio>0.92 && ratio <1)
             {
               duty=8*avg_peak_speed+68;
-              mySerial.write(duty);  
-              Serial.print("Nrml");
-              Serial.println(duty);
-              analogWrite(10,duty);
-              analogWrite(9,duty);
+              if(duty<110)
+              {
+                mySerial.write(duty);  
+                Serial.print("Nrml");
+                Serial.println(duty);
+                analogWrite(10,duty);
+                analogWrite(9,duty);
+                }
               
              }
             // what happens if we increase the foot speed ratio > 1
@@ -1008,11 +1014,14 @@ void loop() {
             else if( ratio>1 && peak_count>1)
             {
               duty=8*peak_speeds[4]+68;
-              mySerial.write(duty); 
-              Serial.print("Inc");
-              Serial.println(duty);//150*log(peak_speeds[4]
-              analogWrite(10,duty);
-              analogWrite(9,duty);
+              if(duty<110)
+              {
+                mySerial.write(duty); 
+                Serial.print("Inc");
+                Serial.println(duty);//150*log(peak_speeds[4]
+                analogWrite(10,duty);
+                analogWrite(9,duty);
+                }
               }
          }
          
