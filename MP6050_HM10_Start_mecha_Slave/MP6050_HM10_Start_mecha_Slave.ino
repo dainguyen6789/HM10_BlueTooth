@@ -1050,7 +1050,7 @@ void loop() {
               {
                 mySerial.write(duty);
                 Serial.print("Nrml");
-                Serial.println(duty);
+                Serial.println(duty);  
                 analogWrite(10,duty);
                 analogWrite(9,duty);
                 }

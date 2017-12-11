@@ -998,7 +998,7 @@ void loop() {
             // normal walk, speed almost does not change
             else if (ratio>0.92 && ratio <1)
             {
-              duty=8*avg_peak_speed+68;
+              duty=8*avg_peak_speed+68;  
               if(duty<110)
               {
                 mySerial.write(duty);  
