@@ -196,7 +196,7 @@ int16_t AccelX[NumOfSamples+1], AccelY[NumOfSamples+1], AccelZ[NumOfSamples+1];
 
 //============================
 
-int count=0;            // initial value to count the number of samples to compute average
+int count=0,timer1_counter;            // initial value to count the number of samples to compute average
 
 VectorFloat gravity;    // [x, y, z]            gravity vector, ///////////////////class VectorFloat is defined in helper_3dmath.h
 float euler[3];         // [psi, theta, phi]    Euler angle container
