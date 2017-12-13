@@ -148,7 +148,7 @@ bool blinkState = false;
 bool stopbyOther,stopbymyself;
 
 bool adapttomyself;
-int TXAdaptedSignal=2, RXAdaptedSignal=2;
+int TXAdaptedSignal=2, RXAdaptedSignal=2, PilotSignal=3;
 
 // MPU control/status vars
 bool dmpReady = false,fst_peak=true;  // set true if DMP init was successful
@@ -157,7 +157,7 @@ uint8_t devStatus;      // return status after each device operation (0 = succes
 uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
 uint16_t fifoCount;     // count of all bytes currently in FIFO
 uint8_t fifoBuffer[64]; // FIFO storage buffer
-unsigned long time1=0,time_old,step_start_time,half_step_time,step_peak_time,Current_time,t0,t2;
+unsigned long time1=0,time_old,step_start_time,half_step_time,step_peak_time,Current_time,t0,t2,capturedPilotTime;
 float delta_t,SumMagAccel;
 //float delta_time;
 int run1=1,j,peak_count;
@@ -441,7 +441,22 @@ uint8_t dmpGetLinearAccel_8G(VectorInt16 *v, VectorInt16 *vRaw, VectorFloat *gra
 
 void setup() {
       // ================================================================
-      // ===                      Motor SETUP                       ===
+      // ===                      Timer 1 SETUP                       ===
+      // ================================================================  
+      noInterrupts();           // disable all interrupts
+      TCCR1A = 0;
+      TCCR1B = 0;
+    
+      // Set timer1_counter to the correct value for our interrupt interval
+
+      timer1_counter = 57723;   // preload timer 65536-8MHz/256/4Hz
+      
+      TCNT1 = timer1_counter;   // preload timer
+      TCCR1B |= (1 << CS12);    // 256 prescaler 
+      TIMSK1 |= (1 << TOIE1);   // enable timer overflow interrupt
+      interrupts();             // enable all interrupts  
+      // ================================================================
+      // ===                      Motor SETUP                         ===
       // ================================================================
       // declare pin 10 to be an output:
        pinMode(10, OUTPUT);
@@ -601,9 +616,14 @@ void setup() {
 }
 
 // ================================================================
-// ===                    MAIN PROGRAM LOOP                     ===
+// ===                    TIMER1 INTERRUPT  ROUTINE             ===
 // ================================================================
-
+// send PilotSignal periodically to check the BLE Connection
+ISR(TIMER1_OVF_vect)        // interrupt service routine 
+{
+  TCNT1 = timer1_counter;   // preload timer
+  mySerial.write(PilotSignal);
+}
 
 // ================================================================
 // ===                    MAIN PROGRAM LOOP                     ===
@@ -922,7 +942,11 @@ void loop() {
           if(RX_Data_BLE==RXAdaptedSignal) //reveive the signal from other foot that requires me to sync my speed with it
           {
             adapttomyself=false;
-            }          
+            } 
+           else if (RX_Data_BLE=PilotSignal)// receive the PilotSignal => BLE connection is still alive.
+           {
+             capturedPilotTime=millis();
+            }       
           //==================================================================//
           //                    SPEED  SYNCHRONIZATION   
           //==================================================================//         
@@ -970,61 +994,79 @@ void loop() {
             Serial.println(gradualStopDuty);
           }
         }
-        else if(stopbyOther)// stop by other foot because RX_Data_BLE==1 <=> slave ratio <0.7
+        else if(stopbyOther)//stop by other foot because RX_Data_BLE==1 <=> slave ratio <0.7
         {
             Serial.print("STbyother:");
             Serial.println((int)RX_Data_BLE);
             analogWrite(10,RX_Data_BLE);
             analogWrite(9,RX_Data_BLE);
           }
-         // ========================================
-         // SPEED CHANGE BEHAVIOUR. 
-         // ========================================
-         if(adapttomyself && !stopbyOther)
-         {
-            // Decrease the speed
-            if(ratio>0.7 && ratio<=0.92)
-            {  
-              duty=8*peak_speeds[4]+68;
-              if(duty<110)
-              {
-                Serial.print("Dec");
-                Serial.println(duty);
-                mySerial.write(duty);                                         // signal the Slave to decrease speed
-                analogWrite(10,duty);
-                analogWrite(9,duty);
+          if (millis()-capturedPilotTime<255)
+          {
+             // ========================================
+             // SPEED CHANGE BEHAVIOUR. 
+             // ========================================
+             if(adapttomyself && !stopbyOther)
+             {
+                // Decrease the speed
+                if(ratio>0.7 && ratio<=0.92)
+                {  
+                  duty=8*peak_speeds[4]+68;
+                  if(duty<110)
+                  {
+                    Serial.print("Dec");
+                    Serial.println(duty);
+                    mySerial.write(duty);                                         // signal the Slave to decrease speed
+                    analogWrite(10,duty);
+                    analogWrite(9,duty);
+                    }
+                }
+                // normal walk, speed almost does not change
+                else if (ratio>0.92 && ratio <1)
+                {
+                  duty=8*avg_peak_speed+68;  
+                  if(duty<110)
+                  {
+                    mySerial.write(duty);  
+                    Serial.print("Nrml");
+                    Serial.println(duty);
+                    analogWrite(10,duty);
+                    analogWrite(9,duty);
+                    }
+                  
+                 }
+                // what happens if we increase the foot speed ratio > 1
+                // modify because ratio > 1 at the initital foot steps
+                else if( ratio>1 && peak_count>1)
+                {
+                  duty=8*peak_speeds[4]+68;
+                  if(duty<110)
+                  {
+                    mySerial.write(duty); 
+                    Serial.print("Inc");
+                    Serial.println(duty);//150*log(peak_speeds[4]
+                    analogWrite(10,duty);
+                    analogWrite(9,duty);
+                    }
+                  }
+             }
+          }
+          else // did not receive pilot signal during 255ms, then the motor will stop
+          {
+                if(step_peak_time+half_step_time>Current_time)
+                {
+                  gradualStopDuty=duty*(step_peak_time+half_step_time-Current_time)/(half_step_time);
+                }
+                Serial.print("STOP");
+                if (gradualStopDuty>30)
+                {
+                  analogWrite(10,gradualStopDuty);
+                  analogWrite(9,gradualStopDuty);
+                  
+                  mySerial.write(gradualStopDuty);// signal the Slave to stop
+                  Serial.println(gradualStopDuty);
                 }
             }
-            // normal walk, speed almost does not change
-            else if (ratio>0.92 && ratio <1)
-            {
-              duty=8*avg_peak_speed+68;  
-              if(duty<110)
-              {
-                mySerial.write(duty);  
-                Serial.print("Nrml");
-                Serial.println(duty);
-                analogWrite(10,duty);
-                analogWrite(9,duty);
-                }
-              
-             }
-            // what happens if we increase the foot speed ratio > 1
-            // modify because ratio > 1 at the initital foot steps
-            else if( ratio>1 && peak_count>1)
-            {
-              duty=8*peak_speeds[4]+68;
-              if(duty<110)
-              {
-                mySerial.write(duty); 
-                Serial.print("Inc");
-                Serial.println(duty);//150*log(peak_speeds[4]
-                analogWrite(10,duty);
-                analogWrite(9,duty);
-                }
-              }
-         }
-         
 }
 
 
