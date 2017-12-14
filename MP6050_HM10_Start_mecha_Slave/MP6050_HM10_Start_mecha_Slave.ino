@@ -493,7 +493,7 @@ void setup() {
     
       // Set timer1_counter to the correct value for our interrupt interval
 
-      timer1_counter = 57723;   // preload timer 65536-8MHz/256/4Hz, 250ms interrupt
+      timer1_counter = 49911;   // preload timer 65536-8MHz/256/2Hz, 500ms interrupt
       
       TCNT1 = timer1_counter;   // preload timer
       TCCR1B |= (1 << CS12);    // 256 prescaler 
@@ -663,6 +663,7 @@ ISR(TIMER1_OVF_vect)        // interrupt service routine
 {
   TCNT1 = timer1_counter;   // preload timer
   mySerial.write(PilotSignal);
+//  Serial.print("TX3");
 }
 
 
@@ -1010,8 +1011,8 @@ void loop() {
             stopbyOther=false;
 //            stopbymyself=true;
             }
-          Serial.print("RX");
-          Serial.println(RX_Data_BLE);
+//          Serial.print("RX");
+//          Serial.println(RX_Data_BLE);
         }
         
         //  This stopping mechanism should be reviewed again
@@ -1044,7 +1045,7 @@ void loop() {
             analogWrite(10,RX_Data_BLE);
             analogWrite(9,RX_Data_BLE);
           }
-          if (millis()-capturedPilotTime<255)
+          if (millis()-capturedPilotTime<555)
           {
              // ========================================
              // SPEED CHANGE BEHAVIOUR. 
