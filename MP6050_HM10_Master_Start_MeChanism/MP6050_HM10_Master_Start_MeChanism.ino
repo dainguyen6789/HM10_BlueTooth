@@ -970,10 +970,15 @@ void loop() {
             stopbyOther=false;
 //            stopbymyself=true;
             }
-//          Serial.print("RX");
-//          Serial.println(RX_Data_BLE);
+            if(RX_Data_BLE!=PilotSignal)
+            {
+              Serial.print("RX");
+              Serial.println(RX_Data_BLE);
+            }
         }
-        
+        //==================================================================//
+        //==================================================================//
+        //==================================================================//
         //  This stopping mechanism should be reviewed again
         //  RX_Data_BLE==0: slave ratio <0.9, >0.7
         //  RX_Data_BLE==1: slave ratio <0.7
