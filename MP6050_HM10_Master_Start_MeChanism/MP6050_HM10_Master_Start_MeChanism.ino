@@ -943,7 +943,7 @@ void loop() {
           {
             adapttomyself=false;
             } 
-           else if (RX_Data_BLE=PilotSignal)// receive the PilotSignal => BLE connection is still alive.
+           else if (RX_Data_BLE==PilotSignal)// receive the PilotSignal => BLE connection is still alive.
            {
              capturedPilotTime=millis();
             }       
