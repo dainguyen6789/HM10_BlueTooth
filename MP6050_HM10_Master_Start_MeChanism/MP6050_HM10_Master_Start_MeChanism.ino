@@ -182,7 +182,7 @@ Quaternion q;           // [w, x, y, z]         quaternion container
 VectorInt16 aa;         // [x, y, z]            accel sensor measurements
 VectorInt16 aaReal;     // [x, y, z]            gravity-free accel sensor measurements
 VectorInt16 aaWorld;    // [x, y, z]            world-frame accel sensor measurements
-
+  
 float aaWorldX;
 float aaWorldY;
 float aaWorldZ;
