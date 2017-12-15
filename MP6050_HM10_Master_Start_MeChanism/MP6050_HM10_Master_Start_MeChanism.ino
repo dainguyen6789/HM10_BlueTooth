@@ -910,7 +910,7 @@ void loop() {
                 if(millis()-pilot_send_time>250) // send pilot signal every 500ms
                 {
                   pilot_send_time=millis();
-                  mySerial.print(PilotSignal);
+                  mySerial.write(PilotSignal);
                   Serial.print("PL");
                   Serial.print(PilotSignal);
                 }                                                 
