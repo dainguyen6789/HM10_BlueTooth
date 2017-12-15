@@ -904,7 +904,16 @@ void loop() {
 //                        Serial.println(peak_speeds[4]); 
                                         
 
-                                                               
+                //==================================================================//
+                //                    CODE FOR SECURITY 
+                //==================================================================// 
+                if(millis()-pilot_send_time>250) // send pilot signal every 500ms
+                {
+                  pilot_send_time=millis();
+                  mySerial.print(PilotSignal);
+                  Serial.print("PL");
+                  Serial.print(PilotSignal);
+                }                                                 
                         
               }
             //==================================================================//
@@ -915,15 +924,7 @@ void loop() {
 
             }
         #endif
-        //==================================================================//
-        //                    CODE FOR SECURITY 
-        //==================================================================// 
-        if(millis()-pilot_send_time>250) // send pilot signal every 500ms
-        {
-          pilot_send_time=millis();
-          mySerial.print(PilotSignal);
-          //Serial.print("PL");
-        }
+
         //==================================================================//
         //                    CODE FOR Speed Change with BLE
         //==================================================================//                   
