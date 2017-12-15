@@ -148,7 +148,7 @@ bool blinkState = false;
 bool stopbyOther,stopbymyself;
 
 bool adapttomyself;
-int TXAdaptedSignal=2, RXAdaptedSignal=2;
+int TXAdaptedSignal=2, RXAdaptedSignal=2, PilotSignal=3;
 
 // MPU control/status vars
 bool dmpReady = false,fst_peak=true;  // set true if DMP init was successful
@@ -158,6 +158,7 @@ uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
 uint16_t fifoCount;     // count of all bytes currently in FIFO
 uint8_t fifoBuffer[64]; // FIFO storage buffer
 unsigned long time1=0,time_old,step_start_time,half_step_time,step_peak_time,Current_time,t0,t2;
+unsigned long pilot_send_time,pilot_receive_time;
 float delta_t,SumMagAccel;
 //float delta_time;
 int run1=1,j,peak_count;
@@ -914,7 +915,18 @@ void loop() {
 
             }
         #endif
-        
+        //==================================================================//
+        //                    CODE FOR SECURITY 
+        //==================================================================// 
+        if(millis()-pilot_send_time>250) // send pilot signal every 500ms
+        {
+          pilot_send_time=millis();
+          mySerial.print(PilotSignal);
+          //Serial.print("PL");
+        }
+        //==================================================================//
+        //                    CODE FOR Speed Change with BLE
+        //==================================================================//                   
         if(mySerial.available())
         {
           RX_Data_BLE=mySerial.read();
@@ -922,7 +934,11 @@ void loop() {
           if(RX_Data_BLE==RXAdaptedSignal) //reveive the signal from other foot that requires me to sync my speed with it
           {
             adapttomyself=false;
-            }          
+            } 
+          else if (RX_Data_BLE==PilotSignal)
+          {
+            pilot_receive_time=millis();
+            }                     
           //==================================================================//
           //                    SPEED  SYNCHRONIZATION   
           //==================================================================//         
@@ -980,50 +996,59 @@ void loop() {
          // ========================================
          // SPEED CHANGE BEHAVIOUR. 
          // ========================================
-         if(adapttomyself && !stopbyOther)
+         if(millis()-pilot_receive_time<650)
          {
-            // Decrease the speed
-            if(ratio>0.7 && ratio<=0.92)
-            {  
-              duty=8*peak_speeds[4]+68;
-              if(duty<110)
-              {
-                Serial.print("Dec");
-                Serial.println(duty);
-                mySerial.write(duty);                                         // signal the Slave to decrease speed
-                analogWrite(10,duty);
-                analogWrite(9,duty);
-                }
-            }
-            // normal walk, speed almost does not change
-            else if (ratio>0.92 && ratio <1)
-            {
-              duty=8*avg_peak_speed+68;  
-              if(duty<110)
-              {
-                mySerial.write(duty);  
-                Serial.print("Nrml");
-                Serial.println(duty);
-                analogWrite(10,duty);
-                analogWrite(9,duty);
-                }
-              
-             }
-            // what happens if we increase the foot speed ratio > 1
-            // modify because ratio > 1 at the initital foot steps
-            else if( ratio>1 && peak_count>1)
-            {
-              duty=8*peak_speeds[4]+68;
-              if(duty<110)
-              {
-                mySerial.write(duty); 
-                Serial.print("Inc");
-                Serial.println(duty);//150*log(peak_speeds[4]
-                analogWrite(10,duty);
-                analogWrite(9,duty);
-                }
+           if(adapttomyself && !stopbyOther)
+           {
+              // Decrease the speed
+              if(ratio>0.7 && ratio<=0.92)
+              {  
+                duty=8*peak_speeds[4]+68;
+                if(duty<110)
+                {
+                  Serial.print("Dec");
+                  Serial.println(duty);
+                  mySerial.write(duty);                                         // signal the Slave to decrease speed
+                  analogWrite(10,duty);
+                  analogWrite(9,duty);
+                  }
               }
+              // normal walk, speed almost does not change
+              else if (ratio>0.92 && ratio <1)
+              {
+                duty=8*avg_peak_speed+68;  
+                if(duty<110)
+                {
+                  mySerial.write(duty);  
+                  Serial.print("Nrml");
+                  Serial.println(duty);
+                  analogWrite(10,duty);
+                  analogWrite(9,duty);
+                  }
+                
+               }
+              // what happens if we increase the foot speed ratio > 1
+              // modify because ratio > 1 at the initital foot steps
+              else if( ratio>1 && peak_count>1)
+              {
+                duty=8*peak_speeds[4]+68;
+                if(duty<110)
+                {
+                  mySerial.write(duty); 
+                  Serial.print("Inc");
+                  Serial.println(duty);//150*log(peak_speeds[4]
+                  analogWrite(10,duty);
+                  analogWrite(9,duty);
+                  }
+                }
+           }
          }
+         else
+         { 
+            Serial.print("LST");
+            analogWrite(10,30);
+            analogWrite(9,30);
+          }
          
 }
 
