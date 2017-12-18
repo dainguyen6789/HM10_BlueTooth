@@ -1048,7 +1048,7 @@ void loop() {
                 }
            }
          }
-         else
+         else // if lose the BLE onnection, we will stop our motor
          { 
             Serial.print("LST");
             analogWrite(10,30);

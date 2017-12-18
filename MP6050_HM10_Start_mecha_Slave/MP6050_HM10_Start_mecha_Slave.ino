@@ -1093,7 +1093,7 @@ void loop() {
                 }
           }
          }
-         else
+         else // If lose the connection, we will stop our motor
          { 
             Serial.print("LST");
             analogWrite(10,30);
