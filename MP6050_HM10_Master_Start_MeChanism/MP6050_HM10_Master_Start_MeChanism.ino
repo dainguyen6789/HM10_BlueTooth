@@ -911,7 +911,7 @@ void loop() {
                 //==================================================================//
                 //                    CODE FOR SECURITY 
                 //==================================================================// 
-                if(millis()-pilot_send_time>500) // send pilot signal every 500ms
+                if(millis()-pilot_send_time>300) // send pilot signal every 500ms
                 {
                   pilot_send_time=millis();
                   mySerial.write(PilotSignal);
