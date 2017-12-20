@@ -528,6 +528,8 @@ void setup() {
       analogWrite(9,45);
   //==============================================================
     mySerial.begin(9600);
+    mySerial.print("AT+BAUD4");
+    delay(1000);
     delay(3000);
     // join I2C bus (I2Cdev library doesn't do this automatically)
     #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE

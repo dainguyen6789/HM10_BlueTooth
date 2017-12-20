@@ -485,6 +485,8 @@ void setup() {
   //==============================================================
     mySerial.begin(9600);
     // set Master mode
+    mySerial.print("AT+BAUD4"); //http://www.martyncurrey.com/hm-10-bluetooth-4ble-modules/
+    delay(1000);
     mySerial.print("AT+ROLE1");
     delay(1000);
     mySerial.print("AT+COND43639D711FA");
