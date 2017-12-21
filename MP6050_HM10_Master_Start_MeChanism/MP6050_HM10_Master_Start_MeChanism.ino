@@ -1,7 +1,7 @@
 // I2C device class (I2Cdev) demonstration Arduino sketch for MPU6050 class using DMP (MotionApps v2.0)
 // 6/21/2012 by Jeff Rowberg <jeff@rowberg.net>
 // Updates should (hopefully) always be available at https://github.com/jrowberg/i2cdevlib
-//
+// I have to use HMComAssistant  and AT+RENEW command to fix the bug (RX254 or noise all the time), connection in the link  http://techienoise.com/upgrading-firmware-to-hm-10-cc2541-ble-4-0/
 //Be careful with the accelerometer, still have noise in the beginning
 //
 //We must wait until the accel value is small (speed is reset to zero), we can only walk and record speed data correctly after the waiting period
