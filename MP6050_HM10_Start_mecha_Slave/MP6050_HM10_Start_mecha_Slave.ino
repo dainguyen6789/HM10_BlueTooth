@@ -2,6 +2,7 @@
 // 6/21/2012 by Jeff Rowberg <jeff@rowberg.net>
 // Updates should (hopefully) always be available at https://github.com/jrowberg/i2cdevlib
 //
+// How to Update Firmware: SW and Connection http://techienoise.com/upgrading-firmware-to-hm-10-cc2541-ble-4-0/
 // Changelog:
 //      2013-05-08 - added seamless Fastwire support
 //                 - added note about gyro calibration
