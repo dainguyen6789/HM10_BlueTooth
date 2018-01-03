@@ -50,6 +50,11 @@ THE SOFTWARE.
 #include "math.h"
 #include <SoftwareSerial.h>
 
+#include <Arduino_FreeRTOS.h>
+
+void TaskAccel( void *pvParameters );
+
+void TaskBLE( void *pvParameters );
 
 #include "MPU6050_6Axis_MotionApps20.h"
 //#include "MPU6050.h" // not necessary if using MotionApps include file
@@ -434,6 +439,54 @@ uint8_t dmpGetLinearAccel_8G(VectorInt16 *v, VectorInt16 *vRaw, VectorFloat *gra
     return 0;
 }
 
+float absolute(float x)
+{
+  if (x>0)
+    return x;
+  else
+    return -x;
+}
+
+void setPwmFrequency(int pin, int divisor) {
+  byte mode;
+  if(pin == 5 || pin == 6 || pin == 9 || pin == 10) {
+  /*    http://playground.arduino.cc/Main/TimerPWMCheatsheet
+   *     Setting   Divisor   Frequency
+  0x01    1     31372.55
+  0x02    8     3921.16
+  0x03      64    490.20   <--DEFAULT
+  0x04      256     122.55
+  0x05    1024    30.64
+  TCCR1B = (TCCR1B & 0b11111000) | <setting>; */
+
+    switch(divisor) {
+      case 1: mode = 0x01; break;
+      case 8: mode = 0x02; break;
+      case 64: mode = 0x03; break;
+      case 256: mode = 0x04; break;
+      case 1024: mode = 0x05; break;
+      default: return;
+    }
+    if(pin == 5 || pin == 6) {
+      TCCR0B = TCCR0B & 0b11111000 | mode;
+    } else {
+      TCCR1B = TCCR1B & 0b11111000 | mode;
+    }
+  } else if(pin == 3 || pin == 11) {
+    switch(divisor) {
+      case 1: mode = 0x01; break;
+      case 8: mode = 0x02; break;
+      case 32: mode = 0x03; break;
+      case 64: mode = 0x04; break;
+      case 128: mode = 0x05; break;
+      case 256: mode = 0x06; break;
+      case 1024: mode = 0x07; break;
+      default: return;
+    }
+    TCCR2B = TCCR2B & 0b11111000 | mode;
+  }
+}
+
 
 
 // ================================================================
@@ -442,7 +495,37 @@ uint8_t dmpGetLinearAccel_8G(VectorInt16 *v, VectorInt16 *vRaw, VectorFloat *gra
 
 void setup() {
       // ================================================================
-      // ===                      Motor SETUP                       ===
+      // ===                      FreeRTOS TASK SETUP                 ===
+      // ================================================================ 
+        xTaskCreate(
+    
+        TaskAccel
+    
+        ,  (const portCHAR *)"Blink"   // A name just for humans
+    
+        ,  64  // This stack size can be checked & adjusted by reading the Stack Highwater
+    
+        ,  NULL
+    
+        ,  2  // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    
+        ,  NULL );
+    
+      xTaskCreate(
+    
+        TaskBLE
+    
+        ,  (const portCHAR *) "AnalogRead"
+    
+        ,  32 // Stack size
+    
+        ,  NULL
+    
+        ,  1  // Priority
+    
+        ,  NULL );
+      // ================================================================
+      // ===                      Motor SETUP                         ===
       // ================================================================
       // declare pin 10 to be an output:
        pinMode(10, OUTPUT);
@@ -617,7 +700,26 @@ void setup() {
 // ================================================================
 
 void loop() {
-    // if programming failed, don't try to do anything
+
+                                        
+
+
+         
+}
+
+/*---------------------- Tasks ---------------------*/
+
+void TaskAccel(void *pvParameters)  // This is a task.
+
+{
+
+  (void) pvParameters;
+
+
+  for (;;) // A Task shall never return or exit.
+
+  {
+        // if programming failed, don't try to do anything
     if (!dmpReady) return;
 
     // wait for MPU interrupt or extra packet(s) available
@@ -912,8 +1014,21 @@ void loop() {
 //                        Serial.print(peak_speeds[3]); 
 //                        Serial.print(",");
 //                        Serial.println(peak_speeds[4]); 
-                                        
+                      #endif
 
+  }
+    }}
+}
+
+void TaskBLE(void *pvParameters)  // This is a task.
+
+{
+
+  (void) pvParameters;
+
+  for (;;)
+
+  {
                 //==================================================================//
                 //                    CODE FOR SECURITY 
                 //==================================================================// 
@@ -925,15 +1040,15 @@ void loop() {
                   Serial.print(PilotSignal);
                 }                                                 
                         
-              }
+              
             //==================================================================//
             //==============       BLE SoftwareSerial Print      ===============//
             //==================================================================//  
             //            mySerial.println(AVAWorld.x);
 
 
-            }
-        #endif
+            
+        
 
         //==================================================================//
         //                    CODE FOR Speed Change with BLE
@@ -1060,58 +1175,13 @@ void loop() {
             analogWrite(10,30);
             analogWrite(9,30);
           }
-         
+    vTaskDelay(1);
+
+}
+
 }
 
 
-
-float absolute(float x)
-{
-  if (x>0)
-    return x;
-  else
-    return -x;
-}
-
-void setPwmFrequency(int pin, int divisor) {
-  byte mode;
-  if(pin == 5 || pin == 6 || pin == 9 || pin == 10) {
-  /*    http://playground.arduino.cc/Main/TimerPWMCheatsheet
-   *     Setting   Divisor   Frequency
-  0x01    1     31372.55
-  0x02    8     3921.16
-  0x03      64    490.20   <--DEFAULT
-  0x04      256     122.55
-  0x05    1024    30.64
-  TCCR1B = (TCCR1B & 0b11111000) | <setting>; */
-
-    switch(divisor) {
-      case 1: mode = 0x01; break;
-      case 8: mode = 0x02; break;
-      case 64: mode = 0x03; break;
-      case 256: mode = 0x04; break;
-      case 1024: mode = 0x05; break;
-      default: return;
-    }
-    if(pin == 5 || pin == 6) {
-      TCCR0B = TCCR0B & 0b11111000 | mode;
-    } else {
-      TCCR1B = TCCR1B & 0b11111000 | mode;
-    }
-  } else if(pin == 3 || pin == 11) {
-    switch(divisor) {
-      case 1: mode = 0x01; break;
-      case 8: mode = 0x02; break;
-      case 32: mode = 0x03; break;
-      case 64: mode = 0x04; break;
-      case 128: mode = 0x05; break;
-      case 256: mode = 0x06; break;
-      case 1024: mode = 0x07; break;
-      default: return;
-    }
-    TCCR2B = TCCR2B & 0b11111000 | mode;
-  }
-}
 
 
 
