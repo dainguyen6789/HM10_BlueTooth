@@ -494,36 +494,7 @@ void setPwmFrequency(int pin, int divisor) {
 // ================================================================
 
 void setup() {
-      // ================================================================
-      // ===                      FreeRTOS TASK SETUP                 ===
-      // ================================================================ 
-        xTaskCreate(
-    
-        TaskAccel
-    
-        ,  (const portCHAR *)"Blink"   // A name just for humans
-    
-        ,  64  // This stack size can be checked & adjusted by reading the Stack Highwater
-    
-        ,  NULL
-    
-        ,  2  // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
-    
-        ,  NULL );
-    
-      xTaskCreate(
-    
-        TaskBLE
-    
-        ,  (const portCHAR *) "AnalogRead"
-    
-        ,  32 // Stack size
-    
-        ,  NULL
-    
-        ,  1  // Priority
-    
-        ,  NULL );
+     
       // ================================================================
       // ===                      Motor SETUP                         ===
       // ================================================================
@@ -686,7 +657,36 @@ void setup() {
     //  =======================================================
     // set the data rate for the SoftwareSerial port
     //  =======================================================
-
+    // ================================================================
+    // ===                      FreeRTOS TASK SETUP                 ===
+    // ================================================================ 
+        xTaskCreate(
+    
+        TaskAccel
+    
+        ,  (const portCHAR *)"Blink"   // A name just for humans
+    
+        ,  64  // This stack size can be checked & adjusted by reading the Stack Highwater
+    
+        ,  NULL
+    
+        ,  1  // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+    
+        ,  NULL );
+    
+      xTaskCreate(
+    
+        TaskBLE
+    
+        ,  (const portCHAR *) "AnalogRead"
+    
+        ,  16 // Stack size
+    
+        ,  NULL
+    
+        ,  2 // Priority
+    
+        ,  NULL );
 
 }
 
@@ -1016,8 +1016,10 @@ void TaskAccel(void *pvParameters)  // This is a task.
 //                        Serial.println(peak_speeds[4]); 
                       #endif
 
-  }
-    }}
+        }
+      }
+     // 
+    }
 }
 
 void TaskBLE(void *pvParameters)  // This is a task.
@@ -1029,16 +1031,17 @@ void TaskBLE(void *pvParameters)  // This is a task.
   for (;;)
 
   {
-                //==================================================================//
-                //                    CODE FOR SECURITY 
-                //==================================================================// 
-                if(millis()-pilot_send_time>300) // send pilot signal every 300ms
-                {
-                  pilot_send_time=millis();
-                  mySerial.write(PilotSignal);
-                  Serial.print("PL");
-                  Serial.print(PilotSignal);
-                }                                                 
+          Serial.print("Hello");
+          //==================================================================//
+          //                    CODE FOR SECURITY 
+          //==================================================================// 
+          if(millis()-pilot_send_time>300) // send pilot signal every 300ms
+          {
+            pilot_send_time=millis();
+            mySerial.write(PilotSignal);
+            Serial.print("PL");
+            Serial.print(PilotSignal);
+          }                                                 
                         
               
             //==================================================================//
