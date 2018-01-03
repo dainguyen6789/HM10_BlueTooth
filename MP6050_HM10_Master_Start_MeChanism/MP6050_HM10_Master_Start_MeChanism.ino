@@ -680,7 +680,7 @@ void setup() {
     
         ,  (const portCHAR *) "AnalogRead"
     
-        ,  16 // Stack size
+        ,  64// Stack size
     
         ,  NULL
     
@@ -716,7 +716,7 @@ void TaskAccel(void *pvParameters)  // This is a task.
   (void) pvParameters;
 
 
-  for (;;) // A Task shall never return or exit.
+  //for (;;) // A Task shall never return or exit.
 
   {
         // if programming failed, don't try to do anything
@@ -1018,7 +1018,7 @@ void TaskAccel(void *pvParameters)  // This is a task.
 
         }
       }
-     // 
+     vTaskDelay(1);
     }
 }
 
@@ -1180,7 +1180,7 @@ void TaskBLE(void *pvParameters)  // This is a task.
           }
     vTaskDelay(1);
 
-}
+  }
 
 }
 
