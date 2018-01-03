@@ -36,8 +36,12 @@ void setup()
     mySerial.begin(9600);
     delay(1000);
     mySerial.print("AT+RENEW");
+    mySerial.print("AT+RENEW");
+    mySerial.print("AT+RENEW");
+    mySerial.print("AT+RENEW");
+    mySerial.print("AT+RENEW");
 //    mySerial.print("AT+IMME1" );
-    delay(1000);
+    delay(3000);
     // set Master mode
     mySerial.print("AT+ROLE1"); 
     delay(1000);
@@ -47,9 +51,9 @@ void setup()
 //    delay(1000);
      mySerial.print("AT+MODE2");
     //mySerial.print("AT+HELP?"); 
-    //delay(1000);
-//    mySerial.print("AT+RESET");
-//    delay(3000);
+    delay(1000);
+    mySerial.print("AT+RESET");
+    delay(3000);
     mySerial.print("AT+DISC?");
     delay(1000);
     mySerial.println("AT+CONN0");// THIS IS THE ADDRESS OF BLE MODULE #2 (D4:36:39:D7:11:FA)

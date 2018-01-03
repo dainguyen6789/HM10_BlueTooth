@@ -484,10 +484,16 @@ void setup() {
       analogWrite(9,20);
   //==============================================================
     mySerial.begin(9600);
+    delay(1000);
     // set Master mode
+    mySerial.print("AT+RENEW");
+    delay(1000);
     mySerial.print("AT+ROLE1");
     delay(1000);
-    mySerial.print("AT+COND43639D711FA");
+    mySerial.print("AT+MODE2");
+    mySerial.print("AT+DISC?");
+    delay(1000);
+    mySerial.println("AT+CONN0");
     delay(2000);
     
     // join I2C bus (I2Cdev library doesn't do this automatically)
@@ -1011,7 +1017,7 @@ void loop() {
                 duty=8*peak_speeds[4]+68;
                 if(duty<110)
                 {
-                  Serial.print("Dec");
+//                  Serial.print("Dec");
                   Serial.println(duty);
                   mySerial.write(duty);                                         // signal the Slave to decrease speed
                   analogWrite(10,duty);
@@ -1025,7 +1031,7 @@ void loop() {
                 if(duty<110)
                 {
                   mySerial.write(duty);  
-                  Serial.print("Nrml");
+//                  Serial.print("Nrml");
                   Serial.println(duty);
                   analogWrite(10,duty);
                   analogWrite(9,duty);
@@ -1040,7 +1046,7 @@ void loop() {
                 if(duty<110)
                 {
                   mySerial.write(duty); 
-                  Serial.print("Inc");
+//                  Serial.print("Inc");
                   Serial.println(duty);//150*log(peak_speeds[4]
                   analogWrite(10,duty);
                   analogWrite(9,duty);
