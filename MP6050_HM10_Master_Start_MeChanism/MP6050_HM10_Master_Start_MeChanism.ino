@@ -51,7 +51,11 @@ THE SOFTWARE.
 #include <SoftwareSerial.h>
 
 #include <Arduino_FreeRTOS.h>
+#include <semphr.h>  // add the FreeRTOS functions for Semaphores (or Flags).
 
+// Declare a mutex Semaphore Handle which we will use to manage the Serial Port.
+// It will be used to ensure only only one Task is accessing this resource at any time.
+SemaphoreHandle_t xSerialSemaphore;
 void TaskAccel( void *pvParameters );
 
 void TaskBLE( void *pvParameters );
@@ -657,6 +661,12 @@ void setup() {
     //  =======================================================
     // set the data rate for the SoftwareSerial port
     //  =======================================================
+    if ( xSerialSemaphore == NULL )  // Check to confirm that the Serial Semaphore has not already been created.
+    {
+      xSerialSemaphore = xSemaphoreCreateMutex();  // Create a mutex semaphore we will use to manage the Serial Port
+      if ( ( xSerialSemaphore ) != NULL )
+        xSemaphoreGive( ( xSerialSemaphore ) );  // Make the Serial Port available for use, by "Giving" the Semaphore.
+    }
     // ================================================================
     // ===                      FreeRTOS TASK SETUP                 ===
     // ================================================================ 
@@ -1018,6 +1028,16 @@ void TaskAccel(void *pvParameters)  // This is a task.
 
         }
       }
+          if ( xSemaphoreTake( xSerialSemaphore, ( TickType_t ) 5 ) == pdTRUE )
+    {
+      // We were able to obtain or "Take" the semaphore and can now access the shared resource.
+      // We want to have the Serial Port for us alone, as it takes some time to print,
+      // so we don't want it getting stolen during the middle of a conversion.
+      // print out the state of the button:
+      //Serial.println(buttonState);
+
+      xSemaphoreGive( xSerialSemaphore ); // Now free or "Give" the Serial Port for others.
+    }
      // 
     }
 }
@@ -1178,6 +1198,11 @@ void TaskBLE(void *pvParameters)  // This is a task.
             analogWrite(10,30);
             analogWrite(9,30);
           }
+    if ( xSemaphoreTake( xSerialSemaphore, ( TickType_t ) 5 ) == pdTRUE )
+    {
+    
+      xSemaphoreGive( xSerialSemaphore ); // Now free or "Give" the Serial Port for others.
+    }
     vTaskDelay(1);
 
 }
