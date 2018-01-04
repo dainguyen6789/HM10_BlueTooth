@@ -51,7 +51,9 @@ THE SOFTWARE.
 #include <SoftwareSerial.h>
 
 #include <Arduino_FreeRTOS.h>
+#include <semphr.h>  // add the FreeRTOS functions for Semaphores (or Flags).
 
+SemaphoreHandle_t xSerialSemaphore;
 void TaskAccel( void *pvParameters );
 
 void TaskBLE( void *pvParameters );
@@ -660,6 +662,12 @@ void setup() {
     // ================================================================
     // ===                      FreeRTOS TASK SETUP                 ===
     // ================================================================ 
+      if ( xSerialSemaphore == NULL )  // Check to confirm that the Serial Semaphore has not already been created.
+  {
+    xSerialSemaphore = xSemaphoreCreateMutex();  // Create a mutex semaphore we will use to manage the Serial Port
+    if ( ( xSerialSemaphore ) != NULL )
+      xSemaphoreGive( ( xSerialSemaphore ) );  // Make the Serial Port available for use, by "Giving" the Semaphore.
+  }
         xTaskCreate(
     
         TaskAccel
@@ -670,7 +678,7 @@ void setup() {
     
         ,  NULL
     
-        ,  1  // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
+        ,  1 // Priority, with 3 (configMAX_PRIORITIES - 1) being the highest, and 0 being the lowest.
     
         ,  NULL );
     
@@ -701,336 +709,346 @@ void setup() {
 
 void loop() {
 
-                                        
-
-
-         
+                                              
 }
 
 /*---------------------- Tasks ---------------------*/
 
-void TaskAccel(void *pvParameters)  // This is a task.
+void TaskAccel(void *pvParameters __attribute__((unused)))  // This is a task.
 
 {
 
-  (void) pvParameters;
+  //(void) pvParameters;
 
 
-  //for (;;) // A Task shall never return or exit.
+  for (;;) // A Task shall never return or exit.
 
   {
+
         // if programming failed, don't try to do anything
-    if (!dmpReady) return;
-
-    // wait for MPU interrupt or extra packet(s) available
-    while (!mpuInterrupt && fifoCount < packetSize) {
-        // other program behavior stuff here
-
-    }
-
-    // reset interrupt flag and get INT_STATUS byte
-    mpuInterrupt = false;
-    mpuIntStatus = mpu.getIntStatus();
-
-    // get current FIFO count
-    fifoCount = mpu.getFIFOCount();
-
-    // check for overflow (this should never happen unless our code is too inefficient)
-    if ((mpuIntStatus & 0x10) || fifoCount == 1024) {
-        // reset so we can continue cleanly
-        mpu.resetFIFO();
-        //delay(200);
-        Serial.println(F("FIFO overflow!"));
-
-    // otherwise, check for DMP data ready interrupt (this should happen frequently)
-    } 
-    else if (mpuIntStatus & 0x02) {
-        // wait for correct available data length, should be a VERY short wait
-        while (fifoCount < packetSize) fifoCount = mpu.getFIFOCount();
-
-        // read a packet from FIFO
-        mpu.getFIFOBytes(fifoBuffer, packetSize);
-        
-        // track FIFO count here in case there is > 1 packet available
-        // (this lets us immediately read more without waiting for an interrupt)
-        fifoCount -= packetSize;
-
-    
-
-    
-            #ifdef OUTPUT_READABLE_WORLDACCEL
-            if( time1<=5000)
-            {
-              time1=millis();
-            }
-            
-            if (time1>5000)
-            {
-                // display initial world-frame acceleration, adjusted to remove gravity
-                // and rotated based on known orientation from quaternion
-                mpu.dmpGetQuaternion(&q, fifoBuffer);
-                mpu.dmpGetAccel(&aa, fifoBuffer);
-                mpu.dmpGetGravity(&gravity, &q);
-                
-                #ifdef AccelSensitivity_2G
-                mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
-                #endif
-                
-                #ifdef AccelSensitivity_4G
-                dmpGetLinearAccel_4G(&aaReal, &aa, &gravity);
-                #endif
-    
-                #ifdef AccelSensitivity_8G
-                dmpGetLinearAccel_8G(&aaReal, &aa, &gravity);
-                #endif
-                
-                mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
-
-                //save old value to compute the rate of change
-                
-                AVAWorld1.x= AVAWorld.x;
-                AVAWorld1.y= AVAWorld.x;
-                AVAWorld1.z= AVAWorld.x;
-                
-                // current value of accel
-                AVAWorld.x= (float) aaWorld.x*9.81/2048.0;
-                AVAWorld.y= (float) aaWorld.y*9.81/2048.0;
-                AVAWorld.z= (float) aaWorld.z*9.81/2048.0;
-                
-                
-                if(run1==1)
-                {
-//                    delay(800);
-//                    analogWrite(10,70);
-//                    analogWrite(9,70);  
-//                    delay(250);                  
-//                    analogWrite(10,75);
-//                    analogWrite(9,75);   
-//                    delay(500);                    
-//                    analogWrite(10,80);
-//                    analogWrite(9,80);
-//                    delay(250);   
-//                    analogWrite(10,90);
-//                    analogWrite(9,90);
-                    if (absolute(AVAWorld.x)<AccelMagThreshold)
-                    {
-                      AVAWorldMagSeries[NumSamplesToSetZero-1]=0;
-                    }
-                    else
-                    {
-                      AVAWorldMagSeries[NumSamplesToSetZero-1]= absolute(AVAWorld.x); 
-                    }
-                    time1=millis();
-                    run1++;
-                }
-                else
-                {
-                    for(int ii=0;ii<NumSamplesToSetZero-1;ii++)
-                      {
-                        AVAWorldMagSeries[ii]= AVAWorldMagSeries[ii+1];
-                      }
-                   
-                    if (absolute(AVAWorld.x)<AccelMagThreshold)
-                      {
-                        AVAWorldMagSeries[NumSamplesToSetZero-1]=0;
-                      }
-                    else
-                    {
-                      AVAWorldMagSeries[NumSamplesToSetZero-1]= absolute(AVAWorld.x); 
-                    }
-                    
-                    time_old=time1;
-                    time1=millis();
-                }         
-                        delta_t=(time1-time_old);
-                        RoCh=(AVAWorld.x-AVAWorld1.x)*1000.0/(float)delta_t;
-//                        Serial.print(RoCh);
-//                        Serial.print(",");
-                        //==================================================================//
-                        //==============    RESET SPEED TO ZERO IF NECESSARY ===============//
-                        //==================================================================//
-                        SumMagAccel=0;
-                        
-                        for(int ii=0;ii<NumSamplesToSetZero;ii++)
-                        {
-                           SumMagAccel+=AVAWorldMagSeries[ii];
-                        }
-                          
-                        //==================================================================//
-
-                        //==================================================================//
-                        Spds[0].x=Spds[1].x;
-                        Spds[0].y=Spds[1].y;
-                        Spds[1].x=Spds[2].x;
-                        Spds[1].y=Spds[2].y;
-                        Spds[2].x=Spds[3].x;
-                        Spds[2].y=Spds[3].y;
-                        Spds[3].x=spd[1].x;
-                        Spds[3].y=spd[1].y;
-                        
-                        speed_calc(&spd[1],AVAWorld, delta_t);
-                                              
-                        if(SumMagAccel==0 && absolute(RoCh)<RoChThreshold)// add abs_x<0.8 to prevent wrong speed reset :((
-                        {
-                          // we should realize the peak value and do not reset the speed to zero
-//                          Serial.print("here,");
-                          spd[1].x=0;
-                          spd[1].y=0;
-                          spd[1].z=0; 
-//                          AVAWorld.x=0;
-//                          AVAWorld.y=0;
-//                          AVAWorld.z=0; 
-                          peak_speed=0; 
-                        }
-                        //  ==================================================================//
-                        //  Catch the peak speed value, minor bug when move at low speed
-                        //  ==================================================================//
-                        //  we must change something here to capture the time correctly
-                        //  one sample =0; then we have 4 samples !=0 => begin the step 
-                        if (Spds[0].x==0 && Spds[1].x!=0 && Spds[2].x!=0 && Spds[3].x!=0 & spd[1].x!=0)
-                        {
-                          Serial.print("Here,");
-                          Serial.print(spd[0].x);
-                          Serial.println(spd[1].x);
-                          step_start_time=millis();
-                         }
-                        abs_x=absolute(spd[1].x);  
-//                      per our test, the peak value of normal walk will never drop below 0.8
-                        if (abs_x>0.8)
-                        peak_speed=max(peak_speed,abs_x); // we have to use our own absolute function because built-in abs() returns int value
-                        
-                        //==================================================================//
-                        //        CATCH PEAK SPEED VALUES
-                        //        Modify the code to detect the peak of 4 steps
-                        //        current speed < previous speed  that means we finish with the 1st peak
-                        //==================================================================//  
-                        //==================================================================//    
-                          
-                        // peak_speed>0.5 to prevent the small negative value at the beginning of foot step .
-                        // absolute(spd[1].x)==0 before the condition j==n_reset is met, then we can't reset the temp var "peak_speed".
-                        //if (abs_x < peak_speed && peak_speed>0.6 && abs_x!=0 ) //the value is going down (absolute(spd[1].x) < peak_speed) and the acceleration is zero.
-                        if (absolute(spd[1].x) < peak_speed && peak_speed>0.5 && absolute(spd[1].x)!=0 ) //the value is going down and the acceleration is zero.
-                        {
-
-//                            Serial.println("T"+half_step_time);   
-                            if (!j)// j==0
-                            {
-                                  peak_count++;                               
-                                  step_peak_time=millis();
-                                  half_step_time=step_peak_time-step_start_time;
-                                  Serial.println("HST");
-                                  Serial.println(half_step_time);
-                                  adapttomyself=true;
-                                  mySerial.write(TXAdaptedSignal);// TXAdaptedSignal=2, we can choose any encoded value                                  
-                                  mySerial.write(TXAdaptedSignal);// TXAdaptedSignal=2, we can choose any encoded value     
-                                  mySerial.write(TXAdaptedSignal);// TXAdaptedSignal=2, we can choose any encoded value
-                                  
-                                  peak_speeds[0]=peak_speeds[1];
-                                  peak_speeds[1]=peak_speeds[2];
-                                  peak_speeds[2]=peak_speeds[3];
-                                  peak_speeds[3]=peak_speeds[4]; 
-                                  peak_speeds[4]=peak_speed;
-                                  
-                                  avg_peak_speed=(peak_speeds[0]+peak_speeds[1]+peak_speeds[2]+peak_speeds[3])/4;
-                                  
-                                  //  tend to reduce the user's speed
-                                  ratio=peak_speeds[4]/avg_peak_speed;
-                                  Serial.println(ratio);
-                                  // this is at Master side
-                                  if (ratio<0.92 && ratio >=0.7)
-                                  {
-                                    //note on this
-                                    mySerial.write((byte)0x00);
-                                    mySerial.write((byte)0x00);
-                                    mySerial.write((byte)0x00);
-                                    Serial.println("Se1M");
-                                  }
-                                  else if(ratio<0.7 && ratio>0)
-                                  {
-                                    mySerial.write(1);
-                                    mySerial.write(1);
-                                    mySerial.write(1);
-                                    Serial.println("Se2M");
-                                  }
-
-                            }
-                            j=1;
-                         }
-                         else
-                         {
-                          j=0;
-                         }
-                         
-                        //===================================================================
-                        // This code is designed for Starting Mechanism 
-                        //===================================================================
-                        Current_time=millis();
-                        //===================================================================
-                        // FOR the very 1ST FOOT STEP    
-                        //===================================================================                   
-                        if(peak_speeds[4]>0 && peak_speeds[3]==0 && (Current_time-step_peak_time) >= half_step_time/2 && (Current_time-step_peak_time) <= half_step_time) // 1st step
-                        {
-                          //  how to capture t0 ?
-                          
-                          if (!motor_init)
-                          {
-                            t0=Current_time;              
-                            motor_init=1;                           
-                          }
-                          duty=(8*peak_speeds[4]+68)*(Current_time-t0)/(half_step_time/2); // the motor speed will proportional to the peak foot speed
-                          if(duty>90)
-                          {
-                            duty=90;
-                            }
-                          if(duty>20)
-                          {
-                            analogWrite(10,duty);
-                            analogWrite(9,duty) ;
-                          }
-                          Serial.print("dt:");
-                          Serial.println(duty);
-                          if(duty>30)
-                            mySerial.write(duty);
-                        }
-
-                        //==================================================================//
-                        //==============              Serial Print           ===============//
-                        //==================================================================//
-                        
-//                        Serial.print(Current_time); 
-//                        Serial.print(","); 
-                        Serial.print(AVAWorld.x); 
-                        Serial.print(",");             
-                        Serial.println(spd[1].x); 
-//                        Serial.print(",");
-//                        Serial.print(1].x);
-//                        Serial.print(",");
-//                        Serial.print(peak_speeds[0]);
-//                        Serial.print(",");
-//                        Serial.print(peak_speeds[1]);
-//                        Serial.print(",");
-//                        Serial.print(peak_speeds[2]);
-//                        Serial.print(",");
-//                        Serial.print(peak_speeds[3]); 
-//                        Serial.print(",");
-//                        Serial.println(peak_speeds[4]); 
-                      #endif
-
-        }
-      }
-     vTaskDelay(1);
+//    if (!dmpReady) return;
+//
+//    // wait for MPU interrupt or extra packet(s) available
+//    while (!mpuInterrupt && fifoCount < packetSize) {
+//        // other program behavior stuff here
+//
+//    }
+//
+//    // reset interrupt flag and get INT_STATUS byte
+//    mpuInterrupt = false;
+//    mpuIntStatus = mpu.getIntStatus();
+//
+//    // get current FIFO count
+//    fifoCount = mpu.getFIFOCount();
+//
+//    // check for overflow (this should never happen unless our code is too inefficient)
+//    if ((mpuIntStatus & 0x10) || fifoCount == 1024) {
+//        // reset so we can continue cleanly
+//        mpu.resetFIFO();
+//        //delay(200);
+//        Serial.println(F("FIFO overflow!"));
+//
+//    // otherwise, check for DMP data ready interrupt (this should happen frequently)
+//    } 
+//    else if (mpuIntStatus & 0x02) {
+//        // wait for correct available data length, should be a VERY short wait
+//        while (fifoCount < packetSize) fifoCount = mpu.getFIFOCount();
+//
+//        // read a packet from FIFO
+//        mpu.getFIFOBytes(fifoBuffer, packetSize);
+//        
+//        // track FIFO count here in case there is > 1 packet available
+//        // (this lets us immediately read more without waiting for an interrupt)
+//        fifoCount -= packetSize;
+//
+//    
+//
+//    
+//            #ifdef OUTPUT_READABLE_WORLDACCEL
+//            if( time1<=5000)
+//            {
+//              time1=millis();
+//            }
+//            
+//            if (time1>5000)
+//            {
+//                // display initial world-frame acceleration, adjusted to remove gravity
+//                // and rotated based on known orientation from quaternion
+//                mpu.dmpGetQuaternion(&q, fifoBuffer);
+//                mpu.dmpGetAccel(&aa, fifoBuffer);
+//                mpu.dmpGetGravity(&gravity, &q);
+//                
+//                #ifdef AccelSensitivity_2G
+//                mpu.dmpGetLinearAccel(&aaReal, &aa, &gravity);
+//                #endif
+//                
+//                #ifdef AccelSensitivity_4G
+//                dmpGetLinearAccel_4G(&aaReal, &aa, &gravity);
+//                #endif
+//    
+//                #ifdef AccelSensitivity_8G
+//                dmpGetLinearAccel_8G(&aaReal, &aa, &gravity);
+//                #endif
+//                
+//                mpu.dmpGetLinearAccelInWorld(&aaWorld, &aaReal, &q);
+//
+//                //save old value to compute the rate of change
+//                
+//                AVAWorld1.x= AVAWorld.x;
+//                AVAWorld1.y= AVAWorld.x;
+//                AVAWorld1.z= AVAWorld.x;
+//                
+//                // current value of accel
+//                AVAWorld.x= (float) aaWorld.x*9.81/2048.0;
+//                AVAWorld.y= (float) aaWorld.y*9.81/2048.0;
+//                AVAWorld.z= (float) aaWorld.z*9.81/2048.0;
+//                
+//                
+//                if(run1==1)
+//                {
+////                    delay(800);
+////                    analogWrite(10,70);
+////                    analogWrite(9,70);  
+////                    delay(250);                  
+////                    analogWrite(10,75);
+////                    analogWrite(9,75);   
+////                    delay(500);                    
+////                    analogWrite(10,80);
+////                    analogWrite(9,80);
+////                    delay(250);   
+////                    analogWrite(10,90);
+////                    analogWrite(9,90);
+//                    if (absolute(AVAWorld.x)<AccelMagThreshold)
+//                    {
+//                      AVAWorldMagSeries[NumSamplesToSetZero-1]=0;
+//                    }
+//                    else
+//                    {
+//                      AVAWorldMagSeries[NumSamplesToSetZero-1]= absolute(AVAWorld.x); 
+//                    }
+//                    time1=millis();
+//                    run1++;
+//                }
+//                else
+//                {
+//                    for(int ii=0;ii<NumSamplesToSetZero-1;ii++)
+//                      {
+//                        AVAWorldMagSeries[ii]= AVAWorldMagSeries[ii+1];
+//                      }
+//                   
+//                    if (absolute(AVAWorld.x)<AccelMagThreshold)
+//                      {
+//                        AVAWorldMagSeries[NumSamplesToSetZero-1]=0;
+//                      }
+//                    else
+//                    {
+//                      AVAWorldMagSeries[NumSamplesToSetZero-1]= absolute(AVAWorld.x); 
+//                    }
+//                    
+//                    time_old=time1;
+//                    time1=millis();
+//                }         
+//                        delta_t=(time1-time_old);
+//                        RoCh=(AVAWorld.x-AVAWorld1.x)*1000.0/(float)delta_t;
+////                        Serial.print(RoCh);
+////                        Serial.print(",");
+//                        //==================================================================//
+//                        //==============    RESET SPEED TO ZERO IF NECESSARY ===============//
+//                        //==================================================================//
+//                        SumMagAccel=0;
+//                        
+//                        for(int ii=0;ii<NumSamplesToSetZero;ii++)
+//                        {
+//                           SumMagAccel+=AVAWorldMagSeries[ii];
+//                        }
+//                          
+//                        //==================================================================//
+//
+//                        //==================================================================//
+//                        Spds[0].x=Spds[1].x;
+//                        Spds[0].y=Spds[1].y;
+//                        Spds[1].x=Spds[2].x;
+//                        Spds[1].y=Spds[2].y;
+//                        Spds[2].x=Spds[3].x;
+//                        Spds[2].y=Spds[3].y;
+//                        Spds[3].x=spd[1].x;
+//                        Spds[3].y=spd[1].y;
+//                        
+//                        speed_calc(&spd[1],AVAWorld, delta_t);
+//                                              
+//                        if(SumMagAccel==0 && absolute(RoCh)<RoChThreshold)// add abs_x<0.8 to prevent wrong speed reset :((
+//                        {
+//                          // we should realize the peak value and do not reset the speed to zero
+////                          Serial.print("here,");
+//                          spd[1].x=0;
+//                          spd[1].y=0;
+//                          spd[1].z=0; 
+////                          AVAWorld.x=0;
+////                          AVAWorld.y=0;
+////                          AVAWorld.z=0; 
+//                          peak_speed=0; 
+//                        }
+//                        //  ==================================================================//
+//                        //  Catch the peak speed value, minor bug when move at low speed
+//                        //  ==================================================================//
+//                        //  we must change something here to capture the time correctly
+//                        //  one sample =0; then we have 4 samples !=0 => begin the step 
+//                        if (Spds[0].x==0 && Spds[1].x!=0 && Spds[2].x!=0 && Spds[3].x!=0 & spd[1].x!=0)
+//                        {
+//                          Serial.print("Here,");
+//                          Serial.print(spd[0].x);
+//                          Serial.println(spd[1].x);
+//                          step_start_time=millis();
+//                         }
+//                        abs_x=absolute(spd[1].x);  
+////                      per our test, the peak value of normal walk will never drop below 0.8
+//                        if (abs_x>0.8)
+//                        peak_speed=max(peak_speed,abs_x); // we have to use our own absolute function because built-in abs() returns int value
+//                        
+//                        //==================================================================//
+//                        //        CATCH PEAK SPEED VALUES
+//                        //        Modify the code to detect the peak of 4 steps
+//                        //        current speed < previous speed  that means we finish with the 1st peak
+//                        //==================================================================//  
+//                        //==================================================================//    
+//                          
+//                        // peak_speed>0.5 to prevent the small negative value at the beginning of foot step .
+//                        // absolute(spd[1].x)==0 before the condition j==n_reset is met, then we can't reset the temp var "peak_speed".
+//                        //if (abs_x < peak_speed && peak_speed>0.6 && abs_x!=0 ) //the value is going down (absolute(spd[1].x) < peak_speed) and the acceleration is zero.
+//                        if (absolute(spd[1].x) < peak_speed && peak_speed>0.5 && absolute(spd[1].x)!=0 ) //the value is going down and the acceleration is zero.
+//                        {
+//
+////                            Serial.println("T"+half_step_time);   
+//                            if (!j)// j==0
+//                            {
+//                                  peak_count++;                               
+//                                  step_peak_time=millis();
+//                                  half_step_time=step_peak_time-step_start_time;
+//                                  Serial.println("HST");
+//                                  Serial.println(half_step_time);
+//                                  adapttomyself=true;
+//                                  mySerial.write(TXAdaptedSignal);// TXAdaptedSignal=2, we can choose any encoded value                                  
+//                                  mySerial.write(TXAdaptedSignal);// TXAdaptedSignal=2, we can choose any encoded value     
+//                                  mySerial.write(TXAdaptedSignal);// TXAdaptedSignal=2, we can choose any encoded value
+//                                  
+//                                  peak_speeds[0]=peak_speeds[1];
+//                                  peak_speeds[1]=peak_speeds[2];
+//                                  peak_speeds[2]=peak_speeds[3];
+//                                  peak_speeds[3]=peak_speeds[4]; 
+//                                  peak_speeds[4]=peak_speed;
+//                                  
+//                                  avg_peak_speed=(peak_speeds[0]+peak_speeds[1]+peak_speeds[2]+peak_speeds[3])/4;
+//                                  
+//                                  //  tend to reduce the user's speed
+//                                  ratio=peak_speeds[4]/avg_peak_speed;
+//                                  Serial.println(ratio);
+//                                  // this is at Master side
+//                                  if (ratio<0.92 && ratio >=0.7)
+//                                  {
+//                                    //note on this
+//                                    mySerial.write((byte)0x00);
+//                                    mySerial.write((byte)0x00);
+//                                    mySerial.write((byte)0x00);
+//                                    Serial.println("Se1M");
+//                                  }
+//                                  else if(ratio<0.7 && ratio>0)
+//                                  {
+//                                    mySerial.write(1);
+//                                    mySerial.write(1);
+//                                    mySerial.write(1);
+//                                    Serial.println("Se2M");
+//                                  }
+//
+//                            }
+//                            j=1;
+//                         }
+//                         else
+//                         {
+//                          j=0;
+//                         }
+//                         
+//                        //===================================================================
+//                        // This code is designed for Starting Mechanism 
+//                        //===================================================================
+//                        Current_time=millis();
+//                        //===================================================================
+//                        // FOR the very 1ST FOOT STEP    
+//                        //===================================================================                   
+//                        if(peak_speeds[4]>0 && peak_speeds[3]==0 && (Current_time-step_peak_time) >= half_step_time/2 && (Current_time-step_peak_time) <= half_step_time) // 1st step
+//                        {
+//                          //  how to capture t0 ?
+//                          
+//                          if (!motor_init)
+//                          {
+//                            t0=Current_time;              
+//                            motor_init=1;                           
+//                          }
+//                          duty=(8*peak_speeds[4]+68)*(Current_time-t0)/(half_step_time/2); // the motor speed will proportional to the peak foot speed
+//                          if(duty>90)
+//                          {
+//                            duty=90;
+//                            }
+//                          if(duty>20)
+//                          {
+//                            analogWrite(10,duty);
+//                            analogWrite(9,duty) ;
+//                          }
+//                          Serial.print("dt:");
+//                          Serial.println(duty);
+//                          if(duty>30)
+//                            mySerial.write(duty);
+//                        }
+//
+//                        //==================================================================//
+//                        //==============              Serial Print           ===============//
+//                        //==================================================================//
+//                        
+////                        Serial.print(Current_time); 
+////                        Serial.print(","); 
+//                        Serial.print(AVAWorld.x); 
+//                        Serial.print(",");             
+//                        Serial.println(spd[1].x); 
+////                        Serial.print(",");
+////                        Serial.print(1].x);
+////                        Serial.print(",");
+////                        Serial.print(peak_speeds[0]);
+////                        Serial.print(",");
+////                        Serial.print(peak_speeds[1]);
+////                        Serial.print(",");
+////                        Serial.print(peak_speeds[2]);
+////                        Serial.print(",");
+////                        Serial.print(peak_speeds[3]); 
+////                        Serial.print(",");
+////                        Serial.println(peak_speeds[4]); 
+//                      #endif
+//
+//        }
+//      }
+//    if ( xSemaphoreTake( xSerialSemaphore, ( TickType_t ) 5 ) == pdTRUE )
+//    {
+//      // We were able to obtain or "Take" the semaphore and can now access the shared resource.
+//      // We want to have the Serial Port for us alone, as it takes some time to print,
+//      // so we don't want it getting stolen during the middle of a conversion.
+//      // print out the state of the button:
+//      //Serial.println(buttonState);
+//
+//      xSemaphoreGive( xSerialSemaphore ); // Now free or "Give" the Serial Port for others.
+//    }
+//
+//     vTaskDelay(1);
     }
 }
 
-void TaskBLE(void *pvParameters)  // This is a task.
+void TaskBLE(void *pvParameters __attribute__((unused)))  // This is a task.
 
 {
 
-  (void) pvParameters;
+  //(void) pvParameters;
 
   for (;;)
 
   {
+
           Serial.print("Hello");
           //==================================================================//
           //                    CODE FOR SECURITY 
@@ -1178,7 +1196,18 @@ void TaskBLE(void *pvParameters)  // This is a task.
             analogWrite(10,30);
             analogWrite(9,30);
           }
-    vTaskDelay(1);
+                  
+    if ( xSemaphoreTake( xSerialSemaphore, ( TickType_t ) 55 ) == pdTRUE )
+    {
+      // We were able to obtain or "Take" the semaphore and can now access the shared resource.
+      // We want to have the Serial Port for us alone, as it takes some time to print,
+      // so we don't want it getting stolen during the middle of a conversion.
+      // print out the state of the button:
+      //Serial.println(buttonState);
+
+      xSemaphoreGive( xSerialSemaphore ); // Now free or "Give" the Serial Port for others.
+    }
+    //vTaskDelay(1);
 
   }
 
