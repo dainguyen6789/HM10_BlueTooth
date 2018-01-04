@@ -1052,6 +1052,7 @@ void loop() {
                   analogWrite(9,duty);
                   }
                 }
+                adapttomyself=false; //set the speed  and send BLE signal only one time
            }
          }
          else // if lose the BLE connection, we will stop our motor
