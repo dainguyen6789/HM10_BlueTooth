@@ -880,7 +880,8 @@ void loop() {
                                   mySerial.write(1);
                                   mySerial.write(1);
                                   mySerial.write(1);
-//                                  Serial.println("Se2");}
+//                                  Serial.println("Se2");
+                                }
                               }
                               j=1;
                          }
@@ -1104,7 +1105,7 @@ void loop() {
             analogWrite(10,30);
             analogWrite(9,30);
           }
-    }
+    
 }
 
 
