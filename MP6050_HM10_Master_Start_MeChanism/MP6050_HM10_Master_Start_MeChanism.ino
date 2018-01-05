@@ -841,14 +841,14 @@ void loop() {
                                     mySerial.write((byte)0x00);
                                     mySerial.write((byte)0x00);
                                     mySerial.write((byte)0x00);
-                                    Serial.println("Se1M");
+//                                    Serial.println("Se1M");
                                   }
                                   else if(ratio<0.7 && ratio>0)
                                   {
                                     mySerial.write(1);
                                     mySerial.write(1);
                                     mySerial.write(1);
-                                    Serial.println("Se2M");
+//                                    Serial.println("Se2M");
                                   }
 
                             }
