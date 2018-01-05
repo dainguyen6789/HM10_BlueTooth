@@ -46,7 +46,7 @@ THE SOFTWARE.
 // for both classes must be in the include path of your project
 #include "I2Cdev.h"
 #include "math.h"
-#include <SoftwareSerial.h>
+#include <SoftwareSWSerial.h>
 
 
 #include "MPU6050_6Axis_MotionApps20.h"
@@ -66,7 +66,7 @@ using namespace std;
 MPU6050 mpu;
 //MPU6050 mpu1(0x69); // <-- use for AD0 high
 
-SoftwareSerial mySerial(7, 8); // RX, TX
+SoftwareSWSerial Serial(7, 8); // RX, TX
 /* =========================================================================
    NOTE: In addition to connection 3.3v, GND, SDA, and SCL, this sketch
    depends on the MPU-6050's INT pin being connected to the Arduino's
@@ -76,7 +76,7 @@ SoftwareSerial mySerial(7, 8); // RX, TX
 
 /* =========================================================================
    NOTE: Arduino v1.0.1 with the Leonardo board generates a compile error
-   when using Serial.write(buf, len). The Teapot output uses this method.
+   when using SWSerial.write(buf, len). The Teapot output uses this method.
    The solution requires a modification to the Arduino USBAPI.h file, which
    is fortunately simple, but annoying. This will be fixed in the next IDE
    release. For more info, see these links:
@@ -528,11 +528,11 @@ void setup() {
       analogWrite(10,45);
       analogWrite(9,45);
   //==============================================================
-    mySerial.begin(9600);
+    Serial.begin(9600);
     delay(3000);
-    mySerial.print("AT+RENEW");
+    Serial.print("AT+RENEW");
     delay(1000);
-    mySerial.print("AT+ROLE0");
+    Serial.print("AT+ROLE0");
     // join I2C bus (I2Cdev library doesn't do this automatically)
     #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
         Wire.begin();
@@ -541,11 +541,11 @@ void setup() {
     #elif I2CDEV_IMPLEMENTATION == I2CDEV_BUILTIN_FASTWIRE
         Fastwire::setup(400, true);
     #endif
-    // initialize serial communication
+    // initialize SWSerial communication
     // (115200 chosen because it is required for Teapot Demo output, but it's
     // really up to you depending on your project)
-    Serial.begin(115200);
-    while (!Serial); // wait for Leonardo enumeration, others continue immediately
+    SWSerial.begin(115200);
+    while (!SWSerial); // wait for Leonardo enumeration, others continue immediately
 
     // NOTE: 8MHz or slower host processors, like the Teensy @ 3.3v or Ardunio
     // Pro Mini running at 3.3v, cannot handle this baud rate reliably due to
@@ -554,21 +554,21 @@ void setup() {
     // crystal solution for the UART timer.
     
     // initialize device
-    Serial.println(F("Initializing I2C devices..."));
+    SWSerial.println(F("Initializing I2C devices..."));
     mpu.initialize();
     
     // verify connection
-    Serial.println(F("Testing device connections..."));
-    Serial.println(mpu.testConnection() ? F("MPU6050 connection successful") : F("MPU6050 connection failed"));
+    SWSerial.println(F("Testing device connections..."));
+    SWSerial.println(mpu.testConnection() ? F("MPU6050 connection successful") : F("MPU6050 connection failed"));
     
     // wait for ready
-    Serial.println(F("\nSend any character to begin DMP programming and demo: "));
-    while (Serial.available() && Serial.read()); // empty buffer
-    while (!Serial.available());                 // wait for data
-    while (Serial.available() && Serial.read()); // empty buffer again
+    SWSerial.println(F("\nSend any character to begin DMP programming and demo: "));
+    while (SWSerial.available() && SWSerial.read()); // empty buffer
+    while (!SWSerial.available());                 // wait for data
+    while (SWSerial.available() && SWSerial.read()); // empty buffer again
 
     // load and configure the DMP
-    Serial.println(F("Initializing DMP..."));
+    SWSerial.println(F("Initializing DMP..."));
 //            mpu.setFullScaleAccelRange(MPU6050_ACCEL_FS_4);
 //            DEBUG_PRINTLN(F("Setting accelerometer sensitivity to +/- 4..."));
 //            I2Cdev::writeByte(0x68, MPU6050_RA_ACCEL_CONFIG, 0x01);
@@ -607,16 +607,16 @@ Data is printed as: acelX acelY acelZ giroX giroY giroZ
 
     if (devStatus == 0) {
         // turn on the DMP, now that it's ready
-        Serial.println(F("Enabling DMP..."));
+        SWSerial.println(F("Enabling DMP..."));
         mpu.setDMPEnabled(true);
       
         // enable Arduino interrupt detection
-        Serial.println(F("Enabling interrupt detection (Arduino external interrupt 0)..."));
+        SWSerial.println(F("Enabling interrupt detection (Arduino external interrupt 0)..."));
         attachInterrupt(0, dmpDataReady, RISING);
         mpuIntStatus = mpu.getIntStatus();
 
         // set our DMP Ready flag so the main loop() function knows it's okay to use it
-        Serial.println(F("DMP ready! Waiting for first interrupt..."));
+        SWSerial.println(F("DMP ready! Waiting for first interrupt..."));
         dmpReady = true;
 
         // get expected DMP packet size for later comparison
@@ -628,18 +628,18 @@ Data is printed as: acelX acelY acelZ giroX giroY giroZ
         // 1 = initial memory load failed
         // 2 = DMP configuration updates failed
         // (if it's going to break, usually the code will be 1)
-        Serial.print(F("DMP Initialization failed (code "));
-        Serial.print(devStatus);
-        Serial.println(F(")"));
+        SWSerial.print(F("DMP Initialization failed (code "));
+        SWSerial.print(devStatus);
+        SWSerial.println(F(")"));
     }
 
     // configure LED for output
     pinMode(LED_PIN, OUTPUT);
     
-    Serial.println("I am Slave!");
+    SWSerial.println("I am Slave!");
     
     //  =======================================================
-    // set the data rate for the SoftwareSerial port
+    // set the data rate for the SoftwareSWSerial port
     //  =======================================================
 
 
@@ -681,7 +681,7 @@ void loop() {
         // reset so we can continue cleanly
         mpu.resetFIFO();
         //delay(200);
-        Serial.println(F("FIFO overflow!"));
+        SWSerial.println(F("FIFO overflow!"));
 
     // otherwise, check for DMP data ready interrupt (this should happen frequently)
     } 
@@ -823,9 +823,9 @@ void loop() {
                         //  one sample =0; then we have 4 samples !=0 => begin the step 
                         if (Spds[0].x==0 && Spds[1].x!=0 && Spds[2].x!=0 && Spds[3].x!=0 & spd[1].x!=0)
                         {
-//                          Serial.print("Here,");
-                          Serial.print(spd[0].x);
-                          Serial.println(spd[1].x);
+//                          SWSerial.print("Here,");
+                          SWSerial.print(spd[0].x);
+                          SWSerial.println(spd[1].x);
                           step_start_time=millis();
                          }
 //
@@ -849,12 +849,12 @@ void loop() {
                                 peak_count++;
                                 step_peak_time=millis();
                                 half_step_time=step_peak_time-step_start_time;
-                                Serial.println("H");
-                                Serial.println(half_step_time);
+                                SWSerial.println("H");
+                                SWSerial.println(half_step_time);
                                 adapttomyself=true;
-                                mySerial.write(TXAdaptedSignal);// TXAdaptedSignal=2, we can choose any encoded value
-                                mySerial.write(TXAdaptedSignal);// TXAdaptedSignal=2, we can choose any encoded value
-                                mySerial.write(TXAdaptedSignal);// TXAdaptedSignal=2, we can choose any encoded value   
+                                Serial.write(TXAdaptedSignal);// TXAdaptedSignal=2, we can choose any encoded value
+                                Serial.write(TXAdaptedSignal);// TXAdaptedSignal=2, we can choose any encoded value
+                                Serial.write(TXAdaptedSignal);// TXAdaptedSignal=2, we can choose any encoded value   
                                 
                                 peak_speeds[0]=peak_speeds[1];
                                 peak_speeds[1]=peak_speeds[2];
@@ -866,21 +866,21 @@ void loop() {
                                 
                                 //  tend to reduce the user's speed
                                 ratio=peak_speeds[4]/avg_peak_speed;
-                                Serial.println(ratio);
+                                SWSerial.println(ratio);
                                 if (ratio<0.92 && ratio >0.7)
                                 {
                                   //note on this
-                                  mySerial.write((byte)0x00);
-                                  mySerial.write((byte)0x00);
-                                  mySerial.write((byte)0x00);
-//                                  Serial.println("Se1");
+                                  Serial.write((byte)0x00);
+                                  Serial.write((byte)0x00);
+                                  Serial.write((byte)0x00);
+//                                  SWSerial.println("Se1");
                                 }
                                 else if(ratio<0.7 && ratio>0)
                                 {
-                                  mySerial.write(1);
-                                  mySerial.write(1);
-                                  mySerial.write(1);
-//                                  Serial.println("Se2");
+                                  Serial.write(1);
+                                  Serial.write(1);
+                                  Serial.write(1);
+//                                  SWSerial.println("Se2");
                                 }
                               }
                               j=1;
@@ -920,56 +920,56 @@ void loop() {
                             analogWrite(9,duty) ;
                           }
                           
-                          Serial.print("dt:");
-                          Serial.println(duty);
+                          SWSerial.print("dt:");
+                          SWSerial.println(duty);
                           if(duty>30)
-                          mySerial.write(duty);
+                          Serial.write(duty);
                         }
 
 
 //                        spd[0].x=abs(spd[1].x);
 
                         //==================================================================//
-                        //==============              Serial Print           ===============//
+                        //==============              SWSerial Print           ===============//
                         //==================================================================//  
-                        Serial.print(AVAWorld.x); 
-                        Serial.print(",");             
-                        Serial.println(spd[1].x);
-//                        Serial.print(spd[1].x);
-//                        Serial.print(",");
-//                        Serial.print(peak_speeds[0]);
-//                        Serial.print(",");
-//                        Serial.print(peak_speeds[1]);
-//                        Serial.print(",");
-//                        Serial.print(peak_speeds[2]);
-//                        Serial.print(",");
-//                        Serial.print(peak_speeds[3]); 
-//                        Serial.print(",");
-//                        Serial.println(peak_speeds[4]);                         
-//                        Serial.print(peak_speeds[3]);                         
-//                        Serial.print(",");
-//                        Serial.print(AVAWorld.x); 
-//                        Serial.print("");
-//                        Serial.print(AVAWorld.y); 
-//                        Serial.print(",");
-//                        Serial.println(AVAWorld.z); 
+                        SWSerial.print(AVAWorld.x); 
+                        SWSerial.print(",");             
+                        SWSerial.println(spd[1].x);
+//                        SWSerial.print(spd[1].x);
+//                        SWSerial.print(",");
+//                        SWSerial.print(peak_speeds[0]);
+//                        SWSerial.print(",");
+//                        SWSerial.print(peak_speeds[1]);
+//                        SWSerial.print(",");
+//                        SWSerial.print(peak_speeds[2]);
+//                        SWSerial.print(",");
+//                        SWSerial.print(peak_speeds[3]); 
+//                        SWSerial.print(",");
+//                        SWSerial.println(peak_speeds[4]);                         
+//                        SWSerial.print(peak_speeds[3]);                         
+//                        SWSerial.print(",");
+//                        SWSerial.print(AVAWorld.x); 
+//                        SWSerial.print("");
+//                        SWSerial.print(AVAWorld.y); 
+//                        SWSerial.print(",");
+//                        SWSerial.println(AVAWorld.z); 
                 //==================================================================//
                 //                    CODE FOR SECURITY 
                 //==================================================================// 
                 if(millis()-pilot_send_time>300) // send pilot signal every 300ms
                 {
                   pilot_send_time=millis();
-                  mySerial.write(PilotSignal);
-                  Serial.print("PL");
-                  Serial.print(PilotSignal);
+                  Serial.write(PilotSignal);
+                  SWSerial.print("PL");
+                  SWSerial.print(PilotSignal);
                 }
                                                
                         
               }
             //==================================================================//
-            //==============       BLE SoftwareSerial Print      ===============//
+            //==============       BLE SoftwareSWSerial Print      ===============//
             //==================================================================//  
-//            mySerial.println(AVAWorld.x);
+//            Serial.println(AVAWorld.x);
 
 
             }
@@ -978,9 +978,9 @@ void loop() {
         //                    CODE FOR Speed Change with BLE
         //==================================================================//            
         // if there is any signal from Master module, that means slave has to react 
-        if(mySerial.available())
+        if(Serial.available())
         {
-          RX_Data_BLE=mySerial.read();
+          RX_Data_BLE=Serial.read();
           
           if(RX_Data_BLE==RXAdaptedSignal) //reveive the signal from other foot that requires me to sync my speed with it
           {
@@ -997,8 +997,8 @@ void loop() {
 
           if(millis()>15000 && RX_Data_BLE>30 && RX_Data_BLE<110 && !adapttomyself) // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
           {
-            Serial.print("RSet");// receive duty
-            Serial.println(RX_Data_BLE);
+            SWSerial.print("RSet");// receive duty
+            SWSerial.println(RX_Data_BLE);
             
             analogWrite(10,RX_Data_BLE);
             analogWrite(9,RX_Data_BLE) ;
@@ -1014,8 +1014,8 @@ void loop() {
             stopbyOther=false;
 //            stopbymyself=true;
             }
-          Serial.print("RX");
-          Serial.println(RX_Data_BLE);
+          SWSerial.print("RX");
+          SWSerial.println(RX_Data_BLE);
         }
         
         //  This stopping mechanism should be reviewed again
@@ -1029,21 +1029,21 @@ void loop() {
           {
             gradualStopDuty=duty*(step_peak_time+half_step_time-Current_time)/(half_step_time);
           }
-          Serial.print("STbymyself");
+          SWSerial.print("STbymyself");
           if (gradualStopDuty>30)
           {
             analogWrite(10,gradualStopDuty);
             analogWrite(9,gradualStopDuty);
             //================================
-            Serial.println(gradualStopDuty);
-            mySerial.write(gradualStopDuty);// signal the Slave to stop
+            SWSerial.println(gradualStopDuty);
+            Serial.write(gradualStopDuty);// signal the Slave to stop
             
           }
         }
         else if(stopbyOther)// STOP BY OTHER foot because RX_Data_BLE==1 <=> Master ratio <0.7
         {
-            Serial.print("STbyother");
-            Serial.println(RX_Data_BLE);
+            SWSerial.print("STbyother");
+            SWSerial.println(RX_Data_BLE);
             //================================
             analogWrite(10,RX_Data_BLE);
             analogWrite(9,RX_Data_BLE);
@@ -1061,9 +1061,9 @@ void loop() {
                 duty=8*peak_speeds[4]+68;
                 if(duty<110)
                 {
-//                  Serial.print("Dec");
-                  Serial.println(duty);
-                  mySerial.write(duty);                                         // signal the Slave to decrease speed
+//                  SWSerial.print("Dec");
+                  SWSerial.println(duty);
+                  Serial.write(duty);                                         // signal the Slave to decrease speed
                   analogWrite(10,duty);
                   analogWrite(9,duty);
                   }
@@ -1074,9 +1074,9 @@ void loop() {
                 duty=8*avg_peak_speed+68;
                 if(duty<110)
                 {
-                  mySerial.write(duty);
-//                  Serial.print("Nrml");
-                  Serial.println(duty);  
+                  Serial.write(duty);
+//                  SWSerial.print("Nrml");
+                  SWSerial.println(duty);  
                   analogWrite(10,duty);
                   analogWrite(9,duty);
                   }
@@ -1089,9 +1089,9 @@ void loop() {
                 duty=8*peak_speeds[4]+68;
                 if(duty<110)
                 {
-                  mySerial.write(duty); 
-//                  Serial.print("Inc");
-                  Serial.println(duty);//150*log(peak_speeds[4]
+                  Serial.write(duty); 
+//                  SWSerial.print("Inc");
+                  SWSerial.println(duty);//150*log(peak_speeds[4]
                   analogWrite(10,duty);
                   analogWrite(9,duty);
                   }
@@ -1101,7 +1101,7 @@ void loop() {
          }
          else // If lose the connection, we will stop our motor
          { 
-            Serial.print("LST");
+            SWSerial.print("LST");
             analogWrite(10,30);
             analogWrite(9,30);
           }
