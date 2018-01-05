@@ -823,7 +823,7 @@ void loop() {
                         //  one sample =0; then we have 4 samples !=0 => begin the step 
                         if (Spds[0].x==0 && Spds[1].x!=0 && Spds[2].x!=0 && Spds[3].x!=0 & spd[1].x!=0)
                         {
-                          Serial.print("Here,");
+//                          Serial.print("Here,");
                           Serial.print(spd[0].x);
                           Serial.println(spd[1].x);
                           step_start_time=millis();
@@ -849,7 +849,7 @@ void loop() {
                                 peak_count++;
                                 step_peak_time=millis();
                                 half_step_time=step_peak_time-step_start_time;
-                                Serial.println("HST");
+                                Serial.println("H");
                                 Serial.println(half_step_time);
                                 adapttomyself=true;
                                 mySerial.write(TXAdaptedSignal);// TXAdaptedSignal=2, we can choose any encoded value

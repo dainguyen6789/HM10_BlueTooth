@@ -816,7 +816,7 @@ void loop() {
                                   peak_count++;                               
                                   step_peak_time=millis();
                                   half_step_time=step_peak_time-step_start_time;
-                                  Serial.println("HST");
+                                  Serial.println("H");
                                   Serial.println(half_step_time);
                                   adapttomyself=true;
                                   mySerial.write(TXAdaptedSignal);// TXAdaptedSignal=2, we can choose any encoded value                                  
