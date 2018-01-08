@@ -46,7 +46,7 @@ THE SOFTWARE.
 // for both classes must be in the include path of your project
 #include "I2Cdev.h"
 #include "math.h"
-#include <SoftwareSWSerial.h>
+#include <SoftwareSerial.h>
 
 
 #include "MPU6050_6Axis_MotionApps20.h"
@@ -66,7 +66,7 @@ using namespace std;
 MPU6050 mpu;
 //MPU6050 mpu1(0x69); // <-- use for AD0 high
 
-SoftwareSWSerial Serial(7, 8); // RX, TX
+SoftwareSerial SWSerial(7, 8); // RX, TX
 /* =========================================================================
    NOTE: In addition to connection 3.3v, GND, SDA, and SCL, this sketch
    depends on the MPU-6050's INT pin being connected to the Arduino's
@@ -974,6 +974,70 @@ void loop() {
 
             }
         #endif
+        
+         //===================================================================================
+         ///  ADAPT THE SPEED BY MYSELF and SEND THE SIGNAL TO OTHER MODULE
+         //=================================================================================== 
+         if(millis()-pilot_receive_time<650)
+         {
+         // Decrease the speed
+          if(adapttomyself && !stopbyOther)
+          {
+              if(ratio>0.7 && ratio<=0.92)
+              {  
+                duty=8*peak_speeds[4]+68;
+                if(duty<110)
+                {
+//                  SWSerial.print("Dec");
+                  SWSerial.println(duty);
+                  Serial.write(duty);                                         // signal the Slave to decrease speed
+                  analogWrite(10,duty);
+                  analogWrite(9,duty);
+                  }
+              }
+              // normal walk, speed almost does not change
+              else if (ratio>0.92 && ratio <1)
+              {
+                duty=8*avg_peak_speed+68;
+                if(duty<110)
+                {
+                  Serial.write(duty);
+//                  SWSerial.print("Nrml");
+                  SWSerial.println(duty);  
+                  analogWrite(10,duty);
+                  analogWrite(9,duty);
+                  }
+                
+               }
+              // what happens if we increase the foot speed ratio > 1
+              // modify because ratio > 1 at the initital foot steps
+              else if( ratio>1 && peak_count>1)
+              {
+                duty=8*peak_speeds[4]+68;
+                if(duty<110)
+                {
+                  Serial.write(duty); 
+//                  SWSerial.print("Inc");
+                  SWSerial.println(duty);//150*log(peak_speeds[4]
+                  analogWrite(10,duty);
+                  analogWrite(9,duty);
+                  }
+                }
+                adapttomyself=false; ////set the speed  and send BLE signal only one time
+          }
+         }
+         else // If lose the connection, we will stop our motor
+         { 
+            SWSerial.print("LST");
+            analogWrite(10,30);
+            analogWrite(9,30);
+          }
+    
+}
+
+
+
+void serialEvent() {
         //==================================================================//
         //                    CODE FOR Speed Change with BLE
         //==================================================================//            
@@ -1048,69 +1112,9 @@ void loop() {
             analogWrite(10,RX_Data_BLE);
             analogWrite(9,RX_Data_BLE);
           }
-         //===================================================================================
-         ///  ADAPT THE SPEED BY MYSELF and SEND THE SIGNAL TO OTHER MODULE
-         //=================================================================================== 
-         if(millis()-pilot_receive_time<650)
-         {
-         // Decrease the speed
-          if(adapttomyself && !stopbyOther)
-          {
-              if(ratio>0.7 && ratio<=0.92)
-              {  
-                duty=8*peak_speeds[4]+68;
-                if(duty<110)
-                {
-//                  SWSerial.print("Dec");
-                  SWSerial.println(duty);
-                  Serial.write(duty);                                         // signal the Slave to decrease speed
-                  analogWrite(10,duty);
-                  analogWrite(9,duty);
-                  }
-              }
-              // normal walk, speed almost does not change
-              else if (ratio>0.92 && ratio <1)
-              {
-                duty=8*avg_peak_speed+68;
-                if(duty<110)
-                {
-                  Serial.write(duty);
-//                  SWSerial.print("Nrml");
-                  SWSerial.println(duty);  
-                  analogWrite(10,duty);
-                  analogWrite(9,duty);
-                  }
-                
-               }
-              // what happens if we increase the foot speed ratio > 1
-              // modify because ratio > 1 at the initital foot steps
-              else if( ratio>1 && peak_count>1)
-              {
-                duty=8*peak_speeds[4]+68;
-                if(duty<110)
-                {
-                  Serial.write(duty); 
-//                  SWSerial.print("Inc");
-                  SWSerial.println(duty);//150*log(peak_speeds[4]
-                  analogWrite(10,duty);
-                  analogWrite(9,duty);
-                  }
-                }
-                adapttomyself=false; ////set the speed  and send BLE signal only one time
-          }
-         }
-         else // If lose the connection, we will stop our motor
-         { 
-            SWSerial.print("LST");
-            analogWrite(10,30);
-            analogWrite(9,30);
-          }
-    
+
+  
 }
-
-
-
-
 
 
 
