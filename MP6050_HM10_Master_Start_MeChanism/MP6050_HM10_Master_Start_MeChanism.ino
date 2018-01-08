@@ -48,7 +48,7 @@ THE SOFTWARE.
 // for both classes must be in the include path of your project
 #include "I2Cdev.h"
 #include "math.h"
-#include <SoftwareSWSerial.h>
+#include <SoftwareSerial.h>
 
 
 #include "MPU6050_6Axis_MotionApps20.h"
@@ -68,7 +68,7 @@ using namespace std;
 MPU6050 mpu;
 //MPU6050 mpu1(0x69); // <-- use for AD0 high
 
-SoftwareSWSerial Serial(7, 8); // RX, TX
+SoftwareSerial SWSerial(7, 8); // RX, TX
 /* =========================================================================
    NOTE: In addition to connection 3.3v, GND, SDA, and SCL, this sketch
    depends on the MPU-6050's INT pin being connected to the Arduino's
