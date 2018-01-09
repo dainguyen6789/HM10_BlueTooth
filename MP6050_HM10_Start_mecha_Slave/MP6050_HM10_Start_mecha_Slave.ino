@@ -975,6 +975,36 @@ void loop() {
             }
         #endif
         
+        //  This stopping mechanism should be reviewed again
+        //  RX_Data_BLE==0: slave ratio <0.9, >0.7
+        //  RX_Data_BLE==1: slave ratio <0.7
+        if((ratio<0.7))  // Stop by myself
+        {
+//          half_step_time=step_peak_time-step_start_time;
+//          duty=90*peak_speeds[4]*(step_peak_time+half_step_time-Current_time)/(half_step_time); // the motor speed will proportional to the peak foot speed
+          if(step_peak_time+half_step_time>Current_time)
+          {
+            gradualStopDuty=duty*(step_peak_time+half_step_time-Current_time)/(half_step_time);
+          }
+          SWSerial.print("STbymyself");
+          if (gradualStopDuty>30)
+          {
+            analogWrite(10,gradualStopDuty);
+            analogWrite(9,gradualStopDuty);
+            //================================
+            SWSerial.println(gradualStopDuty);
+            Serial.write(gradualStopDuty);// signal the Slave to stop
+            
+          }
+        }
+        else if(stopbyOther)// STOP BY OTHER foot because RX_Data_BLE==1 <=> Master ratio <0.7
+        {
+            SWSerial.print("STbyother");
+            SWSerial.println(RX_Data_BLE);
+            //================================
+            analogWrite(10,RX_Data_BLE);
+            analogWrite(9,RX_Data_BLE);
+          }        
          //===================================================================================
          ///  ADAPT THE SPEED BY MYSELF and SEND THE SIGNAL TO OTHER MODULE
          //=================================================================================== 
@@ -1082,36 +1112,7 @@ void serialEvent() {
           SWSerial.println(RX_Data_BLE);
         }
         
-        //  This stopping mechanism should be reviewed again
-        //  RX_Data_BLE==0: slave ratio <0.9, >0.7
-        //  RX_Data_BLE==1: slave ratio <0.7
-        if((ratio<0.7))  // Stop by myself
-        {
-//          half_step_time=step_peak_time-step_start_time;
-//          duty=90*peak_speeds[4]*(step_peak_time+half_step_time-Current_time)/(half_step_time); // the motor speed will proportional to the peak foot speed
-          if(step_peak_time+half_step_time>Current_time)
-          {
-            gradualStopDuty=duty*(step_peak_time+half_step_time-Current_time)/(half_step_time);
-          }
-          SWSerial.print("STbymyself");
-          if (gradualStopDuty>30)
-          {
-            analogWrite(10,gradualStopDuty);
-            analogWrite(9,gradualStopDuty);
-            //================================
-            SWSerial.println(gradualStopDuty);
-            Serial.write(gradualStopDuty);// signal the Slave to stop
-            
-          }
-        }
-        else if(stopbyOther)// STOP BY OTHER foot because RX_Data_BLE==1 <=> Master ratio <0.7
-        {
-            SWSerial.print("STbyother");
-            SWSerial.println(RX_Data_BLE);
-            //================================
-            analogWrite(10,RX_Data_BLE);
-            analogWrite(9,RX_Data_BLE);
-          }
+
 
   
 }

@@ -934,47 +934,6 @@ void loop() {
 
             }
         #endif
-
-        //==================================================================//
-        //                    CODE FOR Speed Change with BLE
-        //==================================================================//                   
-        if(Serial.available())
-        {
-          RX_Data_BLE=Serial.read();
-          
-          if(RX_Data_BLE==RXAdaptedSignal) //reveive the signal from other foot that requires me to sync my speed with it
-          {
-            adapttomyself=false;
-            } 
-          else if (RX_Data_BLE==PilotSignal)
-          {
-            pilot_receive_time=millis();
-            }                     
-          //==================================================================//
-          //                    SPEED  SYNCHRONIZATION   
-          //==================================================================//         
-          if(millis()>15000 && RX_Data_BLE>30 && RX_Data_BLE<110 && !adapttomyself) // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
-          {
-            SWSerial.print("RSet");// receive duty and set
-            SWSerial.println(RX_Data_BLE);
-            
-            analogWrite(10,RX_Data_BLE);
-            analogWrite(9,RX_Data_BLE) ;
-            //duty=RX_Data_BLE; 
-            }  
-          if (RX_Data_BLE==1)
-          {
-            stopbyOther=true;
-//            stopbymyself=false;
-            }
-          else if(RX_Data_BLE==0)
-          {
-            stopbyOther=false;
-//            stopbymyself=true;
-            }
-          SWSerial.print("RX");
-          SWSerial.println(RX_Data_BLE);
-        }
         
         //  This stopping mechanism should be reviewed again
         //  RX_Data_BLE==0: slave ratio <0.9, >0.7
@@ -1004,6 +963,7 @@ void loop() {
             analogWrite(10,RX_Data_BLE);
             analogWrite(9,RX_Data_BLE);
           }
+
          // ========================================
          // SPEED CHANGE BEHAVIOUR. 
          // ========================================
@@ -1064,7 +1024,51 @@ void loop() {
          
 }
 
+void serialEvent()
+{
+          //==================================================================//
+        //                    CODE FOR Speed Change with BLE
+        //==================================================================//                   
+        if(Serial.available())
+        {
+          RX_Data_BLE=Serial.read();
+          
+          if(RX_Data_BLE==RXAdaptedSignal) //reveive the signal from other foot that requires me to sync my speed with it
+          {
+            adapttomyself=false;
+            } 
+          else if (RX_Data_BLE==PilotSignal)
+          {
+            pilot_receive_time=millis();
+            }                     
+          //==================================================================//
+          //                    SPEED  SYNCHRONIZATION   
+          //==================================================================//         
+          if(millis()>15000 && RX_Data_BLE>30 && RX_Data_BLE<110 && !adapttomyself) // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
+          {
+            SWSerial.print("RSet");// receive duty and set
+            SWSerial.println(RX_Data_BLE);
+            
+            analogWrite(10,RX_Data_BLE);
+            analogWrite(9,RX_Data_BLE) ;
+            //duty=RX_Data_BLE; 
+            }  
+          if (RX_Data_BLE==1)
+          {
+            stopbyOther=true;
+//            stopbymyself=false;
+            }
+          else if(RX_Data_BLE==0)
+          {
+            stopbyOther=false;
+//            stopbymyself=true;
+            }
+          SWSerial.print("RX");
+          SWSerial.println(RX_Data_BLE);
+        }
+        
 
+  }
 
 float absolute(float x)
 {
