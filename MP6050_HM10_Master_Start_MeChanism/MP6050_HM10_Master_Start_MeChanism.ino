@@ -1007,7 +1007,7 @@ void loop() {
                 {
                   Serial.write(duty); 
 //                  SWSerial.print("Inc");
-                  SWSerial.println(duty);//150*log(peak_speeds[4]
+                  SWSerial.println(duty);//150*log(peak_speeds[4])
                   analogWrite(10,duty);
                   analogWrite(9,duty);
                   }
