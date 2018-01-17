@@ -1044,7 +1044,7 @@ void serialEvent()
           //==================================================================//
           //                    SPEED  SYNCHRONIZATION   
           //==================================================================//         
-          if(millis()>15000 && RX_Data_BLE>30 && RX_Data_BLE<110 && !adapttomyself) // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
+          if(millis()>15000 && RX_Data_BLE>30 && RX_Data_BLE<110 && !adapttomyself)  // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
           {
             SWSerial.print("RSet");// receive duty and set
             SWSerial.println(RX_Data_BLE);
