@@ -866,7 +866,7 @@ void loop() {
                         //===================================================================
                         // FOR the very 1ST FOOT STEP    
                         //===================================================================                   
-                        if(peak_speeds[4]>0 && peak_speeds[3]==0 && !MtorIsMoving && (Current_time-step_peak_time) >= half_step_time/2 && (Current_time-step_peak_time) <= half_step_time) // 1st step
+                        if( !MtorIsMoving && peak_speeds[4]>0 && peak_speeds[3]==0  && (Current_time-step_peak_time) >= half_step_time/2 && (Current_time-step_peak_time) <= half_step_time) // 1st step
                         {
                           //  how to capture t0 ?
                           
