@@ -143,7 +143,7 @@ int brightness = 55;    // how bright the LED is
 #define LED_PIN 13 // (Arduino is 13, Teensy is 11, Teensy++ is 6)
 bool blinkState = false;
 
-bool stopbyOther,stopbymyself;
+bool stopbyOther,stopbymyself,MtorIsMoving=false;
 
 bool adapttomyself;
 int RXAdaptedSignal=2, TXAdaptedSignal=2,PilotSignal=3;
@@ -899,7 +899,7 @@ void loop() {
                         //===================================================================
                         // for the very 1st foot step    
                         //===================================================================                   
-                        if(peak_speeds[4]>0 && peak_speeds[3]==0 && (Current_time-step_peak_time) >= half_step_time/2 && (Current_time-step_peak_time) <= half_step_time) // 1st step
+                        if(peak_speeds[4]>0 && peak_speeds[3]==0 && !MtorIsMoving && (Current_time-step_peak_time) >= half_step_time/2 && (Current_time-step_peak_time) <= half_step_time) // 1st step
                         {
                           //  how to capture t0 ?
                           
@@ -1096,6 +1096,7 @@ void serialEvent() {
             
             analogWrite(10,RX_Data_BLE);
             analogWrite(9,RX_Data_BLE) ;
+            MtorIsMoving=true;
             //duty=RX_Data_BLE;
             }  
           if (RX_Data_BLE==1)

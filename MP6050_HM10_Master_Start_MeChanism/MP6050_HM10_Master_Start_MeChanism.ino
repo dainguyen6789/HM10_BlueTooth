@@ -151,7 +151,7 @@ bool adapttomyself;
 int TXAdaptedSignal=2, RXAdaptedSignal=2, PilotSignal=3;
 
 // MPU control/status vars
-bool dmpReady = false,fst_peak=true;  // set true if DMP init was successful
+bool dmpReady = false,fst_peak=true,MtorIsMoving=false;  // set true if DMP init was successful
 uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
 uint8_t devStatus;      // return status after each device operation (0 = success, !0 = error)
 uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
@@ -866,7 +866,7 @@ void loop() {
                         //===================================================================
                         // FOR the very 1ST FOOT STEP    
                         //===================================================================                   
-                        if(peak_speeds[4]>0 && peak_speeds[3]==0 && (Current_time-step_peak_time) >= half_step_time/2 && (Current_time-step_peak_time) <= half_step_time) // 1st step
+                        if(peak_speeds[4]>0 && peak_speeds[3]==0 && !MtorIsMoving && (Current_time-step_peak_time) >= half_step_time/2 && (Current_time-step_peak_time) <= half_step_time) // 1st step
                         {
                           //  how to capture t0 ?
                           
@@ -1051,6 +1051,7 @@ void serialEvent()
             
             analogWrite(10,RX_Data_BLE);
             analogWrite(9,RX_Data_BLE) ;
+            MtorIsMoving=true;
             //duty=RX_Data_BLE;   
             }  
           if (RX_Data_BLE==1)
