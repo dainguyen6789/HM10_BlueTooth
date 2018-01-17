@@ -1082,7 +1082,7 @@ void serialEvent() {
             }
           else if (RX_Data_BLE==PilotSignal)
           {
-            pilot_receive_time=millis();
+            pilot_receive_time=millis();  
             }    
             
           //==================================================================//
