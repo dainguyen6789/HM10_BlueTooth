@@ -901,15 +901,7 @@ void loop() {
                         //===================================================================                   
                         if(!MtorIsMoving && peak_speeds[4]>0 && peak_speeds[3]==0  &&  (Current_time-step_peak_time) <= half_step_time/2) // 1st step
                         {
-                          //  how to capture t0 ?
-                          
-                          if (!motor_init)
-                          {
-                            t0=Current_time;
-                            motor_init=1;              
-                          }
-                          
-                          duty=(int)(8*peak_speeds[4]+68)*(Current_time-t0)/(half_step_time/2); // the motor speed will proportional to the peak foot speed
+                          duty=(int)(8*peak_speeds[4]+68)*(Current_time-step_peak_time)/(half_step_time/2); // the motor speed will proportional to the peak foot speed
                           if(duty>90)
                           { 
                             duty=90;
