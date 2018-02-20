@@ -899,7 +899,7 @@ void loop() {
                         //===================================================================
                         // for the very 1st foot step    
                         //===================================================================                   
-                        if(!MtorIsMoving && peak_speeds[4]>0 && peak_speeds[3]==0  && (Current_time-step_peak_time) >= half_step_time/2 && (Current_time-step_peak_time) <= half_step_time) // 1st step
+                        if(!MtorIsMoving && peak_speeds[4]>0 && peak_speeds[3]==0  &&  (Current_time-step_peak_time) <= half_step_time/2) // 1st step
                         {
                           //  how to capture t0 ?
                           
@@ -923,7 +923,7 @@ void loop() {
                           SWSerial.print("dt:");
                           SWSerial.println(duty);
                           if(duty>30)
-                          Serial.write(duty);
+                            Serial.write(duty);
                         }
 
 
