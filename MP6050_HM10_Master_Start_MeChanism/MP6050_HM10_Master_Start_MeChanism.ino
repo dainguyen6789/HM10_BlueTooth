@@ -138,7 +138,7 @@ SoftwareSerial SWSerial(7, 8); // RX, TX
 
 
 //---------------------------------------------------------------------
-int fadeAmount = 5,duty,gradualStopDuty;     // how many points to fade the LED by
+int fadeAmount = 5,duty,gradualStopDuty,new_duty,duty_set;     // how many points to fade the LED by
 int num_loop=0,motor_init,second_step_init;
 int brightness = 55;    // how bright the LED is
 
@@ -967,46 +967,56 @@ void loop() {
               // Decrease the speed
               if(ratio>0.7 && ratio<=0.92)
               {  
-                duty=8*peak_speeds[4]+68;
-                if(duty<110)
-                {
+                new_duty=8*peak_speeds[4]+68;
+                
+                if(duty_set<110)
+                { 
 //                  SWSerial.print("Dec");
-                  SWSerial.println(duty);
-                  Serial.write(duty);                                         // signal the Slave to decrease speed
-                  analogWrite(10,duty);
-                  analogWrite(9,duty);
+                  duty_set=duty+(new_duty-duty)*(millis()-step_peak_time)/(half_step_time/2); // gradually change the motor speed
+                  SWSerial.println(duty_set);
+                  Serial.write(duty_set);                                                     // signal the Slave to decrease speed
+                  analogWrite(10,duty_set);
+                  analogWrite(9,duty_set);
                   }
               }
               // normal walk, speed almost does not change
               else if (ratio>0.92 && ratio <1)
               {
-                duty=8*avg_peak_speed+68;  
-                if(duty<110)
+                duty_set=8*avg_peak_speed+68;  
+                if(duty_set<110)
                 {
-                  Serial.write(duty);  
+
+                  Serial.write(duty_set);  
 //                  SWSerial.print("Nrml");
-                  SWSerial.println(duty);
-                  analogWrite(10,duty);
-                  analogWrite(9,duty);
+                  SWSerial.println(duty_set);
+                  analogWrite(10,duty_set);
+                  analogWrite(9,duty_set);
                   }
-                
+                adapttomyself=false; // update only one time in this case
                }
               // what happens if we increase the foot speed ratio > 1
               // modify because ratio > 1 at the initital foot steps
               else if( ratio>1 && peak_count>1)
               {
-                duty=8*peak_speeds[4]+68;
-                if(duty<110)
+                new_duty=8*peak_speeds[4]+68;
+                if(duty_set<110)
                 {
-                  Serial.write(duty); 
+                  duty_set=duty+(new_duty-duty)*(millis()-step_peak_time)/(half_step_time/2);// gradually change the motor speed
+                  Serial.write(duty_set); 
 //                  SWSerial.print("Inc");
-                  SWSerial.println(duty);//150*log(peak_speeds[4])
-                  analogWrite(10,duty);
-                  analogWrite(9,duty);
+                  SWSerial.println(duty_set);
+                  analogWrite(10,duty_set);
+                  analogWrite(9,duty_set);
                   }
                 }
-                adapttomyself=false; //set the speed  and send BLE signal only one time
+
+                if(duty_set>110)
+                {
+                  adapttomyself=false; //stop updating the duty_set because of security season
+                  duty=duty_set;
+                }
            }
+           
          }
          else // if lose the BLE connection, we will stop our motor
          { 
@@ -1045,7 +1055,7 @@ void serialEvent()
             analogWrite(10,RX_Data_BLE);
             analogWrite(9,RX_Data_BLE) ;
             MtorIsMoving=true;
-            //duty=RX_Data_BLE;   
+            duty=RX_Data_BLE;   
             }  
           if (RX_Data_BLE==1)
           {
