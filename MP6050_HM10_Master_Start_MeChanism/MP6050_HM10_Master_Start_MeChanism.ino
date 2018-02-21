@@ -986,7 +986,7 @@ void loop() {
                 if(duty_set<110)
                 {
 
-                  Serial.write(duty_set);  
+                  Serial.write(duty_set);    
 //                  SWSerial.print("Nrml");
                   SWSerial.println(duty_set);
                   analogWrite(10,duty_set);
