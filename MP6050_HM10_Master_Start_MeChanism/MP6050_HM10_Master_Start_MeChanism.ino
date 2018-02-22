@@ -969,15 +969,20 @@ void loop() {
               {  
                 new_duty=8*peak_speeds[4]+68;
                 
-                if(duty_set<110)
+                if(duty_set<110 && duty_set>new_duty)//decrease upto the new_duty value
                 { 
 //                  SWSerial.print("Dec");
-                  duty_set=duty+(new_duty-duty)*(millis()-step_peak_time)/(half_step_time/2); // gradually change the motor speed
+                  duty_set=duty+(new_duty-duty)*(millis()-step_peak_time)/(half_step_time/2); // gradually change the motor speed, duration is 1/4 step time (approx)
                   SWSerial.println(duty_set);
                   Serial.write(duty_set);                                                     // signal the Slave to decrease speed
                   analogWrite(10,duty_set);
                   analogWrite(9,duty_set);
                   }
+                else
+                {
+                  duty=duty_set;
+                  adapttomyself=false;
+                }
               }
               // normal walk, speed almost does not change
               else if (ratio>0.92 && ratio <1)
@@ -991,15 +996,17 @@ void loop() {
                   SWSerial.println(duty_set);
                   analogWrite(10,duty_set);
                   analogWrite(9,duty_set);
-                  }
+                }
+                duty=duty_set;
                 adapttomyself=false; // update only one time in this case
+                
                }
               // what happens if we increase the foot speed ratio > 1
               // modify because ratio > 1 at the initital foot steps
               else if( ratio>1 && peak_count>1)
               {
                 new_duty=8*peak_speeds[4]+68;
-                if(duty_set<110)
+                if(duty_set<110 && duty_set<new_duty) //increase upto the new_duty value
                 {
                   duty_set=duty+(new_duty-duty)*(millis()-step_peak_time)/(half_step_time/2);// gradually change the motor speed
                   Serial.write(duty_set); 
@@ -1007,14 +1014,19 @@ void loop() {
                   SWSerial.println(duty_set);
                   analogWrite(10,duty_set);
                   analogWrite(9,duty_set);
-                  }
                 }
-
-                if(duty_set>110)
+                else
                 {
-                  adapttomyself=false; //stop updating the duty_set because of security season
                   duty=duty_set;
+                  adapttomyself=false;
                 }
+              }
+
+//                if(duty_set>110)
+//                {
+//                  adapttomyself=false; //stop updating the duty_set because of security season
+//                  duty=duty_set;
+//                }
            }
            
          }
