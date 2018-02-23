@@ -151,7 +151,7 @@ bool adapttomyself;
 int TXAdaptedSignal=2, RXAdaptedSignal=2, PilotSignal=3;
 
 // MPU control/status vars
-bool dmpReady = false,fst_peak=true,MtorIsMoving=false;  // set true if DMP init was successful
+bool dmpReady = false,fst_peak=true,MtorIsMoving=false,lost_connection=true;  // set true if DMP init was successful
 uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
 uint8_t devStatus;      // return status after each device operation (0 = success, !0 = error)
 uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
@@ -486,8 +486,16 @@ void setup() {
     Serial.begin(9600);
     delay(1000);
     // set Master mode
+    Serial.print("AT+RENEW");// because Module 1 is not stable 
+    delay(500);
     Serial.print("AT+RENEW");
-    delay(1000);
+    delay(500);
+    Serial.print("AT+RENEW");
+    delay(500);
+    Serial.print("AT+RENEW");
+    delay(500);
+    Serial.print("AT+RENEW");
+    delay(500);
     Serial.print("AT+ROLE1");
     delay(1000);
     Serial.print("AT+MODE2");
@@ -1035,6 +1043,7 @@ void loop() {
             SWSerial.print("LST");
             analogWrite(10,30);
             analogWrite(9,30);
+            lost_connection=true;
           }
          
 }
@@ -1055,11 +1064,12 @@ void serialEvent()
           else if (RX_Data_BLE==PilotSignal)
           {
             pilot_receive_time=millis();
+            lost_connection=false;
             }                     
           //==================================================================//
           //                    SPEED  SYNCHRONIZATION   
           //==================================================================//         
-          if(millis()>15000 && RX_Data_BLE>30 && RX_Data_BLE<110 && !adapttomyself)  // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
+          if(millis()>15000 && RX_Data_BLE>30 && RX_Data_BLE<110 && !adapttomyself && !lost_connection)  // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
           {
             SWSerial.print("RSet");// receive duty and set
             SWSerial.println(RX_Data_BLE);
@@ -1067,7 +1077,8 @@ void serialEvent()
             analogWrite(10,RX_Data_BLE);
             analogWrite(9,RX_Data_BLE) ;
             MtorIsMoving=true;
-            duty=RX_Data_BLE;   
+            duty=RX_Data_BLE;
+            duty_set=RX_Data_BLE;   
             }  
           if (RX_Data_BLE==1)
           {

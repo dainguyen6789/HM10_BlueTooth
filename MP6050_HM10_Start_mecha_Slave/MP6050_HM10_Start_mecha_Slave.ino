@@ -143,7 +143,7 @@ int brightness = 55;    // how bright the LED is
 #define LED_PIN 13 // (Arduino is 13, Teensy is 11, Teensy++ is 6)
 bool blinkState = false;
 
-bool stopbyOther,stopbymyself,MtorIsMoving=false;
+bool stopbyOther,stopbymyself,MtorIsMoving=false,lost_connection=true;
 
 bool adapttomyself;
 int RXAdaptedSignal=2, TXAdaptedSignal=2,PilotSignal=3;
@@ -1006,7 +1006,7 @@ void loop() {
               if(ratio>0.7 && ratio<=0.92)
               {  
                 new_duty=8*peak_speeds[4]+68;
-                
+                SWSerial.println(duty_set);
                if(duty_set<110 && duty_set>new_duty)//decrease upto the "new_duty" value
                 {
 //                  SWSerial.print("Dec");
@@ -1071,6 +1071,7 @@ void loop() {
             SWSerial.print("LST");
             analogWrite(10,30);
             analogWrite(9,30);
+            lost_connection=true;
           }
     
 }
@@ -1092,14 +1093,15 @@ void serialEvent() {
             }
           else if (RX_Data_BLE==PilotSignal)
           {
-            pilot_receive_time=millis();  
+            pilot_receive_time=millis(); 
+            lost_connection=false; 
             }    
             
           //==================================================================//
           //                    SPEED SYNCHRONIZARION  
           //==================================================================//
 
-          if(millis()>15000 && RX_Data_BLE>30 && RX_Data_BLE<110 && !adapttomyself) // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
+          if(millis()>15000 && RX_Data_BLE>30 && RX_Data_BLE<110 && !adapttomyself && !lost_connection) // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
           {
             SWSerial.print("RSet");// receive duty
             SWSerial.println(RX_Data_BLE);
@@ -1108,6 +1110,7 @@ void serialEvent() {
             analogWrite(9,RX_Data_BLE) ;
             MtorIsMoving=true;
             duty=RX_Data_BLE;
+            duty_set=RX_Data_BLE;
             }  
           if (RX_Data_BLE==1)
           {
