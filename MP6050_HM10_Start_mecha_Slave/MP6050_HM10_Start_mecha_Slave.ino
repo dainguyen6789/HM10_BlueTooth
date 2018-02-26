@@ -1002,62 +1002,87 @@ void loop() {
          //=================================================================================== 
          if(millis()-pilot_receive_time<650)
          {
-              // Decrease the speed
-              if(ratio>0.7 && ratio<=0.92)
-              {  
-                new_duty=8*peak_speeds[4]+68;
-                SWSerial.println(duty_set);
-               if(duty_set<110 && duty_set>new_duty)//decrease upto the "new_duty" value
+              new_duty=8*peak_speeds[4]+68;
+              if (new_duty<duty)
+              {
+                // Decrease the speed
+                if(duty_set<110 && duty_set>new_duty)//decrease upto the "new_duty" value
                 {
-//                  SWSerial.print("Dec");
-                  duty_set=duty+(new_duty-duty)*(millis()-step_peak_time)/(half_step_time/2); //gradually change the motor speed, duration is 1/4 step time (approx)
+                  duty_set=duty+(new_duty-duty)*(millis()-step_peak_time)/(half_step_time/2);
                   SWSerial.println(duty_set);
                   Serial.write(duty_set);                                         // signal the Slave to decrease speed
                   analogWrite(10,duty_set);
                   analogWrite(9,duty_set);
-                  } 
-               else
-                {
-                  duty=duty_set;
-                  adapttomyself=false;
-                } 
+                }
               }
-              // normal walk, speed almost does not change
-              else if (ratio>0.92 && ratio <1)
+              else
               {
-                duty_set=8*avg_peak_speed+68;  
-                if(duty_set<110)
+                if(duty_set<110 && duty_set<new_duty)//increase upto the "new_duty" value
                 {
-
-                  Serial.write(duty_set);  
-//                  SWSerial.print("Nrml");
+                  duty_set=duty+(new_duty-duty)*(millis()-step_peak_time)/(half_step_time/2);
                   SWSerial.println(duty_set);
+                  Serial.write(duty_set);                                         // signal the Slave to decrease speed
                   analogWrite(10,duty_set);
                   analogWrite(9,duty_set);
-                 }
-                duty=duty_set; 
-                adapttomyself=false; // update only one time in this case
-               }
-              // what happens if we increase the foot speed ratio > 1
-              // modify because ratio > 1 at the initital foot steps
-              else if( ratio>1 && peak_count>1)
-              {
-                new_duty=8*peak_speeds[4]+68;
-                if(duty_set<110 && duty_set<new_duty) //increase upto the "new_duty" value
-                {
-                  duty_set=duty+(new_duty-duty)*(millis()-step_peak_time)/(half_step_time/2); //gradually change the motor speed, duration is 1/4 step time (approx).
-                  Serial.write(duty_set);                                                     // signal slave guy to adapt its speed.
-//                  SWSerial.print("Inc");
-                  SWSerial.println(duty_set);
-                  analogWrite(10,duty_set);
-                  analogWrite(9,duty_set);
-                  }
-                else
-                {
-                  duty=duty_set;
-                  adapttomyself=false;
                 }
                }
+              
+//              // Decrease the speed
+//              if(ratio>0.7 && ratio<=0.92)
+//              {  
+//                new_duty=8*peak_speeds[4]+68;
+//                SWSerial.println(duty_set);
+//               if(duty_set<110 && duty_set>new_duty)//decrease upto the "new_duty" value
+//                {
+////                  SWSerial.print("Dec");
+//                  duty_set=duty+(new_duty-duty)*(millis()-step_peak_time)/(half_step_time/2); //gradually change the motor speed, duration is 1/4 step time (approx)
+//                  SWSerial.println(duty_set);
+//                  Serial.write(duty_set);                                         // signal the Slave to decrease speed
+//                  analogWrite(10,duty_set);
+//                  analogWrite(9,duty_set);
+//                  } 
+//               else
+//                {
+//                  duty=duty_set;
+//                  adapttomyself=false;
+//                } 
+//              }
+//              // normal walk, speed almost does not change
+//              else if (ratio>0.92 && ratio <1)
+//              {
+//                duty_set=8*avg_peak_speed+68;  
+//                if(duty_set<110)
+//                {
+//
+//                  Serial.write(duty_set);  
+////                  SWSerial.print("Nrml");
+//                  SWSerial.println(duty_set);
+//                  analogWrite(10,duty_set);
+//                  analogWrite(9,duty_set);
+//                 }
+//                duty=duty_set; 
+//                adapttomyself=false; // update only one time in this case
+//               }
+//              // what happens if we increase the foot speed ratio > 1
+//              // modify because ratio > 1 at the initital foot steps
+//              else if( ratio>1 && peak_count>1)
+//              {
+//                new_duty=8*peak_speeds[4]+68;
+//                if(duty_set<110 && duty_set<new_duty) //increase upto the "new_duty" value
+//                {
+//                  duty_set=duty+(new_duty-duty)*(millis()-step_peak_time)/(half_step_time/2); //gradually change the motor speed, duration is 1/4 step time (approx).
+//                  Serial.write(duty_set);                                                     // signal slave guy to adapt its speed.
+////                  SWSerial.print("Inc");
+//                  SWSerial.println(duty_set);
+//                  analogWrite(10,duty_set);
+//                  analogWrite(9,duty_set);
+//                  }
+//                else
+//                {
+//                  duty=duty_set;
+//                  adapttomyself=false;
+//                }
+//               }
                 
 //              if(duty_set>110)
 //              {
