@@ -487,7 +487,25 @@ void setup() {
     delay(1000);
     // set Master mode
     Serial.print("AT+RENEW");
-    delay(1000);
+    delay(500);
+    Serial.print("AT+RENEW");
+    delay(500);
+    Serial.print("AT+RENEW");
+    delay(500);  
+    Serial.print("AT+RENEW");
+    delay(500);
+    Serial.print("AT+RENEW");
+    delay(500);
+    Serial.print("AT+RENEW");
+    delay(500);
+    Serial.print("AT+RENEW");
+    delay(500);
+    Serial.print("AT+RENEW");
+    delay(500);
+    Serial.print("AT+RENEW");
+    delay(500); 
+    Serial.print("AT+RENEW");
+    delay(500);
     Serial.print("AT+ROLE1");
     delay(1000);
     Serial.print("AT+MODE2");
@@ -866,7 +884,7 @@ void loop() {
                         //===================================================================
                         // FOR the very 1ST FOOT STEP    
                         //===================================================================                   
-                        if( !MtorIsMoving && peak_speeds[4]>0 && peak_speeds[3]==0  && (Current_time-step_peak_time) >= half_step_time/2 && (Current_time-step_peak_time) <= half_step_time) // 1st step
+                        if( !MtorIsMoving && peak_speeds[4]>0 && peak_speeds[3]==0  && (Current_time-step_peak_time) <= half_step_time/2) // 1st step
                         {
                           //  how to capture t0 ?
                           
@@ -875,7 +893,7 @@ void loop() {
                             t0=Current_time;              
                             motor_init=1;                           
                           }
-                          duty=(8*peak_speeds[4]+68)*(Current_time-t0)/(half_step_time/2); // the motor speed will proportional to the peak foot speed
+                          duty=(8*peak_speeds[4]+68)*(Current_time-step_peak_time)/(half_step_time/2); // the motor speed will proportional to the peak foot speed
                           if(duty>90)
                           {
                             duty=90;
