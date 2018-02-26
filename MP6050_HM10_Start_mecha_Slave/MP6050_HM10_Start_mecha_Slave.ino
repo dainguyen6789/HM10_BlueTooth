@@ -1015,7 +1015,7 @@ void loop() {
                   Serial.write(duty_set);                                         // signal the Slave to decrease speed
                   analogWrite(10,duty_set);
                   analogWrite(9,duty_set);
-                  }
+                  } 
                else
                 {
                   duty=duty_set;
