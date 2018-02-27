@@ -503,7 +503,7 @@ void setup() {
     Serial.print("AT+DISC?");
     delay(1000);
     Serial.println("AT+CONN0");
-    delay(2000);
+    delay(4000);
     
     // join I2C bus (I2Cdev library doesn't do this automatically)
     #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
@@ -888,9 +888,10 @@ void loop() {
                             analogWrite(9,duty) ;
                           }
                           SWSerial.print("dt:");
-                          SWSerial.println(duty);
+                          SWSerial.println(duty_set);
                           if(duty>30)
                             Serial.write(duty);
+                          duty_set=duty;
                         }
 
                         //==================================================================//
@@ -975,7 +976,7 @@ void loop() {
           {
               new_duty=8*peak_speeds[4]+68;
               // Decrease/increase the speed
-              if(duty_set<110 && duty_set>new_duty && (Current_time-step_peak_time) <= half_step_time/2)//decrease upto the "new_duty" value
+              if(duty_set<110 && (Current_time-step_peak_time) <= half_step_time/2)//decrease upto the "new_duty" value
               {
                 duty_set=duty+(new_duty-duty)*(Current_time-step_peak_time)/(half_step_time/2);
                 SWSerial.print("ds");

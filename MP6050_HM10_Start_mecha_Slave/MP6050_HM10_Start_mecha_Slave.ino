@@ -913,9 +913,10 @@ void loop() {
                           }
                           
                           SWSerial.print("dt:");
-                          SWSerial.println(duty);
+                          SWSerial.println(duty_set);
                           if(duty>30)
                             Serial.write(duty);
+                          duty_set=duty;
                         }
 
 
@@ -1006,7 +1007,7 @@ void loop() {
           {
               new_duty=8*peak_speeds[4]+68;
               // Decrease/increase the speed
-              if(duty_set<110 && duty_set>new_duty && (Current_time-step_peak_time) <= half_step_time/2)//decrease upto the "new_duty" value
+              if(duty_set<110 && (Current_time-step_peak_time) <= half_step_time/2)//decrease upto the "new_duty" value
               {
                 duty_set=duty+(new_duty-duty)*(Current_time-step_peak_time)/(half_step_time/2);
                 SWSerial.print("ds");
