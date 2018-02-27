@@ -973,49 +973,21 @@ void loop() {
           if(adapttomyself && !stopbyOther)
           {
               new_duty=8*peak_speeds[4]+68;
-              if (new_duty<duty)
+              // Decrease/increase the speed
+              if(duty_set<110 && duty_set>new_duty && (Current_time-step_peak_time) <= half_step_time/2)//decrease upto the "new_duty" value
               {
-                // Decrease the speed
-                if(duty_set<110 && duty_set>new_duty)//decrease upto the "new_duty" value
-                {
-                  duty_set=duty+(new_duty-duty)*(millis()-step_peak_time)/(half_step_time/2);
-                  SWSerial.print("ds");
-                  SWSerial.println(duty_set);
-                  Serial.write(duty_set);                                         // signal the Slave to decrease speed
-                  analogWrite(10,duty_set);
-                  analogWrite(9,duty_set);
-                }
-                else
-                {
-                  update_duty=true;
-                  }
+                duty_set=duty+(new_duty-duty)*(Current_time-step_peak_time)/(half_step_time/2);
+                SWSerial.print("ds");
+                SWSerial.println(duty_set);
+                Serial.write(duty_set);                                         // signal the Slave to decrease speed
+                analogWrite(10,duty_set);
+                analogWrite(9,duty_set);
               }
-              else
+              else if ((Current_time-step_peak_time) > half_step_time/2)
               {
-                if(duty_set<110 && duty_set<new_duty)//increase upto the "new_duty" value
-                {
-                  duty_set=duty+(new_duty-duty)*(millis()-step_peak_time)/(half_step_time/2);
-                  SWSerial.print("ds");
-                  SWSerial.println(duty_set);
-                  Serial.write(duty_set);                                         // signal the Slave to decrease speed
-                  analogWrite(10,duty_set);
-                  analogWrite(9,duty_set);
+                duty=duty_set;
                 }
-                else
-                {
-                  update_duty=true;
-                  }
-               }
-               if (update_duty)
-               {
-                 // update "duty"
-                 duty=duty_set;
-                 update_duty=false;
-               }
-          }
-              
-
-          
+            }          
          }
          else // if lose the BLE connection, we will stop our motor
          { 
