@@ -499,6 +499,7 @@ void setup() {
     Serial.print("AT+ROLE1");
     delay(1000);
     Serial.print("AT+MODE2");
+    delay(1000);
     Serial.print("AT+DISC?");
     delay(1000);
     Serial.println("AT+CONN0");
