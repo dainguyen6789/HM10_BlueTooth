@@ -1003,7 +1003,7 @@ void loop() {
          //=================================================================================== 
          if(millis()-pilot_receive_time<650)
          {
-          if(adapttomyself && !stopbyOther)
+          if(adapttomyself && !stopbyOther && ratio >0.7)
           {
               new_duty=8*peak_speeds[4]+68;
               SWSerial.println(duty_set);
