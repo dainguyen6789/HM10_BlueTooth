@@ -496,7 +496,7 @@ void setup() {
     delay(500);
     Serial.print("AT+RENEW");
     delay(500);
-    Serial.print("AT+ROLE1");
+    Serial.print("AT+ROLE1"); 
     delay(1000);
     Serial.print("AT+MODE2");
     delay(1000);
