@@ -155,7 +155,7 @@ uint8_t devStatus;      // return status after each device operation (0 = succes
 uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
 uint16_t fifoCount;     // count of all bytes currently in FIFO
 uint8_t fifoBuffer[64]; // FIFO storage buffer
-unsigned long time1=0,time_old,step_start_time,half_step_time,step_peak_time,Current_time,t0,t2;
+long time1=0,time_old,step_start_time,half_step_time,step_peak_time,Current_time,t0,t2;
 unsigned long pilot_send_time, pilot_receive_time;
 float delta_t,SumMagAccel;
 //float delta_time;
@@ -1006,12 +1006,18 @@ void loop() {
           if(adapttomyself && !stopbyOther)
           {
               new_duty=8*peak_speeds[4]+68;
+              SWSerial.println(duty_set);
               // Decrease/increase the speed
               if(duty_set<110 && (Current_time-step_peak_time) <= half_step_time/2)//decrease upto the "new_duty" value
               {
-                duty_set=duty+(new_duty-duty)*(Current_time-step_peak_time)/(half_step_time/2);
+                duty_set=(int)(duty+(new_duty-duty)*(Current_time-step_peak_time)/(half_step_time/2));
                 SWSerial.print("ds");
                 SWSerial.println(duty_set);
+                SWSerial.println(new_duty);
+                SWSerial.println(duty);
+                SWSerial.println(Current_time);
+                SWSerial.println(step_peak_time);
+                SWSerial.println(half_step_time);
                 Serial.write(duty_set);                                         // signal the Slave to decrease speed
                 analogWrite(10,duty_set);
                 analogWrite(9,duty_set);
