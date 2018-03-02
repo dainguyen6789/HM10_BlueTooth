@@ -923,9 +923,9 @@ void loop() {
                           duty_set=duty;
                         }
 
-                        //==================================================================//
+                        //==================================================================  //
                         //==============              SWSerial Print           ===============//
-                        //==================================================================//
+                        //==================================================================  //
                         
 //                        SWSerial.print(Current_time); 
 //                        SWSerial.print(","); 
@@ -1013,7 +1013,7 @@ void loop() {
          
          if(millis()-pilot_receive_time<650)
          {
-          if(adapttomyself && !stopbyOther && ratio >0.7)
+          if(adapttomyself && !stopbyOther && ratio >0.7 && MtorIsMoving)// MtorIsMoving  is used to isolate this code from 1st foot step
           {
               new_duty=8*peak_speeds[4]+68; 
               SWSerial.println(duty_set);
@@ -1078,7 +1078,6 @@ void serialEvent()
           {
             SWSerial.print("RSet");// receive duty and set
             SWSerial.println(RX_Data_BLE);
-            
             analogWrite(10,RX_Data_BLE);
             analogWrite(9,RX_Data_BLE) ;
             MtorIsMoving=true;

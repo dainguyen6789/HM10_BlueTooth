@@ -1003,7 +1003,7 @@ void loop() {
          //=================================================================================== 
          if(millis()-pilot_receive_time<650)
          {
-          if(adapttomyself && !stopbyOther && ratio >0.7)
+          if(adapttomyself && !stopbyOther && ratio >0.7 && MtorIsMoving) // MtorIsMoving is used to isolate this code from 1st foot step
           {
               new_duty=8*peak_speeds[4]+68;
               SWSerial.println(duty_set);
@@ -1070,6 +1070,7 @@ void serialEvent() {
             
             analogWrite(10,RX_Data_BLE);
             analogWrite(9,RX_Data_BLE) ;
+            
             MtorIsMoving=true;
             duty=RX_Data_BLE;
             duty_set=RX_Data_BLE;
