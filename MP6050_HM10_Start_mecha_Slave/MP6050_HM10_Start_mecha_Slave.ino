@@ -902,7 +902,7 @@ void loop() {
                         if(!MtorIsMoving && peak_speeds[4]>0 && peak_speeds[3]==0  &&  (Current_time-step_peak_time) <= half_step_time/2) // 1st step
                         {
                           duty=(int)(8*peak_speeds[4]+68)*(Current_time-step_peak_time)/(half_step_time/2); // the motor speed will proportional to the peak foot speed
-                          if(duty>90)
+                          if(duty>90) // limit the motor speed for safety
                           { 
                             duty=90;
                             }
@@ -963,10 +963,10 @@ void loop() {
             //==============       BLE SoftwareSWSerial Print      ===============//
             //==================================================================//  
 //            Serial.println(AVAWorld.x);
-
+            #endif
 
             }
-        #endif
+        
         
         //  This stopping mechanism should be reviewed again
         //  RX_Data_BLE==0: slave ratio <0.9, >0.7
