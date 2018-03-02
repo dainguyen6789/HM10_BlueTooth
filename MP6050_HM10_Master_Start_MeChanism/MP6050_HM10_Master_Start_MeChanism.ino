@@ -704,6 +704,14 @@ void loop() {
                 AVAWorld.y= (float) aaWorld.y*9.81/2048.0;
                 AVAWorld.z= (float) aaWorld.z*9.81/2048.0;
                 
+                // Reset the accel to zero if it is small 
+                // Store the "NumSamplesToSetZero" valued=s of acceleration, if they are all zeros, we will reset the speed to zero
+                // EX: AVAWorldMagSeries[0:1]
+                // the "1st sample" (run1==1) will be stored in AVAWorldMagSeries[1];
+                
+                // From the second sample (run1!=1), we will store as:
+                //            "1st sample" stored in AVAWorldMagSeries[0];
+                //            "second sample" stored in AVAWorldMagSeries[1];
                 
                 if(run1==1)
                 {
@@ -748,7 +756,8 @@ void loop() {
                     
                     time_old=time1;
                     time1=millis();
-                }         
+                }  
+                        // compute the rate of change (RoCh) of acceleration to tackle with wrong speed reset bug       
                         delta_t=(time1-time_old);
                         RoCh=(AVAWorld.x-AVAWorld1.x)*1000.0/(float)delta_t;
 //                        SWSerial.print(RoCh);
@@ -764,7 +773,8 @@ void loop() {
                         }
                           
                         //==================================================================//
-
+                        // store the speed values to detect the begin of each step 
+                        // in order to capture half_step_time which will be used for the timing of motor
                         //==================================================================//
                         Spds[0].x=Spds[1].x;
                         Spds[0].y=Spds[1].y;
@@ -774,7 +784,7 @@ void loop() {
                         Spds[2].y=Spds[3].y;
                         Spds[3].x=spd[1].x;
                         Spds[3].y=spd[1].y;
-                        
+                        // Calculate the user speed from the acceleration
                         speed_calc(&spd[1],AVAWorld, delta_t);
                                               
                         if(SumMagAccel==0 && absolute(RoCh)<RoChThreshold)// add abs_x<0.8 to prevent wrong speed reset :((
@@ -874,7 +884,16 @@ void loop() {
                         Current_time=millis();
                         //===================================================================
                         // FOR the very 1ST FOOT STEP    
-                        //===================================================================                   
+                        //===================================================================  
+                        
+                        //  Relation between motor speed (duty) and peak foot speed is chosen as duty=8*peak_speed+68     (we can choose other function)  
+                                 
+                        //  We will increase the motor speed in the duration of "half_step_time/2" (starting from the moment we capture peak foot speed
+                        
+                        //   value 90 is for the user's security, it will prevent the motor from rotating too fast
+
+                        //  MtorIsMoving variable is used to differentiate the 1st step, it could be left foot or right foot.
+                        
                         if( !MtorIsMoving && peak_speeds[4]>0 && peak_speeds[3]==0  &&  (Current_time-step_peak_time) <= half_step_time/2) // 1st step
                         {                          
                           duty=(8*peak_speeds[4]+68)*(Current_time-step_peak_time)/(half_step_time/2); // the motor speed will proportional to the peak foot speed
@@ -919,7 +938,8 @@ void loop() {
 
                 //==================================================================//
                 //                    CODE FOR SECURITY 
-                //==================================================================// 
+                //==================================================================//
+                // Exchange the  PilotSignal with other shoe, if do not receive for more than 650ms, then we lost the Bluetooth connection
                 if(millis()-pilot_send_time>300) // send pilot signal every 300ms
                 {
                   pilot_send_time=millis();
@@ -959,7 +979,7 @@ void loop() {
             SWSerial.println(gradualStopDuty);
           }
         }
-        else if(stopbyOther)// stop by other foot because RX_Data_BLE==1 <=> slave ratio <0.7
+        else if(stopbyOther)// stop by other foot if receive 1 from BLE (RX_Data_BLE==1) <=> slave ratio <0.7
         {
             SWSerial.print("STbyother:");
             SWSerial.println((int)RX_Data_BLE);
@@ -970,11 +990,14 @@ void loop() {
          // ========================================
          // SPEED CHANGE BEHAVIOUR. 
          // ========================================
+         //   the motor will adapt to the new_duty which is given by new_duty=8*peak_speeds[4]+68 (again, we can choose the function)
+         //   We will change the motor speed in the duration of "half_step_time/2" (starting from the moment we capture new peak foot speed)
+         //   value 110 is for the user's security, it will prevent the motor from rotating too fast
          if(millis()-pilot_receive_time<650)
          {
           if(adapttomyself && !stopbyOther && ratio >0.7)
           {
-              new_duty=8*peak_speeds[4]+68;
+              new_duty=8*peak_speeds[4]+68; 
               SWSerial.println(duty_set);
               // Decrease/increase the speed
               if(duty_set<110 && (Current_time-step_peak_time) <= half_step_time/2)//decrease upto the "new_duty" value
@@ -1020,13 +1043,13 @@ void serialEvent()
           {
             adapttomyself=false;
             } 
-          else if (RX_Data_BLE==PilotSignal)
+          else if (RX_Data_BLE==PilotSignal) // this pilot signal is used to check the BLE connection
           {
             pilot_receive_time=millis();
             lost_connection=false;
             }                     
           //==================================================================//
-          //                    SPEED  SYNCHRONIZATION   
+          //                    SPEED  SYNCHRONIZATION WITH THE OTHER SHOE 
           //==================================================================//         
           if(millis()>15000 && RX_Data_BLE>30 && RX_Data_BLE<110 && !adapttomyself && !lost_connection)  // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
           {
