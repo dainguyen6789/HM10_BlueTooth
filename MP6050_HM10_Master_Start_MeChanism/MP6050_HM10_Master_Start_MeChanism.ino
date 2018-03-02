@@ -1025,12 +1025,12 @@ void loop() {
                 duty_set=(int)(duty+(new_duty-duty)*(Current_time-step_peak_time)/(half_step_time/2));
                 SWSerial.print("ds");
                 SWSerial.println(duty_set);
-                SWSerial.println(new_duty);
-                SWSerial.println(duty);
-                SWSerial.println(Current_time);
-                SWSerial.println(step_peak_time);
-                SWSerial.println(half_step_time);
-                Serial.write(duty_set);                                         // signal the Slave to decrease speed
+//                SWSerial.println(new_duty);
+//                SWSerial.println(duty);
+//                SWSerial.println(Current_time);
+//                SWSerial.println(step_peak_time);
+//                SWSerial.println(half_step_time);
+//                Serial.write(duty_set);                                         // signal the Slave to decrease speed
                 analogWrite(10,duty_set);
                 analogWrite(9,duty_set);
               }
