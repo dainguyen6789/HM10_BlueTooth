@@ -1030,7 +1030,7 @@ void loop() {
 //                SWSerial.println(Current_time);
 //                SWSerial.println(step_peak_time);
 //                SWSerial.println(half_step_time);
-//                Serial.write(duty_set);                                         // signal the Slave to decrease speed
+                Serial.write(duty_set);                                         // signal the Slave to decrease speed
                 analogWrite(10,duty_set);
                 analogWrite(9,duty_set);
               }
