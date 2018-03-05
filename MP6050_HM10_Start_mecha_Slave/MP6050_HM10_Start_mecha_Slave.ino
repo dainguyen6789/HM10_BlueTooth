@@ -913,7 +913,7 @@ void loop() {
                           }
                           
                           SWSerial.print("dt:");
-                          SWSerial.println(duty_set);
+                          SWSerial.println(duty);
                           if(duty>30)
                             Serial.write(duty);
                           duty_set=duty;
