@@ -67,7 +67,7 @@ THE SOFTWARE.
 using namespace std;
 MPU6050 mpu;
 //MPU6050 mpu1(0x69); // <-- use for AD0 high
-
+//set up Sw serial port for debugging, pin7 is RX and pin 8 is TX
 SoftwareSerial SWSerial(7, 8); // RX, TX
 /* =========================================================================
    NOTE: In addition to connection 3.3v, GND, SDA, and SCL, this sketch
@@ -152,7 +152,7 @@ bool adapttomyself;
 int TXAdaptedSignal=2, RXAdaptedSignal=2, PilotSignal=3;
 
 // MPU control/status vars
-bool dmpReady = false,fst_peak=true,MtorIsMoving=false,lost_connection=true;  // set true if DMP init was successful
+bool dmpReady = false,MtorIsMoving=false,lost_connection=true;  // set true if DMP init was successful
 uint8_t mpuIntStatus;   // holds actual interrupt status byte from MPU
 uint8_t devStatus;      // return status after each device operation (0 = success, !0 = error)
 uint16_t packetSize;    // expected DMP packet size (default is 42 bytes)
@@ -1062,8 +1062,9 @@ void loop() {
          else // if lose the BLE connection, we will stop our motor
          { 
             SWSerial.print("LST");
-            analogWrite(10,30);
-            analogWrite(9,30);
+            // Stop the motor
+            analogWrite(10,0);
+            analogWrite(9,0);
             lost_connection=true;
           }
 
