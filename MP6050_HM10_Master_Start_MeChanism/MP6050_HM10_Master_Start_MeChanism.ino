@@ -435,12 +435,30 @@ uint8_t dmpGetLinearAccel_8G(VectorInt16 *v, VectorInt16 *vRaw, VectorFloat *gra
     v -> z = vRaw -> z - gravity -> z*2048;
     return 0;
 }
+
+
 // This function is used to compute the motor's duty (speed) 
 // which will be prportional to peak foot speed
+int multiplier=100;
 int motor_duty(float peak_foot_spd)
 {
-  return 8*peak_foot_spd+68;
+  if (peak_foot_spd<=3)
+  {
+  // for peak speed in [1:3]
+     return multiplier*(0.3121*peak_foot_spd-0.057);
   }
+  else if(peak_foot_spd<4.4 && peak_foot_spd>3)
+  {
+  // for peak speed in [3:4.4]
+   return multiplier*(0.5297*peak_foot_spd-0.7077);
+    }
+  else
+  {
+  // for peak speed > 4.4
+   return multiplier*(0.6914*peak_foot_spd-1.4144);
+  }
+  // Note: need to check the ESC firmware again to confirm the threshold value of PWM pulse
+ }
 
 
 // ================================================================
