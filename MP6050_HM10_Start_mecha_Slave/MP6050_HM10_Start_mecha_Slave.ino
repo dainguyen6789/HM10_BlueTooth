@@ -135,8 +135,8 @@ SoftwareSerial SWSerial(7, 8); // RX, TX
 #define AccelSensitivity_8G
 
 //---------------------------------------------------------------------
-int fadeAmount = 5,duty,gradualStopDuty,new_duty,duty_set;     // how many points to fade the LED by
-int startup_safe_duty=90, turnoff_threshold=30, safe_duty_threshold=110;
+int fadeAmount = 2,duty,gradualStopDuty,new_duty,duty_set;     // how many points to fade the LED by
+int startup_safe_duty=40, turnoff_threshold=5, safe_duty_threshold=90;
 int num_loop=0,motor_init,second_step_init;
 int brightness = 55;    // how bright the LED is
 //---------------------------------------------------------------------
@@ -162,6 +162,8 @@ float delta_t,SumMagAccel, turnoff_Ratio=0.7;
 //float delta_time;
 int run1=1,j,n_reset=20, count_decreased_step,peak_count;
 int RX_Data_BLE=2;
+int pwm_1 = 10;           // the PWM pin the pwm_1 is attached to
+int pwm_2 = 9;           // the PWM pin the pwm_2 is attached to
 //============================
 //For Normal and Faster Speed
 //============================
@@ -483,10 +485,28 @@ float absolute(float x)
     return -x;
 }
 
+// This function is used to compute the motor's duty (speed) 
+// which will be prportional to peak foot speed
+int multiplier=100;
 int motor_duty(float peak_foot_spd)
 {
-  return 8*peak_foot_spd+68;
+  if (peak_foot_spd<=3)
+  {
+  // for peak speed in [1:3]
+     return multiplier*(0.3121*peak_foot_spd-0.057);
   }
+  else if(peak_foot_spd<4.4 && peak_foot_spd>3)
+  {
+  // for peak speed in [3:4.4]
+   return multiplier*(0.5297*peak_foot_spd-0.7077);
+    }
+  else
+  {
+  // for peak speed > 4.4
+   return multiplier*(0.6914*peak_foot_spd-1.4144);
+  }
+  // Note: need to check the ESC firmware again to confirm the threshold value of PWM pulse
+ }
 
 
 // ================================================================
@@ -498,43 +518,39 @@ void setup() {
       // ===                      Motor SETUP                       ===
       // ================================================================
       // declare pin 10 to be an output:
-       pinMode(10, OUTPUT);
-      //analogWrite(10, 0);
-      setPwmFrequency(10,8);           //  3921.16 Hz
-      //analogWrite(10, 0);
+       pinMode(pwm_1, OUTPUT);
+      //analogWrite(pwm_1, 0);
+      setPwmFrequency(pwm_1,8);           //  3921.16 Hz
+      //analogWrite(pwm_1, 0);
     
     
-       pinMode(9, OUTPUT);
-      //analogWrite(10, 0);
-      setPwmFrequency(9, 8);           //  3921.16 Hz
-      //analogWrite(10, 0);
+       pinMode(pwm_2, OUTPUT);
+      //analogWrite(pwm_1, 0);
+      setPwmFrequency(pwm_2, 8);           //  3921.16 Hz
+      //analogWrite(pwm_1, 0);
     
-      //analogWrite(9, 0);
-      //analogWrite(10, 0);
-      while (num_loop<=10) // 10 is used for XM20A ESC, 25 is used for SN40A ESC
+      //analogWrite(pwm_2, 0);
+      //analogWrite(pwm_1, 0);
+      while (num_loop<=100)
       {
-
-        analogWrite(10,brightness);
+        analogWrite(pwm_1,brightness);
     
-        analogWrite(9,brightness);
-        
+        analogWrite(pwm_2,brightness);
         brightness = brightness + fadeAmount;
-        
         num_loop++;
-        
-        if (brightness <= 0 || brightness >= 255) 
+        if (brightness <= 0 || brightness >= 100) 
         {
-          fadeAmount = -fadeAmount;      
+          fadeAmount = -2;      
         }
-        if ( num_loop<=1 )
-        {
-           delay(3000);
-        }
-        else
-           delay(10);
+    //    if ( num_loop<=1 )
+    //    {
+    //       delay(30);
+    //    }
+    //    else
+    //       delay(10);
       }
-      analogWrite(10,45);
-      analogWrite(9,45);
+//      analogWrite(pwm_1,45);
+//      analogWrite(pwm_2,45);
   //==============================================================
     Serial.begin(9600);
     delay(3000);
@@ -711,8 +727,8 @@ void loop() {
             if( time1<5000)
             {
               time1=millis();
-//              analogWrite(10,75);
-//              analogWrite(9,75);              
+//              analogWrite(pwm_1,75);
+//              analogWrite(pwm_2,75);              
               }
             
             if (time1>5000)
@@ -749,17 +765,17 @@ void loop() {
     
                 if(run1==1)
                 {
-//                    analogWrite(10,70);
-//                    analogWrite(9,70);  
+//                    analogWrite(pwm_1,70);
+//                    analogWrite(pwm_2,70);  
 //                    delay(250);                  
-//                    analogWrite(10,75);
-//                    analogWrite(9,75);   
+//                    analogWrite(pwm_1,75);
+//                    analogWrite(pwm_2,75);   
 //                    delay(500);                    
-//                    analogWrite(10,80);
-//                    analogWrite(9,80);
+//                    analogWrite(pwm_1,80);
+//                    analogWrite(pwm_2,80);
 //                    delay(250);   
-//                    analogWrite(10,90);
-//                    analogWrite(9,90);
+//                    analogWrite(pwm_1,90);
+//                    analogWrite(pwm_2,90);
                     if (absolute(AVAWorld.x)<AccelMagThreshold)
                     {
                       AVAWorldMagSeries[NumSamplesToSetZero-1]=0;
@@ -916,8 +932,8 @@ void loop() {
                             }
                           if(duty>turnoff_threshold)
                           {
-                            analogWrite(10,duty);
-                            analogWrite(9,duty) ;
+                            analogWrite(pwm_1,duty);
+                            analogWrite(pwm_2,duty) ;
                             Serial.write(duty);
                           }
                           
@@ -990,8 +1006,8 @@ void loop() {
           SWSerial.print("STbymyself");
           if (gradualStopDuty>turnoff_threshold)
           {
-            analogWrite(10,gradualStopDuty);
-            analogWrite(9,gradualStopDuty);
+            analogWrite(pwm_1,gradualStopDuty);
+            analogWrite(pwm_2,gradualStopDuty);
             //================================
             SWSerial.println(gradualStopDuty);
             Serial.write(gradualStopDuty);// signal the Slave to stop
@@ -1003,8 +1019,8 @@ void loop() {
             SWSerial.print("STbyother");
             SWSerial.println(RX_Data_BLE);
             //================================
-            analogWrite(10,RX_Data_BLE);
-            analogWrite(9,RX_Data_BLE);
+            analogWrite(pwm_1,RX_Data_BLE);
+            analogWrite(pwm_2,RX_Data_BLE);
           }        
          //===================================================================================
          ///  ADAPT THE SPEED BY MYSELF and SEND THE SIGNAL TO OTHER MODULE
@@ -1027,8 +1043,8 @@ void loop() {
 //                SWSerial.println(step_peak_time);
 //                SWSerial.println(half_step_time);
                 Serial.write(duty_set);                                         // signal the Slave to decrease speed
-                analogWrite(10,duty_set);
-                analogWrite(9,duty_set);
+                analogWrite(pwm_1,duty_set);
+                analogWrite(pwm_2,duty_set);
               }
               else if ((sample_time-step_peak_time) > half_step_time/2)
               {
@@ -1040,8 +1056,8 @@ void loop() {
          { 
             SWSerial.print("LST");
             // turn off the motor
-            analogWrite(10,0);
-            analogWrite(9,0);
+            analogWrite(pwm_1,0);
+            analogWrite(pwm_2,0);
             lost_connection=true;
           }
     
@@ -1077,8 +1093,8 @@ void serialEvent() {
             SWSerial.print("RSet");// receive duty
             SWSerial.println(RX_Data_BLE);
             
-            analogWrite(10,RX_Data_BLE);
-            analogWrite(9,RX_Data_BLE) ;
+            analogWrite(pwm_1,RX_Data_BLE);
+            analogWrite(pwm_2,RX_Data_BLE) ;
             
             MtorIsMoving=true;
             duty=RX_Data_BLE;
