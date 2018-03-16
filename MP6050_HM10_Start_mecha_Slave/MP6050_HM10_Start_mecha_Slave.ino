@@ -164,6 +164,7 @@ int run1=1,j,n_reset=20, count_decreased_step,peak_count;
 int RX_Data_BLE=2;
 int pwm_1 = 10;           // the PWM pin the pwm_1 is attached to
 int pwm_2 = 9;           // the PWM pin the pwm_2 is attached to
+int duty_zero=0;
 //============================
 //For Normal and Faster Speed
 //============================
@@ -549,8 +550,17 @@ void setup() {
     //    else
     //       delay(10);
       }
-//      analogWrite(pwm_1,45);
-//      analogWrite(pwm_2,45);
+      analogWrite(pwm_1,5);
+      analogWrite(pwm_2,5);
+    ////  delay(50);  
+    //  
+    ////  analogWrite(pwm_1,15);
+    ////  analogWrite(pwm_2,15);
+      delay(1000); 
+      
+      analogWrite(pwm_1,0);
+      analogWrite(pwm_2,0);
+      delay(1000);
   //==============================================================
     Serial.begin(9600);
     delay(3000);
@@ -1015,8 +1025,8 @@ void loop() {
           }
           else 
           {
-              analogWrite(pwm_1,0);
-              analogWrite(pwm_2,0);
+              analogWrite(pwm_1,duty_zero);
+              analogWrite(pwm_2,duty_zero);
             }
           
         }
@@ -1027,8 +1037,8 @@ void loop() {
             //================================
             if(duty_set<2*turnoff_threshold)
             {
-              analogWrite(pwm_1,0);
-              analogWrite(pwm_2,0);
+              analogWrite(pwm_1,duty_zero);
+              analogWrite(pwm_2,duty_zero);
             }
           }        
          //===================================================================================
@@ -1065,8 +1075,8 @@ void loop() {
          { 
             SWSerial.print("LST");
             // turn off the motor
-            analogWrite(pwm_1,0);
-            analogWrite(pwm_2,0);
+            analogWrite(pwm_1,duty_zero);
+            analogWrite(pwm_2,duty_zero);
             lost_connection=true;
           }
     
