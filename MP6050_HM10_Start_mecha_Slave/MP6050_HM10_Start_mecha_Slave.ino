@@ -1013,6 +1013,12 @@ void loop() {
             Serial.write(gradualStopDuty);// signal the Slave to stop
             
           }
+          else 
+          {
+              analogWrite(pwm_1,0);
+              analogWrite(pwm_2,0);
+            }
+          
         }
         else if(stopbyOther)// STOP BY OTHER foot because RX_Data_BLE==1 <=> Master ratio <turnoff_Ratio
         {
