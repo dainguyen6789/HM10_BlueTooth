@@ -703,7 +703,7 @@ void loop() {
             #ifdef OUTPUT_READABLE_WORLDACCEL
             if( time1<=5000)
             {
-              time1=millis();
+              time1=sample_time;
             }
             
             // wait 5s to prevent the noise of the accel sensor at start up
@@ -775,7 +775,7 @@ void loop() {
                     {
                       AVAWorldMagSeries[NumSamplesToSetZero-1]= absolute(AVAWorld.x); 
                     }
-                    time1=millis();
+                    time1=sample_time;
                     run1++;
                 }
                 else
@@ -795,7 +795,7 @@ void loop() {
                     }
                     
                     time_old=time1;
-                    time1=millis();
+                    time1=sample_time;
                 }  
                         // compute the rate of change (RoCh) of acceleration to tackle with wrong speed reset bug       
                         delta_t=(time1-time_old);
