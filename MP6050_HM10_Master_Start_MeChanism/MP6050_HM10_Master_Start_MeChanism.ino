@@ -139,7 +139,7 @@ SoftwareSerial SWSerial(7, 8); // RX, TX
 
 //---------------------------------------------------------------------
 int fadeAmount = 2, duty, gradualStopDuty, new_duty, duty_set;     // how many points to fade the LED by
-int startup_safe_duty=40, turnoff_threshold=5, safe_duty_threshold=90;
+int startup_safe_duty=40, turnoff_threshold=4, safe_duty_threshold=90;
 int num_loop=0;
 int brightness = 55;    // how bright the LED is
 
@@ -1023,13 +1023,21 @@ void loop() {
             Serial.write(gradualStopDuty);// signal the Slave to stop
             SWSerial.println(gradualStopDuty);
           }
+          else
+          {
+            analogWrite(pwm_1,0);
+            analogWrite(pwm_2,0);
+            }
         }
         else if(stopbyOther)// stop by other foot if receive 1 from BLE (RX_Data_BLE==1) <=> slave ratio <turnoff_Ratio
         {
             SWSerial.print("STbyother:");
             SWSerial.println((int)RX_Data_BLE);
-            analogWrite(pwm_1,RX_Data_BLE);
-            analogWrite(pwm_2,RX_Data_BLE);
+            if(duty_set<2*turnoff_threshold)
+            {
+              analogWrite(pwm_1,0);
+              analogWrite(pwm_2,0);
+            }
           }
 
          // ========================================

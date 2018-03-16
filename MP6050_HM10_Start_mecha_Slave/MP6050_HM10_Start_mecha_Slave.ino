@@ -136,7 +136,7 @@ SoftwareSerial SWSerial(7, 8); // RX, TX
 
 //---------------------------------------------------------------------
 int fadeAmount = 2,duty,gradualStopDuty,new_duty,duty_set;     // how many points to fade the LED by
-int startup_safe_duty=40, turnoff_threshold=5, safe_duty_threshold=90;
+int startup_safe_duty=40, turnoff_threshold=4, safe_duty_threshold=90;
 int num_loop=0,motor_init,second_step_init;
 int brightness = 55;    // how bright the LED is
 //---------------------------------------------------------------------
@@ -1019,8 +1019,11 @@ void loop() {
             SWSerial.print("STbyother");
             SWSerial.println(RX_Data_BLE);
             //================================
-            analogWrite(pwm_1,RX_Data_BLE);
-            analogWrite(pwm_2,RX_Data_BLE);
+            if(duty_set<2*turnoff_threshold)
+            {
+              analogWrite(pwm_1,0);
+              analogWrite(pwm_2,0);
+            }
           }        
          //===================================================================================
          ///  ADAPT THE SPEED BY MYSELF and SEND THE SIGNAL TO OTHER MODULE
@@ -1088,7 +1091,7 @@ void serialEvent() {
           //                    SPEED SYNCHRONIZARION  
           //==================================================================//
 
-          if(millis()>15000 && RX_Data_BLE>30 && RX_Data_BLE<safe_duty_threshold && !adapttomyself && !lost_connection) // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
+          if(millis()>15000 && RX_Data_BLE>turnoff_threshold && RX_Data_BLE<safe_duty_threshold && !adapttomyself && !lost_connection) // RX_Data_BLE is the duty of the pulse if RX_Data_BLE>30
           {
             SWSerial.print("RSet");// receive duty
             SWSerial.println(RX_Data_BLE);
