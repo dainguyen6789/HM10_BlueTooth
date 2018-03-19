@@ -1001,10 +1001,12 @@ void loop() {
         else if(stopbyOther)// STOP BY OTHER foot because RX_Data_BLE==1 <=> Master ratio <turnoff_Ratio
         {
             SWSerial.print("STbyother");
-            SWSerial.println(RX_Data_BLE);
-            //================================
-            analogWrite(10,RX_Data_BLE);
-            analogWrite(9,RX_Data_BLE);
+            if (RX_Data_BLE>turnoff_threshold)
+            {
+              SWSerial.println((int)RX_Data_BLE);       
+              analogWrite(10,RX_Data_BLE);
+              analogWrite(9,RX_Data_BLE);
+            }
           }        
          //===================================================================================
          ///  ADAPT THE SPEED BY MYSELF and SEND THE SIGNAL TO OTHER MODULE

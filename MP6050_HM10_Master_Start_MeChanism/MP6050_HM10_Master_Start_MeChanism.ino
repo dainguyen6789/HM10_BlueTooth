@@ -1012,9 +1012,12 @@ void loop() {
         else if(stopbyOther)// stop by other foot if receive 1 from BLE (RX_Data_BLE==1) <=> slave ratio <turnoff_Ratio
         {
             SWSerial.print("STbyother:");
-            SWSerial.println((int)RX_Data_BLE);
-            analogWrite(10,RX_Data_BLE);
-            analogWrite(9,RX_Data_BLE);
+            if (RX_Data_BLE>turnoff_threshold)
+            {
+              SWSerial.println((int)RX_Data_BLE);       
+              analogWrite(10,RX_Data_BLE);
+              analogWrite(9,RX_Data_BLE);
+            }
           }
 
          // ========================================
