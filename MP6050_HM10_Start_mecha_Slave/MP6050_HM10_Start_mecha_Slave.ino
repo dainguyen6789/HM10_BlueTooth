@@ -1039,8 +1039,8 @@ void loop() {
          else // If lose the connection, we will stop our motor
          { 
             SWSerial.print("LST");
-            analogWrite(10,turnoff_threshold);
-            analogWrite(9,turnoff_threshold);
+            analogWrite(10,0);
+            analogWrite(9,0);
             lost_connection=true;
           }
     

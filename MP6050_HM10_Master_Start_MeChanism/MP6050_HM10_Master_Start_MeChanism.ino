@@ -1062,8 +1062,8 @@ void loop() {
          else // if lose the BLE connection, we will stop our motor
          { 
             SWSerial.print("LST");
-            analogWrite(10,30);
-            analogWrite(9,30);
+            analogWrite(10,0);
+            analogWrite(9,0);
             lost_connection=true;
           }
 
