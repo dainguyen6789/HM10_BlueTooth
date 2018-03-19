@@ -710,7 +710,7 @@ void loop() {
             #ifdef OUTPUT_READABLE_WORLDACCEL
             if( time1<5000)
             {
-              time1=millis();
+              time1=sample_time;
 //              analogWrite(10,75);
 //              analogWrite(9,75);              
               }
@@ -768,7 +768,7 @@ void loop() {
                     {
                       AVAWorldMagSeries[NumSamplesToSetZero-1]= absolute(AVAWorld.x); 
                     }
-                    time1=millis();
+                    time1=sample_time;
                     run1++;
                 }
                 else
@@ -788,7 +788,7 @@ void loop() {
                       }
                     
                     time_old=time1;
-                    time1=millis();
+                    time1=sample_time;
                 }         
                         delta_t=(time1-time_old);
                         RoCh=(AVAWorld.x-AVAWorld1.x)*1000.0/(float)delta_t;
