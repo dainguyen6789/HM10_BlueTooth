@@ -601,11 +601,11 @@ Data is printed as: acelX acelY acelZ giroX giroY giroZ
 */
 
     // supply your own gyro offsets here, scaled for min sensitivity
-    mpu.setXGyroOffset(22);
-    mpu.setYGyroOffset(-13);
-    mpu.setZGyroOffset(-35);
+    mpu.setXGyroOffset(28);
+    mpu.setYGyroOffset(-11);
+    mpu.setZGyroOffset(-19);
     
-    mpu.setZAccelOffset(805); //  factory default for my test chip
+    mpu.setZAccelOffset(864); //  factory default for my test chip
     //    mpu.setZAccelOffset(417); 
     //    mpu.setXAccelOffset(-1036);
     //    mpu.setYAccelOffset(-2044);
@@ -916,7 +916,7 @@ void loop() {
                             }
                           if(duty>turnoff_threshold)
                           {
-                            analogWrite(10,duty);
+                            analogWrite(10,duty);// pin number, duty
                             analogWrite(9,duty) ;
                             Serial.write(duty);
                           }
@@ -1041,8 +1041,8 @@ void loop() {
          else // If lose the connection, we will stop our motor
          { 
             SWSerial.print("LST");
-            analogWrite(10,0);
-            analogWrite(9,0);
+            analogWrite(10,5);
+            analogWrite(9,5);
             lost_connection=true;
           }
     

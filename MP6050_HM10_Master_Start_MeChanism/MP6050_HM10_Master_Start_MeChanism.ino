@@ -489,19 +489,21 @@ void setup() {
       }
       analogWrite(10,20);
       analogWrite(9,20);
+
+      
   //==============================================================
     Serial.begin(9600);
     delay(1000);
     // set Master mode
-    Serial.print("AT+RENEW");// because Module 1 is not stable 
-    delay(500);
-    Serial.print("AT+RENEW");
-    delay(500);
-    Serial.print("AT+RENEW");
-    delay(500);
-    Serial.print("AT+RENEW");
-    delay(500);
-    Serial.print("AT+RENEW");
+//    Serial.print("AT+RENEW");// because Module 1 is not stable 
+//    delay(500);
+//    Serial.print("AT+RENEW");
+//    delay(500);
+//    Serial.print("AT+RENEW");
+//    delay(500);
+//    Serial.print("AT+RENEW");
+//    delay(500);
+//    Serial.print("AT+RENEW");
     delay(500);
     Serial.print("AT+ROLE1"); 
     delay(1000);
@@ -571,11 +573,11 @@ void setup() {
 //Check that your sensor readings are close to 0 0 16384 0 0 0
 
     // supply your own gyro offsets here, scaled for min sensitivity
-    mpu.setXGyroOffset(87);
-    mpu.setYGyroOffset(-14);
-    mpu.setZGyroOffset(-55);
+    mpu.setXGyroOffset(31);
+    mpu.setYGyroOffset(-23);
+    mpu.setZGyroOffset(0);
     
-    mpu.setZAccelOffset(999); //  factory default for my test chip
+    mpu.setZAccelOffset(1058); //  factory default for my test chip
     //    mpu.setZAccelOffset(417); 
     //    mpu.setXAccelOffset(-1036);
     //    mpu.setYAccelOffset(-2044);
@@ -942,10 +944,10 @@ void loop() {
                         //==============              SWSerial Print           ===============//
                         //==================================================================  //
                         
-                        SWSerial.print(sample_time); 
-                        SWSerial.print(","); 
+//                        SWSerial.print(sample_time); 
+//                        SWSerial.print(","); 
                         SWSerial.print(AVAWorld.x); 
-                        SWSerial.print(",");             
+                        SWSerial.print(",");
                         SWSerial.println(spd[1].x); 
 //                        SWSerial.print(",");
 //                        SWSerial.print(1].x);
@@ -1065,8 +1067,8 @@ void loop() {
          else // if lose the BLE connection, we will stop our motor
          { 
             SWSerial.print("LST");
-            analogWrite(10,0);
-            analogWrite(9,0);
+            analogWrite(10,5);
+            analogWrite(9,5);
             lost_connection=true;
           }
 
