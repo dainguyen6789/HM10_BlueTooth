@@ -495,15 +495,15 @@ void setup() {
     Serial.begin(9600);
     delay(1000);
     // set Master mode
-//    Serial.print("AT+RENEW");// because Module 1 is not stable 
-//    delay(500);
-//    Serial.print("AT+RENEW");
-//    delay(500);
-//    Serial.print("AT+RENEW");
-//    delay(500);
-//    Serial.print("AT+RENEW");
-//    delay(500);
-//    Serial.print("AT+RENEW");
+    Serial.print("AT+RENEW");// because Module 1 is not stable 
+    delay(500);
+    Serial.print("AT+RENEW");
+    delay(500);
+    Serial.print("AT+RENEW");
+    delay(500);
+    Serial.print("AT+RENEW");
+    delay(500);
+    Serial.print("AT+RENEW");
     delay(500);
     Serial.print("AT+ROLE1"); 
     delay(1000);
