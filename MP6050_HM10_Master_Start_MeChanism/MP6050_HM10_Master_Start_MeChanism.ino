@@ -1,4 +1,4 @@
-// I2C device class (I2Cdev) demonstration Arduino sketch for MPU6050 class using DMP (MotionApps v2.0)
+Blue// I2C device class (I2Cdev) demonstration Arduino sketch for MPU6050 class using DMP (MotionApps v2.0)
 // 6/21/2012 by Jeff Rowberg <jeff@rowberg.net>
 // Updates should (hopefully) always be available at https://github.com/jrowberg/i2cdevlib
 // I have to use HMComAssistant  and AT+RENEW command to fix the bug (RX254 or noise all the time), connection in the link  http://techienoise.com/upgrading-firmware-to-hm-10-cc2541-ble-4-0/
@@ -509,9 +509,9 @@ void setup() {
     delay(1000);
     Serial.print("AT+MODE2");
     delay(1000);
-    Serial.print("AT+DISC?");
+    //Serial.print("AT+DISC?");
     delay(1000);
-    Serial.println("AT+CONN0");
+    Serial.println("AT+CON0035FF1F548D");
     delay(4000);
     
     // join I2C bus (I2Cdev library doesn't do this automatically)
