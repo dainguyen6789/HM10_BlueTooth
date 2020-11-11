@@ -28,7 +28,7 @@ void setup()
     //  =======================================================
     // set the data rate for the SoftwareSerial port
     //  =======================================================
-
+///======================
     mySerial.begin(9600);
     delay(1000);
     // set slave
@@ -45,7 +45,7 @@ void loop() // run over and over
     if (mySerial.available())
     {
       //c=mySerial.read();
-      Serial.write(mySerial.read());
+      Serial.print(mySerial.read());
 //      delay(50);    // if we do not set delay or delay(10), we will receive noise signal, BE CAREFUL WITH DELAY VALUE
 //      mySerial.write(c);
     }
