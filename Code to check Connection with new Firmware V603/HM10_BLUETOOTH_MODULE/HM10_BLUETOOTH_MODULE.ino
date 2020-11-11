@@ -50,9 +50,9 @@ void setup()
     //delay(1000);
 //    mySerial.print("AT+RESET");
 //    delay(3000);
-    mySerial.print("AT+DISC?");
+//    mySerial.print("AT+DISC?");
     delay(1000);
-    mySerial.println("AT+CONN0");// THIS IS THE ADDRESS OF BLE MODULE #2 (D4:36:39:D7:11:FA)
+    mySerial.println("AT+COND43639D711FA");// THIS IS THE ADDRESS OF BLE MODULE #2 (D4:36:39:D7:11:FA)
     delay(1000);
 //    mySerial.println("AT+START");
 //    delay(1000);
@@ -91,28 +91,3 @@ void loop() // run over and over
       mySerial.write(Serial.read());// BLE writes data here
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
