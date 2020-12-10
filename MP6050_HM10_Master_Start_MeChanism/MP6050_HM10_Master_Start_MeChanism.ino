@@ -574,14 +574,23 @@ void setup() {
 //Check that your sensor readings are close to 0 0 16384 0 0 0
 
     // supply your own gyro offsets here, scaled for min sensitivity
-    mpu.setXGyroOffset(31);
-    mpu.setYGyroOffset(-23);
-    mpu.setZGyroOffset(0);
-    
-    mpu.setZAccelOffset(1058); //  factory default for my test chip
-    //    mpu.setZAccelOffset(417); 
-    //    mpu.setXAccelOffset(-1036);
-    //    mpu.setYAccelOffset(-2044);
+    mpu.setXGyroOffset(26);
+    mpu.setYGyroOffset(-7);
+    mpu.setZGyroOffset(-23);
+    FINISHED!
+//14:23:48.884 -> 
+//14:23:48.884 -> Sensor readings with offsets:  10  0 16382 -1  0 0
+//14:23:48.884 -> Your offsets: -1128 -2239 867 26  -7  -23
+//14:23:48.918 -> 
+//14:23:48.918 -> Data is printed as: acelX acelY acelZ giroX giroY giroZ
+//14:23:48.918 -> Check that your sensor readings are close to 0 0 16384 0 0 0
+//14:23:48.918 -> If calibration was succesful write down your offsets so you can set them in your projects using something similar to mpu.setXAccelOffset(youroffset)
+
+    //mpu.setZAccelOffset(1058); //  factory default for my test chip
+        mpu.setXAccelOffset(-1128);
+        mpu.setYAccelOffset(-2239);
+        mpu.setZAccelOffset(867); 
+
     //    make sure it worked (returns 0 if so)
     //
     //    mpu.setFullScaleAccelRange(MPU6050_ACCEL_FS_4);

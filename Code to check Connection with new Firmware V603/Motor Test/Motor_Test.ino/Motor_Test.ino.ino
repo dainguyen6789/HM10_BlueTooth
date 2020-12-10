@@ -487,8 +487,8 @@ void setup() {
         else
            delay(10);
       }
-      analogWrite(10,90);
-      analogWrite(9,90);
+      analogWrite(10,85);
+      analogWrite(9,85);
 
       
   
